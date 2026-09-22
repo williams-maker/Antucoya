@@ -188,9 +188,9 @@
 const PARTICIPANTES = ["J. Madrid","T. Brown","E. Leiva","E. Cabalín","E. Pino","M. Campaña",
   "L. Rojas","E. Riveras","N. Vega","F. Lagos","GPRO"];
 
-// ============ CALENDARIO DE FOROS (martes) ============
-// ancla: Foro N° 31 = martes 28-07-2026; se generan todos los martes hasta fin de año
-const ANCLA = {num: 31, fecha: "2026-07-28"};
+// ============ CALENDARIO DE FOROS (jueves) ============
+// ancla: Foro N° 10 = jueves 24-09-2026; se generan todos los jueves hasta fin de año
+const ANCLA = {num: 10, fecha: "2026-09-24"};
 const FOROS = [];
 (function(){
   let d = new Date(ANCLA.fecha + "T12:00:00"), n = ANCLA.num;
@@ -204,20 +204,7 @@ const FOROS = [];
 
 // ============ COMPROMISOS BASE ============
 // foro: fecha ISO del foro en que se tomó · estados: pendiente | progreso | cerrado
-const BASE = [
-  {n:"01", t:"Presentar en Comité Ctto. extensión plazo contrato Marco Ingeniería", r:"M. Campaña", fi:"19.05.26", fp:"08.07.26", foro:"2026-05-19", e:"cerrado", closedAt:"2026-07-28"},
-  {n:"02", t:"Presentar en Comité Ctto. Servicio Apoyo Multidisciplinario GPRO", r:"M. Campaña", fi:"19.05.26", fp:"08.07.26", foro:"2026-05-19", e:"cerrado", closedAt:"2026-07-28"},
-  {n:"03", t:"Gestionar recepción cable micrófono GPRO", r:"N. Vega", fi:"02.06.26", fp:"10.07.26", foro:"2026-06-02", e:"progreso"},
-  {n:"04", t:"Reactivar foro Finanzas / GPRO", r:"T. Brown", fi:"23.06.26", fp:"14.07.26", foro:"2026-06-23", e:"progreso"},
-  {n:"05", t:"Revisar con cliente (A. Velasquez) si se realizará proyecto Techo Decantadores", r:"E. Cabalín", fi:"07.07.26", fp:"—", foro:"2026-07-07", e:"pendiente"},
-  {n:"06", t:"Verificar si es factible adelantar presupuesto del proyecto PLS-ILS del año 2027 al presente año", r:"E. Cabalín", fi:"14.07.26", fp:"28.07.26", foro:"2026-07-14", e:"pendiente"},
-  {n:"07", t:"Generar reunión con Sigdo Koppers para revisar plan de cierre del contrato de construcción", r:"E. Leiva", fi:"14.07.26", fp:"28.07.26", foro:"2026-07-14", e:"pendiente"},
-  {n:"08", t:"Generar reunión proyecto SCP Fase 3 (ingeniería y construcción) para abordar estrategia de ejecución", r:"E. Leiva / M. Campaña", fi:"14.07.26", fp:"28.07.26", foro:"2026-07-14", e:"pendiente"},
-  {n:"09", t:"Definir ejecución de proyecto Barrio Cívico Mina", r:"E. Riveras", fi:"14.07.26", fp:"21.07.26", foro:"2026-07-14", e:"pendiente"},
-  {n:"10", t:"Revisar con Operaciones el atravieso de caminos por la nueva zanja de PLS al interior de las Pilas", r:"E. Pino", fi:"14.07.26", fp:"28.07.26", foro:"2026-07-14", e:"pendiente"},
-  {n:"11", t:"Buscar financiamiento con \"C3\" para la prefactibilidad del proyecto \"8 Pilas\"", r:"T. Brown / M. Campaña", fi:"14.07.26", fp:"28.07.26", foro:"2026-07-14", e:"pendiente"},
-  {n:"12", t:"Regularización Aconex", r:"GPRO", fi:"21.07.26", fp:"28.07.26", foro:"2026-07-21", e:"pendiente"}
-];
+const BASE = [];
 // =====================================================
 const ESTADOS = [["pendiente","Pendiente","#D22630"],["progreso","En Progreso","#EAAA00"],["cerrado","Cerrado","#3B6E22"]];
 const ALLSTATES = ESTADOS.concat([["informativo","Informativo","#8A97A0"]]);
