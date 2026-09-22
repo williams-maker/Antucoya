@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Compromisos · Foro GPRO</title>
+<style>
+  :root{
+    --teal:#00778B; --navy:#253746; --gray:#8A97A0; --red:#D22630;
+    --green:#3B6E22; --gold:#EAAA00; --line:#E2E7EA; --zebra:#F6F8F9; --aqua:#64CCC9;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{font-family:Arial, sans-serif; background:#fff; color:var(--navy); padding:26px 38px;}
+  .kicker{color:var(--teal); font-weight:bold; font-size:13px; letter-spacing:3px; text-transform:uppercase;}
+  h1{font-size:27px; margin:4px 0 6px;}
+  .accents{display:flex; gap:6px; margin:6px 0 20px;}
+  .accents span{width:22px; height:6px; border-radius:2px;}
+  .topbar{display:flex; justify-content:space-between; align-items:flex-start;}
+  .topctrl{display:flex; gap:10px; align-items:center;}
+  .zoomctl{display:flex; align-items:center; gap:4px; border:1px solid var(--line); border-radius:20px; padding:4px 8px;}
+  .zoomctl button{font-family:Arial; border:none; background:none; color:var(--teal); font-weight:bold; font-size:15px; cursor:pointer; width:22px;}
+  .zoomctl span{font-size:11px; color:var(--gray); min-width:34px; text-align:center;}
+  select#foro{font-family:Arial; font-size:13px; font-weight:bold; color:var(--navy);
+    border:1px solid var(--line); border-radius:20px; padding:8px 14px; background:#fff; cursor:pointer; max-width:260px;}
+  .btn-add{font-family:Arial; font-size:13px; font-weight:bold; color:#fff; background:var(--teal);
+    border:none; border-radius:20px; padding:9px 18px; cursor:pointer;}
+  .btn-add:hover{background:#005f70;}
+  .chips{display:grid; grid-template-columns:repeat(5,1fr); gap:12px; margin-bottom:20px;}
+  .chip{border:1px solid var(--line); border-radius:10px; padding:11px 16px; background:#fff;}
+  .chip.total{background:var(--teal); border-color:var(--teal);}
+  .chip .lab{font-size:10px; font-weight:bold; letter-spacing:1.5px; color:var(--gray); text-transform:uppercase;}
+  .chip .num{font-size:25px; font-weight:bold; margin-top:2px;}
+  .chip.total .lab{color:#BFE3E8;} .chip.total .num{color:#fff;}
+  .n-pendiente{color:var(--red);} .n-progreso{color:var(--gold);} .n-cerrado{color:var(--green);} .n-nuevo{color:#0E7F86;}
+  .cols{display:grid; grid-template-columns:2.5fr 1fr; gap:18px; align-items:start;}
+  .card{border:1px solid var(--line); border-radius:12px; padding:16px 18px;}
+  .card h2{color:var(--teal); font-size:11.5px; letter-spacing:2px; text-transform:uppercase; margin-bottom:12px;}
+  table{width:100%; border-collapse:collapse; font-size:12px; table-layout:fixed;}
+  thead th:nth-child(1){width:3.5%} thead th:nth-child(2){width:41%} thead th:nth-child(3){width:12.5%}
+  thead th:nth-child(4){width:7%} thead th:nth-child(5){width:7%} thead th:nth-child(6){width:6.5%}
+  thead th:nth-child(7){width:17.5%; text-align:center} thead th:nth-child(8){width:5%}
+  thead th{background:var(--teal); color:#fff; padding:7px 8px; text-align:left; font-size:10px;
+    letter-spacing:1px; text-transform:uppercase;}
+  thead th:first-child{border-radius:8px 0 0 8px;} thead th:last-child{border-radius:0 8px 8px 0;}
+  tbody td{padding:4px 8px; vertical-align:middle; border-bottom:1px solid var(--zebra); line-height:1.25; overflow-wrap:break-word;}
+  tbody tr:nth-child(odd){background:var(--zebra);}
+  tbody tr.is-new{background:#EAF7F6; box-shadow:inset 4px 0 0 var(--aqua);}
+  .badge-new{display:inline-block; background:var(--aqua); color:#0B4A50; font-size:9px; font-weight:bold;
+    letter-spacing:1px; border-radius:9px; padding:2px 8px; margin-left:6px; vertical-align:1px;}
+  .muted{color:var(--gray); font-size:11px; white-space:nowrap;}
+  .atraso{color:var(--red); font-weight:bold; font-size:11px; white-space:nowrap;}
+  .rowacts{display:flex; gap:6px; align-items:center; white-space:nowrap;}
+  .edit{color:var(--teal); cursor:pointer; font-weight:bold; font-size:14px; padding:0 2px;}
+  .edit:hover{color:#005f70;}
+  .estado-btns{display:flex; gap:3px; justify-content:center;}
+  .estado-btns button{font-family:Arial; font-size:9.5px; font-weight:bold; border-radius:11px; cursor:pointer; white-space:nowrap;
+    padding:3px 8px; border:1px solid var(--line); background:#fff; color:var(--gray); transition:all .15s;}
+  .estado-btns button:hover{border-color:var(--gray);}
+  .estado-btns button.on-pendiente{background:var(--red); color:#fff; border-color:var(--red);}
+  .estado-btns button.on-progreso{background:var(--gold); color:var(--navy); border-color:var(--gold);}
+  .estado-btns button.on-cerrado{background:var(--green); color:#fff; border-color:var(--green);}
+  .estado-btns button.on-informativo{background:var(--gray); color:#fff; border-color:var(--gray); padding:3px 16px;}
+  .del{color:var(--red); cursor:pointer; font-weight:bold; padding:0 4px;}
+  .donut-wrap{display:flex; align-items:center; gap:14px;}
+  .donut-center{font-size:11px; fill:var(--gray);}
+  .donut-num{font-size:22px; font-weight:bold; fill:#253746;}
+  .dleg{font-size:11px; line-height:1.9;}
+  .dleg i{display:inline-block; width:10px; height:10px; border-radius:3px; margin-right:6px; vertical-align:-1px;}
+  .resp-row{margin-bottom:8px;}
+  .resp-row .name{font-size:10.5px; font-weight:bold; display:flex; justify-content:space-between; margin-bottom:2px;}
+  .resp-row .name small{color:var(--gray); font-weight:normal; font-size:10px;}
+  .bar{display:flex; height:8px; border-radius:4px; overflow:hidden; background:var(--zebra);}
+  .bar div{height:100%;}
+  .b-pendiente{background:var(--red);} .b-progreso{background:var(--gold);} .b-cerrado{background:var(--green);} .b-informativo{background:#B9C2C8;}
+  .venc{font-size:11px; line-height:1.5; margin-bottom:7px; display:flex; justify-content:space-between; gap:8px;}
+  .venc b{color:var(--red); white-space:nowrap;}
+  #addForm{display:none; border:1px solid var(--teal); border-radius:12px; padding:14px 18px; margin-bottom:16px; background:#F4FAFB;}
+  #addForm h3{color:var(--teal); font-size:12px; letter-spacing:1.5px; text-transform:uppercase; margin-bottom:10px;}
+  #addForm .frow{display:grid; grid-template-columns:3fr 1.4fr 1fr auto; gap:10px; align-items:end;}
+  #addForm label{font-size:10px; font-weight:bold; color:var(--gray); text-transform:uppercase; display:block; margin-bottom:3px;}
+  #addForm input{font-family:Arial; font-size:12px; padding:7px 9px; border:1px solid var(--line); border-radius:8px; width:100%;}
+  .respPick{position:relative;}
+  .respPick .box{font-size:12px; padding:7px 9px; border:1px solid var(--line); border-radius:8px;
+    background:#fff; cursor:pointer; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:220px;}
+  .plist{display:none; position:absolute; top:108%; left:0; z-index:30; background:#fff; border:1px solid var(--line);
+    border-radius:10px; box-shadow:0 6px 18px rgba(37,55,70,.15); padding:12px 14px; max-height:260px; overflow:auto; min-width:260px;}
+  .plist label{display:flex; align-items:center; gap:10px; font-size:12px; font-weight:normal; color:var(--navy); text-transform:none; margin:2px 0; padding:5px 8px; border-radius:6px; cursor:pointer;}
+  .plist label:hover{background:#F4FAFB;}
+  #addForm .plist input, .plist input{width:auto !important; margin:0; flex:0 0 auto;}
+  .pact{margin-left:auto; display:flex; gap:7px; visibility:hidden;}
+  label:hover .pact{visibility:visible;}
+  .pact span{cursor:pointer; font-size:11px; color:var(--gray);}
+  .pact span:hover{color:var(--teal);}
+  .pact span.px:hover{color:var(--red);}
+  .addp{display:flex; gap:6px; margin-top:8px; padding-top:8px; border-top:1px solid var(--zebra);}
+  .addp input{flex:1 !important; min-width:0; font-family:Arial; font-size:11.5px; padding:5px 8px; border:1px solid var(--line); border-radius:8px; width:auto !important;}
+  .addp button{background:var(--teal); color:#fff; border:none; border-radius:8px; width:28px; font-weight:bold; cursor:pointer;}
+  #pop{display:none; position:absolute; z-index:40; background:#fff; border:1px solid var(--line); border-radius:10px;
+    box-shadow:0 6px 18px rgba(37,55,70,.2); padding:10px 12px; max-height:320px; overflow:auto; min-width:200px;}
+  #pop label{display:flex; align-items:center; gap:8px; font-size:12px; margin:5px 0; cursor:pointer;}
+  #pop .flab{font-weight:bold; color:var(--teal); font-size:10px; letter-spacing:1px; text-transform:uppercase; margin:10px 0 4px; cursor:default; display:block;}
+  #pop textarea, #pop input[type=date]{font-family:Arial; font-size:12px; padding:6px 8px; border:1px solid var(--line); border-radius:8px; width:100%;}
+  #pop textarea{resize:vertical; min-height:56px;}
+  #pop .chk{max-height:150px; overflow:auto; border:1px solid var(--zebra); border-radius:8px; padding:4px 8px;}
+  #pop input{margin-right:0;}
+  #pop .okbtn{margin-top:8px; width:100%; background:var(--teal); color:#fff; border:none; border-radius:8px;
+    padding:6px; font-weight:bold; cursor:pointer; font-family:Arial;}
+  .foot{margin-top:16px; font-size:10.5px; color:var(--gray);}
+  button.reset{font-family:Arial; margin-left:10px; font-size:10.5px; border:none; background:none;
+    color:var(--teal); cursor:pointer; text-decoration:underline;}
+</style>
+</head>
+<body>
+  <div class="topbar">
+    <div>
+      <div class="kicker">Foro GPRO · Seguimiento</div>
+      <h1>Revisión de Compromisos</h1>
+      <div class="accents">
+        <span style="background:#00778B"></span><span style="background:#64CCC9"></span>
+        <span style="background:#4C8C2B"></span><span style="background:#EAAA00"></span>
+        <span style="background:#D22630"></span>
+      </div>
+    </div>
+    <div class="topctrl">
+      <div class="zoomctl" title="Zoom de la vista"><button onclick="setZoom(-0.05)">−</button><span id="zoomlab"></span><button onclick="setZoom(0.05)">+</button></div>
+      <button class="btn-add" onclick="toggleForm()">＋ Agregar Nuevo Compromiso</button>
+      <select id="foro" onchange="render()"></select>
+    </div>
+  </div>
+
+  <div class="chips" id="chips"></div>
+
+  <div id="addForm">
+    <h3>Nuevo compromiso · se registra en el foro seleccionado</h3>
+    <div class="frow">
+      <div><label>Compromiso</label><input id="f_txt" placeholder="Descripción del compromiso"></div>
+      <div><label>Responsable(s)</label>
+        <div class="respPick">
+          <div class="box" id="f_respBox" onclick="togglePlist(event)">Seleccionar…</div>
+          <div class="plist" id="f_plist"></div>
+        </div>
+      </div>
+      <div><label>F. Plan</label><input type="date" id="f_fp"></div>
+      <div><button class="btn-add" onclick="addComp()">Agregar</button></div>
+    </div>
+  </div>
+
+  <div class="cols">
+    <div class="card">
+      <h2 id="tableTitle">Compromisos</h2>
+      <table>
+        <thead><tr><th>N°</th><th>Compromiso</th><th>Responsable</th><th>F. Inicio</th><th>F. Plan</th>
+        <th>Días atraso</th><th>Estado</th><th></th></tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+    <div>
+      <div class="card" style="margin-bottom:14px;">
+        <h2>Distribución por estado</h2>
+        <div class="donut-wrap">
+          <svg id="donut" width="130" height="130" viewBox="0 0 130 130"></svg>
+          <div class="dleg" id="dleg"></div>
+        </div>
+      </div>
+      <div class="card" style="margin-bottom:14px;">
+        <h2>Por responsable</h2>
+        <div id="resps"></div>
+      </div>
+      <div class="card">
+        <h2>Próximos vencimientos</h2>
+        <div id="vencs"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="foot">
+    <span id="sync" style="font-weight:bold"></span> ·
+    Los informativos van siempre al inicio. Los cerrados quedan visibles en su foro y se omiten en los siguientes; pendientes y en progreso se arrastran ordenados del más antiguo al más reciente. Lápiz ✎ para editar (incluye destacar NUEVO); ✕ elimina. Clic sobre el estado ya marcado = ℹ Informativo. En la lista de responsables, pasa el mouse sobre un nombre para renombrar ✎ o quitar ✕.
+    <button class="reset" onclick="resetTodo()">Restablecer todo</button>
+  </div>
+
+  <div id="pop"></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
+<script>
+// ============ PARTICIPANTES INICIALES (la lista viva se administra desde la página) ============
+const PARTICIPANTES = ["J. Madrid","T. Brown","E. Leiva","E. Cabalín","E. Pino","M. Campaña",
+  "L. Rojas","E. Riveras","N. Vega","F. Lagos","GPRO"];
+
+// ============ CALENDARIO DE FOROS (martes) ============
+// ancla: Foro N° 31 = martes 28-07-2026; se generan todos los martes hasta fin de año
+const ANCLA = {num: 31, fecha: "2026-07-28"};
+const FOROS = [];
+(function(){
+  let d = new Date(ANCLA.fecha + "T12:00:00"), n = ANCLA.num;
+  d.setDate(d.getDate() - 28); n -= 4;   // incluye 4 foros previos para historial
+  while(d.getFullYear() <= 2026){
+    FOROS.push({num: n, iso: d.toISOString().slice(0, 10),
+      lbl: "Foro N° " + n + " · " + d.toLocaleDateString('es-CL', {day:'2-digit', month:'2-digit', year:'numeric'})});
+    d.setDate(d.getDate() + 7); n++;
+  }
+})();
+
+// ============ COMPROMISOS BASE ============
+// foro: fecha ISO del foro en que se tomó · estados: pendiente | progreso | cerrado
+const BASE = [
+  {n:"01", t:"Presentar en Comité Ctto. extensión plazo contrato Marco Ingeniería", r:"M. Campaña", fi:"19.05.26", fp:"08.07.26", foro:"2026-05-19", e:"cerrado", closedAt:"2026-07-28"},
+  {n:"02", t:"Presentar en Comité Ctto. Servicio Apoyo Multidisciplinario GPRO", r:"M. Campaña", fi:"19.05.26", fp:"08.07.26", foro:"2026-05-19", e:"cerrado", closedAt:"2026-07-28"},
+  {n:"03", t:"Gestionar recepción cable micrófono GPRO", r:"N. Vega", fi:"02.06.26", fp:"10.07.26", foro:"2026-06-02", e:"progreso"},
+  {n:"04", t:"Reactivar foro Finanzas / GPRO", r:"T. Brown", fi:"23.06.26", fp:"14.07.26", foro:"2026-06-23", e:"progreso"},
+  {n:"05", t:"Revisar con cliente (A. Velasquez) si se realizará proyecto Techo Decantadores", r:"E. Cabalín", fi:"07.07.26", fp:"—", foro:"2026-07-07", e:"pendiente"},
+  {n:"06", t:"Verificar si es factible adelantar presupuesto del proyecto PLS-ILS del año 2027 al presente año", r:"E. Cabalín", fi:"14.07.26", fp:"28.07.26", foro:"2026-07-14", e:"pendiente"},
+  {n:"07", t:"Generar reunión con Sigdo Koppers para revisar plan de cierre del contrato de construcción", r:"E. Leiva", fi:"14.07.26", fp:"28.07.26", foro:"2026-07-14", e:"pendiente"},
+  {n:"08", t:"Generar reunión proyecto SCP Fase 3 (ingeniería y construcción) para abordar estrategia de ejecución", r:"E. Leiva / M. Campaña", fi:"14.07.26", fp:"28.07.26", foro:"2026-07-14", e:"pendiente"},
+  {n:"09", t:"Definir ejecución de proyecto Barrio Cívico Mina", r:"E. Riveras", fi:"14.07.26", fp:"21.07.26", foro:"2026-07-14", e:"pendiente"},
+  {n:"10", t:"Revisar con Operaciones el atravieso de caminos por la nueva zanja de PLS al interior de las Pilas", r:"E. Pino", fi:"14.07.26", fp:"28.07.26", foro:"2026-07-14", e:"pendiente"},
+  {n:"11", t:"Buscar financiamiento con \"C3\" para la prefactibilidad del proyecto \"8 Pilas\"", r:"T. Brown / M. Campaña", fi:"14.07.26", fp:"28.07.26", foro:"2026-07-14", e:"pendiente"},
+  {n:"12", t:"Regularización Aconex", r:"GPRO", fi:"21.07.26", fp:"28.07.26", foro:"2026-07-21", e:"pendiente"}
+];
+// =====================================================
+const ESTADOS = [["pendiente","Pendiente","#D22630"],["progreso","En Progreso","#EAAA00"],["cerrado","Cerrado","#3B6E22"]];
+const ALLSTATES = ESTADOS.concat([["informativo","Informativo","#8A97A0"]]);
+
+// ---------- persistencia compartida en la nube (Firebase) ----------
+const firebaseConfig = {
+  apiKey: "AIzaSyAW_vaFBPqtuJf2SaRjI3GL5Gyz--_Xcnc",
+  authDomain: "sso-gpro.firebaseapp.com",
+  databaseURL: "https://sso-gpro-default-rtdb.firebaseio.com",
+  projectId: "sso-gpro",
+  storageBucket: "sso-gpro.firebasestorage.app",
+  messagingSenderId: "965543023119",
+  appId: "1:965543023119:web:42cb8269a33943b8fac97a",
+  measurementId: "G-Z98DWW1RB6"
+};
+const DB_PATH = 'foroGPRO-x7k2';
+const LSK = 'foroGPROv3::';
+let CLOUD = {}, dbref = null;
+try{
+  firebase.initializeApp(firebaseConfig);
+  dbref = firebase.database().ref(DB_PATH);
+}catch(e){ console.warn('Firebase no disponible; usando almacenamiento local.', e); }
+// escribe una lista completa (extras, participantes)
+const store = (k, v) => {
+  CLOUD[k] = v;
+  if(dbref) dbref.child(k).set(v).catch(() => setSync(false));
+  else localStorage.setItem(LSK + k, JSON.stringify(v));
+};
+// escribe UNA SOLA entrada de un mapa (evita que una vista con datos viejos pise los cambios de otra)
+const storeKey = (map, n, v) => {
+  const m = read(map, {});
+  m[n] = v;
+  CLOUD[map] = m;
+  if(dbref) dbref.child(map).child(n).set(v).catch(() => setSync(false));
+  else localStorage.setItem(LSK + map, JSON.stringify(m));
+};
+const read = (k, d) => {
+  if(dbref) return CLOUD[k] ?? d;
+  try{ return JSON.parse(localStorage.getItem(LSK + k)) ?? d; }catch(e){ return d; }
+};
+function setSync(ok){
+  const el = document.getElementById('sync');
+  if(el){ el.textContent = ok ? '● nube sincronizada' : '● sin conexión a la nube (cambios no compartidos)';
+          el.style.color = ok ? '#3B6E22' : '#D22630'; }
+}
+if(dbref){
+  dbref.on('value', snap => {
+    CLOUD = snap.val() || {};
+    if(CLOUD.extra && !Array.isArray(CLOUD.extra)) CLOUD.extra = Object.values(CLOUD.extra);
+    if(CLOUD.ppl && !Array.isArray(CLOUD.ppl)) CLOUD.ppl = Object.values(CLOUD.ppl);
+    if(CLOUD.plist && !Array.isArray(CLOUD.plist)) CLOUD.plist = Object.values(CLOUD.plist);
+    setSync(true);
+    render();
+  }, () => setSync(false));
+}
+function resetTodo(){
+  if(!confirm('¿Borrar todos los estados y compromisos agregados? Afecta a TODOS los usuarios.')) return;
+  CLOUD = {};
+  if(dbref) dbref.remove();
+  ['est','extra','resp','del','fp','fi','t','ppl','plist','nuevo'].forEach(k => localStorage.removeItem(LSK + k));
+  render();
+}
+
+// ---------- zoom (se guarda por equipo/navegador) ----------
+let ZOOM = parseFloat(localStorage.getItem('foroZoom') || '0') || (window.innerWidth < 1100 ? 0.7 : 1);
+function applyZoom(){
+  document.body.style.zoom = ZOOM;
+  const el = document.getElementById('zoomlab');
+  if(el) el.textContent = Math.round(ZOOM * 100) + '%';
+}
+function setZoom(d){
+  ZOOM = Math.min(1.3, Math.max(0.5, Math.round((ZOOM + d) * 100) / 100));
+  localStorage.setItem('foroZoom', ZOOM);
+  applyZoom();
+}
+applyZoom();
+
+// ---------- utilidades ----------
+const pf = f => { const m = /^(\d{2})\.(\d{2})\.(\d{2})$/.exec(f || ''); return m ? '20' + m[3] + '-' + m[2] + '-' + m[1] : null; };
+const dias = (a, b) => Math.round((new Date(b) - new Date(a)) / 864e5);
+const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+
+// ---------- responsables (lista viva compartida: agregar, renombrar, quitar) ----------
+function peopleList(){
+  const pl = read('plist', null);
+  if(pl && pl.length) return pl;
+  return PARTICIPANTES.concat(read('ppl', []).filter(p => !PARTICIPANTES.includes(p)));
+}
+function personRow(p, i, ctx, checked){
+  const onch = ctx === 'form' ? 'onchange="updRespBox()"' : '';
+  return `<label><input type="checkbox" value="${esc(p)}" ${checked ? 'checked' : ''} ${onch}>${esc(p)}` +
+    `<span class="pact"><span title="Renombrar" onclick="event.preventDefault(); event.stopPropagation(); renamePerson(${i},'${ctx}')">✎</span>` +
+    `<span class="px" title="Quitar de la lista" onclick="event.preventDefault(); event.stopPropagation(); removePerson(${i},'${ctx}')">✕</span></span></label>`;
+}
+function listHTML(ctx, checkedList){
+  const addId = ctx === 'form' ? 'np_form' : 'np_pop';
+  return `<div class="addp" style="margin:0 0 8px; padding:0 0 8px; border-top:none; border-bottom:1px solid var(--zebra);">` +
+    `<input id="${addId}" placeholder="✚ Agregar otro responsable…"><button type="button" onclick="newPerson('${ctx}')">+</button></div>` +
+    peopleList().map((p, i) => personRow(p, i, ctx, checkedList.includes(p))).join('');
+}
+function checkedOf(ctx){
+  const sel = ctx === 'form' ? '#f_plist input[type=checkbox]:checked' : '#pop .chk input[type=checkbox]:checked';
+  return [...document.querySelectorAll(sel)].map(i => i.value);
+}
+function refreshList(ctx, checkedList){
+  const cont = ctx === 'form' ? document.getElementById('f_plist') : document.querySelector('#pop .chk');
+  if(cont) cont.innerHTML = listHTML(ctx, checkedList);
+  if(ctx === 'form') updRespBox();
+}
+function newPerson(ctx){
+  const inp = document.getElementById(ctx === 'form' ? 'np_form' : 'np_pop');
+  const v = (inp.value || '').trim();
+  if(!v) return;
+  const marcados = checkedOf(ctx).concat([v]);
+  if(!peopleList().includes(v)) store('plist', peopleList().concat([v]));
+  refreshList(ctx, marcados);
+}
+function renamePerson(i, ctx){
+  const old = peopleList()[i];
+  const nu = prompt('Nuevo nombre para "' + old + '":', old);
+  if(!nu || !nu.trim() || nu.trim() === old) return;
+  const v = nu.trim();
+  const marcados = checkedOf(ctx).map(p => p === old ? v : p);
+  store('plist', peopleList().map(p => p === old ? v : p));
+  // actualiza los compromisos que lo tienen asignado
+  const respMap = read('resp', {});
+  BASE.concat(read('extra', [])).forEach(c => {
+    const cur = (respMap[c.n] || c.r).split('/').map(s => s.trim());
+    if(cur.includes(old)) storeKey('resp', c.n, cur.map(p => p === old ? v : p).join(' / '));
+  });
+  refreshList(ctx, marcados);
+  render();
+}
+function removePerson(i, ctx){
+  const p = peopleList()[i];
+  if(!confirm('¿Quitar a "' + p + '" de la lista? (no modifica los compromisos ya asignados)')) return;
+  const marcados = checkedOf(ctx).filter(x => x !== p);
+  store('plist', peopleList().filter(x => x !== p));
+  refreshList(ctx, marcados);
+}
+
+const sel = document.getElementById('foro');
+FOROS.forEach(f => sel.add(new Option(f.lbl, f.iso)));
+(function(){
+  const hoy = new Date().toISOString().slice(0, 10);
+  let pick = FOROS[0].iso;
+  FOROS.forEach(f => { if(f.iso <= hoy) pick = f.iso; });
+  sel.value = pick;
+})();
+
+// ---------- modelo ----------
+function items(){
+  const F = sel.value;
+  const est = read('est', {}), resp = read('resp', {}), nvo = read('nuevo', {});
+  const all = BASE.map(c => ({...c})).concat(read('extra', []).map((c, i) => ({...c, extraIdx: i})));
+  const out = [];
+  all.forEach(c => {
+    if(est[c.n]){ c.e = est[c.n].e; c.closedAt = est[c.n].closedAt; }
+    if(resp[c.n]) c.r = resp[c.n];
+    if(read('del', {})[c.n]) return;                        // eliminado por el usuario
+    const fpo = read('fp', {}); if(fpo[c.n]) c.fp = fpo[c.n];
+    const fio = read('fi', {}); if(fio[c.n]) c.fi = fio[c.n];
+    const tto = read('t', {});  if(tto[c.n]) c.t = tto[c.n];
+    if(c.foro > F) return;                                  // aún no existía
+    // cerrado: visible en el foro donde se cerró; omitido en los siguientes
+    if(c.e === 'cerrado' && c.closedAt && c.closedAt < F) return;
+    const ov = nvo[c.n + '@' + F];
+    c.esNuevo = (ov !== undefined && ov !== null) ? !!ov : (c.foro === F);
+    c.atraso = (!['cerrado','informativo'].includes(c.e) && pf(c.fp) && pf(c.fp) < F) ? dias(pf(c.fp), F) : 0;
+    out.push(c);
+  });
+  // informativos siempre arriba; el resto conserva su orden por fecha de inicio (cambiar estado NO mueve la fila)
+  const rank = c => c.e === 'informativo' ? 0 : 1;
+  out.sort((a, b) => rank(a) - rank(b) || (pf(a.fi) || a.foro).localeCompare(pf(b.fi) || b.foro));
+  return out;
+}
+function curEstado(n){
+  const m = read('est', {});
+  if(m[n]) return m[n].e;
+  const b = BASE.find(c => c.n === n) || read('extra', []).find(c => c.n === n);
+  return b ? b.e : 'pendiente';
+}
+function setEstado(n, e){
+  const cur = curEstado(n);
+  if(cur === e) e = (e === 'informativo') ? 'pendiente' : 'informativo';  // doble clic -> informativo; informativo de nuevo -> pendiente
+  storeKey('est', n, {e, closedAt: e === 'cerrado' ? sel.value : null});
+  render();
+}
+function delExtra(i){ const ex = read('extra', []); ex.splice(i, 1); store('extra', ex); render(); }
+function delComp(n, i){
+  if(!confirm('¿Eliminar este compromiso de forma permanente?')) return;
+  if(i !== undefined){ delExtra(i); return; }
+  storeKey('del', n, true);
+  render();
+}
+
+// ---------- agregar compromiso ----------
+function toggleForm(){
+  const f = document.getElementById('addForm');
+  f.style.display = f.style.display === 'block' ? 'none' : 'block';
+  if(f.style.display === 'block'){
+    document.getElementById('f_plist').innerHTML = listHTML('form', []);
+    updRespBox();
+    document.getElementById('f_fp').value = '';
+  }
+}
+function togglePlist(ev){
+  ev.stopPropagation();
+  const pl = document.getElementById('f_plist');
+  pl.style.display = pl.style.display === 'block' ? 'none' : 'block';
+}
+function updRespBox(){
+  const v = checkedOf('form');
+  document.getElementById('f_respBox').textContent = v.length ? v.join(' / ') : 'Seleccionar…';
+}
+function addComp(){
+  const t = document.getElementById('f_txt').value.trim();
+  const r = checkedOf('form').join(' / ');
+  if(!t){ alert('Escribe el compromiso'); return; }
+  if(!r){ alert('Selecciona responsable(s)'); return; }
+  const F = sel.value;
+  const ddmmaa = iso => iso ? iso.slice(8, 10) + '.' + iso.slice(5, 7) + '.' + iso.slice(2, 4) : '—';
+  const ex = read('extra', []);
+  ex.push({n: 'N' + String(Date.now()).slice(-7), t, r, fi: ddmmaa(F),
+           fp: ddmmaa(document.getElementById('f_fp').value), foro: F, e: 'pendiente'});
+  store('extra', ex);
+  document.getElementById('f_txt').value = '';
+  document.getElementById('addForm').style.display = 'none';
+  render();
+}
+
+// ---------- editar compromiso (lápiz) ----------
+function editComp(ev, n){
+  ev.stopPropagation();
+  const c = items().find(x => x.n === n);
+  if(!c) return;
+  const curResp = c.r.split('/').map(s => s.trim());
+  const pop = document.getElementById('pop');
+  pop.innerHTML =
+    `<span class="flab">Compromiso</span><textarea id="e_t">${esc(c.t)}</textarea>` +
+    `<span class="flab">Responsable(s)</span><div class="chk">` + listHTML('pop', curResp) + `</div>` +
+    `<span class="flab">F. Inicio</span><input type="date" id="e_fi" value="${pf(c.fi) || ''}">` +
+    `<span class="flab">F. Plan</span><input type="date" id="e_fp" value="${pf(c.fp) || ''}">` +
+    `<label style="margin-top:12px;"><input type="checkbox" id="e_nuevo" ${c.esNuevo ? 'checked' : ''} style="width:auto">` +
+    ` Destacar como <span class="badge-new" style="margin-left:2px;">NUEVO</span> en este foro</label>` +
+    `<button class="okbtn" onclick="saveComp('${n}')">Guardar cambios</button>`;
+  pop.style.display = 'block';
+  pop.style.minWidth = '310px';
+  pop.style.left = Math.min(ev.pageX / ZOOM - 150, window.innerWidth / ZOOM - 350) + 'px';
+  pop.style.top = (ev.pageY / ZOOM + 10) + 'px';
+}
+function saveComp(n){
+  const ddmmaa = iso => iso ? iso.slice(8, 10) + '.' + iso.slice(5, 7) + '.' + iso.slice(2, 4) : null;
+  const t = document.getElementById('e_t').value.trim();
+  const r = checkedOf('pop').join(' / ');
+  const fi = ddmmaa(document.getElementById('e_fi').value);
+  const fp = ddmmaa(document.getElementById('e_fp').value);
+  if(t) storeKey('t', n, t);
+  if(r) storeKey('resp', n, r);
+  if(fi) storeKey('fi', n, fi);
+  if(fp) storeKey('fp', n, fp);
+  storeKey('nuevo', n + '@' + sel.value, document.getElementById('e_nuevo').checked);
+  document.getElementById('pop').style.display = 'none';
+  render();
+}
+document.addEventListener('click', e => {
+  if(!e.target.closest('#pop') && !e.target.closest('.edit')) document.getElementById('pop').style.display = 'none';
+  if(!e.target.closest('.respPick')) document.getElementById('f_plist').style.display = 'none';
+});
+
+// ---------- render ----------
+function render(){
+  const all = items();
+  const foroLbl = FOROS.find(f => f.iso === sel.value).lbl;
+  document.getElementById('tableTitle').textContent = 'Compromisos · ' + foroLbl;
+  // tabla
+  const tb = document.getElementById('tbody'); tb.innerHTML = '';
+  all.forEach((c, idx) => {
+    const btns = c.e === 'informativo'
+      ? `<button class="on-informativo" title="Clic para volver a Pendiente" onclick="setEstado('${c.n}','informativo')">ℹ Informativo</button>`
+      : ESTADOS.map(([id, lbl]) =>
+      `<button class="${c.e === id ? 'on-' + id : ''}" title="${c.e === id ? 'Clic de nuevo para marcar Informativo' : ''}" onclick="setEstado('${c.n}','${id}')">${lbl}</button>`).join('');
+    const del = `<span class="del" title="Eliminar compromiso" onclick="delComp('${c.n}', ${c.extraIdx !== undefined ? c.extraIdx : 'undefined'})">✕</span>`;
+    const acts = `<div class="rowacts"><span class="edit" title="Editar compromiso" onclick="editComp(event,'${c.n}')">✎</span>${del}</div>`;
+    const badge = c.esNuevo ? '<span class="badge-new">NUEVO</span>' : '';
+    const atr = c.atraso > 0 ? `<span class="atraso">▲ ${c.atraso} d</span>` : '<span class="muted">—</span>';
+    const tr = document.createElement('tr');
+    if(c.esNuevo) tr.className = 'is-new';
+    tr.innerHTML = `<td class="muted">${String(idx + 1).padStart(2, '0')}</td><td>${c.t}${badge}</td>` +
+      `<td style="font-size:11.5px">${c.r}</td>` +
+      `<td class="muted">${c.fi}</td><td class="muted">${c.fp}</td><td>${atr}</td>` +
+      `<td><div class="estado-btns">${btns}</div></td><td>${acts}</td>`;
+    tb.appendChild(tr);
+  });
+  // chips
+  const q = id => all.filter(c => c.e === id).length;
+  const nuevos = all.filter(c => c.esNuevo).length;
+  document.getElementById('chips').innerHTML =
+    `<div class="chip total"><div class="lab">Compromisos en este foro</div><div class="num">${all.length}</div></div>` +
+    `<div class="chip"><div class="lab">Pendientes</div><div class="num n-pendiente">${q('pendiente')}</div></div>` +
+    `<div class="chip"><div class="lab">En Progreso</div><div class="num n-progreso">${q('progreso')}</div></div>` +
+    `<div class="chip"><div class="lab">Cerrados en el foro</div><div class="num n-cerrado">${q('cerrado')}</div></div>` +
+    `<div class="chip"><div class="lab">Nuevos del foro</div><div class="num n-nuevo">${nuevos}</div></div>`;
+  // dona
+  const svg = document.getElementById('donut');
+  const R = 48, CX = 65, CY = 65, CIRC = 2 * Math.PI * R;
+  const pct = all.length ? Math.round(q('cerrado') / all.length * 100) : 0;
+  let off = 0, segs = '';
+  ALLSTATES.forEach(([id, , col]) => {
+    const frac = all.length ? q(id) / all.length : 0;
+    if(frac > 0){
+      segs += `<circle r="${R}" cx="${CX}" cy="${CY}" fill="none" stroke="${col}" stroke-width="16" ` +
+        `stroke-dasharray="${frac * CIRC} ${CIRC}" stroke-dashoffset="${-off * CIRC}" transform="rotate(-90 ${CX} ${CY})"></circle>`;
+      off += frac;
+    }
+  });
+  svg.innerHTML = `<circle r="${R}" cx="${CX}" cy="${CY}" fill="none" stroke="#F6F8F9" stroke-width="16"></circle>` + segs +
+    `<text x="${CX}" y="${CY - 2}" text-anchor="middle" class="donut-num">${pct}%</text>` +
+    `<text x="${CX}" y="${CY + 14}" text-anchor="middle" class="donut-center">cierre</text>`;
+  document.getElementById('dleg').innerHTML = ALLSTATES.map(([id, lbl, col]) =>
+    `<div><i style="background:${col}"></i>${lbl}: <b>${q(id)}</b></div>`).join('');
+  // por responsable
+  const resp = {};
+  all.forEach(c => c.r.split('/').map(s => s.trim()).forEach(r => (resp[r] = resp[r] || []).push(c.e)));
+  const max = Math.max(1, ...Object.values(resp).map(v => v.length));
+  document.getElementById('resps').innerHTML = Object.entries(resp)
+    .sort((a, b) => b[1].length - a[1].length).map(([r, lst]) => {
+      const seg = ALLSTATES.map(([id, , col]) => {
+        const k = lst.filter(x => x === id).length;
+        return k ? `<div class="b-${id}" style="width:${k / max * 100}%"></div>` : '';
+      }).join('');
+      const pend = lst.filter(x => x === 'pendiente').length;
+      return `<div class="resp-row"><div class="name"><span>${r}</span>` +
+        `<small>${lst.length}${pend ? ' · ' + pend + ' pend.' : ''}</small></div><div class="bar">${seg}</div></div>`;
+    }).join('');
+  // próximos vencimientos
+  const pend = all.filter(c => !['cerrado','informativo'].includes(c.e) && pf(c.fp)).sort((a, b) => pf(a.fp).localeCompare(pf(b.fp))).slice(0, 5);
+  document.getElementById('vencs').innerHTML = pend.length
+    ? pend.map(c => `<div class="venc"><span>${c.t.slice(0, 52)}${c.t.length > 52 ? '…' : ''}</span><b>${c.fp}</b></div>`).join('')
+    : '<div class="muted">Sin vencimientos pendientes</div>';
+}
+render();
+</script>
+</body>
+</html>
