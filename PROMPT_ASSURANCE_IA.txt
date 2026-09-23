@@ -1,5 +1,5 @@
 Adjunto dos archivos:
-1) FORMATO_ASSURANCE_ITO_v1.2.pptx: plantilla del Assurance.
+1) FORMATO_ASSURANCE_ITO_v1.3.pptx: plantilla del Assurance.
 2) El Excel de eventos de seguridad (hoja "Export").
 
 Tu tarea es preparar el Assurance del turno entrante completando la lámina 1 de la plantilla.
@@ -16,10 +16,13 @@ PASO 2 – Datos de este Assurance:
 - Proyecto / EECC: [dato o dejar en blanco]
 - Área / Sector: [dato o dejar en blanco]
 
-PASO 3 – Arma el Assurance siguiendo las instrucciones del formato. El resultado debe quedar lo más parecido posible al Assurance de la gerencia que viene como ejemplo resuelto en el punto 16 de las instrucciones (misma agrupación, orden, formato de eventos, estilo y nivel de detalle). En especial:
+PASO 3 – Arma el Assurance siguiendo las instrucciones del formato. El resultado debe quedar lo más parecido posible al Assurance de la gerencia que vienen como ejemplos resueltos en los puntos 16 y 17 de las instrucciones (misma agrupación, orden, formato de eventos, estilo y nivel de detalle). En especial:
 - NIVEL (N1/N2, color) y PRIORIDAD (orden de los focos) son dos cosas distintas.
-- Prioridad: 1° N1 con reiteración/evidencia, 2° N1 aislados, 3° N2 con reiteración/evidencia, 4° N2 aislados.
-- Los HBP (N3) nunca generan un foco, pero sí pueden ir como evidencia complementaria de un foco y en la franja Recurrente.
+- Nivel: N1 = ACC, CAAP o 2 o más HAP/CBP del mismo tema; N2 = un solo HAP o CBP, o foco de solo HBP.
+- Prioridad: todo N1 antes que todo N2 (orden detallado en el punto 4 de las instrucciones).
+- Los HBP no definen nivel: van como evidencia complementaria, en Recurrente y, solo para completar filas, un tema HBP reiterado puede ser foco N2.
+- Áreas: nombres exactos de AREA_GEO. Bloque PM: primero los eventos que seguían abiertos a la fecha de cierre.
+- Reemplaza el título por "ASSURANCE TURNO 1-3" o "ASSURANCE TURNO 2-4".
 - Agrupa por brecha específica leyendo título y descripción; nunca uses "Otro riesgo de seguridad" como tema.
 - Cada foco debe ser una instrucción muy específica para el turno entrante (dónde, qué, qué control, quién y cuándo).
 - La fila 5 (SI PRO) se deja tal cual.
