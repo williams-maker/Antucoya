@@ -25,7 +25,8 @@ La clasificación se basa en las categorías N1, N2 y N3, según el nivel de rie
 - Verifica que ACC + CAAP + HAP + CBP = Total.
 
 3. SELECCIÓN DE FOCOS (filas 1 a 4)
-- Los focos nacen de los eventos N1/N2 del período (ACC, CAAP, HAP, CBP).
+- Antes de agrupar, lee la "Descripción" de todos los eventos y aplica la revaloración del punto 4: un HBP revalorizado a HAP o CA pasa a ser un evento N1/N2 y puede originar un foco o contar para la reiteración.
+- Los focos nacen de los eventos N1/N2 del período (ACC, CAAP, HAP, CBP, incluidos los revalorizados).
 - TEMA = brecha o control específico, NO la categoría general de riesgo. Ej.: "plan de izaje por maniobra", "segregación y comunicación en izaje", "certificación de elementos de izaje y línea de fuego", "inspección pre-uso de vehículos y equipos", "liberación de andamios", "tableros eléctricos", "equipos de emergencia". Si un mismo riesgo tiene brechas distintas, van en focos distintos.
 - Para asignar el tema lee "Titulo" y "Descripción" de cada evento, no solo "RIESGO INVOLUCRADO": más del 70% de los eventos dice "Otro riesgo de seguridad" pero sí pertenece a un tema. Ojo: el título puede traer un prefijo distinto a la clasificación real (p. ej., un HBP titulado "CBP - …"); manda la clasificación de las columnas. PROHIBIDO usar "Otro", "Otro riesgo de seguridad" o "Sin Información" como tema en focos, Recurrente o tendencias.
 - EVIDENCIA COMPLEMENTARIA (HBP): después de definir los focos, agrega a cada uno los HBP del período que correspondan a la misma brecha. Sus detalles (equipo, lugar, condición) hacen más específica la instrucción. Un HBP no cambia el nivel del foco.
@@ -34,22 +35,24 @@ La clasificación se basa en las categorías N1, N2 y N3, según el nivel de rie
 
 4. NIVEL Y PRIORIDAD – SON DOS COSAS DISTINTAS
 NIVEL = criticidad del foco. Determina el texto y el COLOR de la celda.
-  - N1 · CRITICIDAD ALTA (celda roja C62828) si el foco tiene: un ACC (con lesión o daño material), o un CAAP, o un CBP revalorizado como CA, o 2 o más eventos N1/N2 del mismo tema (reiteración: p. ej., HAP + CBP, o HAP + HAP).
+  - N1 · CRITICIDAD ALTA (celda roja C62828) si el foco tiene: un ACC (con lesión o daño material), o un CAAP, o un evento revalorizado como CA, o 2 o más eventos N1/N2 del mismo tema (reiteración: p. ej., HAP + CBP, o HAP + HAP).
   - N2 · CRITICIDAD INTERMEDIA (celda naranja E67E22) si el foco tiene un solo evento N1/N2 (HAP o CBP), con o sin HBP complementarios, o si es un foco de solo HBP (3 o más HBP del mismo tema, punto 3).
   - Los HBP nunca cuentan para definir el nivel.
   - Gravedad de los tipos de evento: ACC con lesión > ACC con daño material > CAAP > CBP > HAP > HBP.
-REVALORACIÓN DE POTENCIAL – CBP → CA (criterio de la gerencia)
-  - Un CBP se trata como CA (cuasi accidente de alto potencial, equivalente a CAAP: N1) cuando su "Descripción" muestra a una persona efectivamente expuesta a: (1) línea de fuego de un equipo o vehículo en movimiento (p. ej., retroceso, aculatamiento, giro), (2) carga suspendida, o (3) energía peligrosa energizada (eléctrica, presión). Ej.: CBP 549924 – rigger a 2 m de un camión pluma en retroceso, sin radio → la gerencia lo registró como "CA ID 549924".
-  - NO se revaloriza por riesgos solo potenciales o sin exposición concreta descrita (p. ej., CBP 554227, retiro de eslinga en borde de zanja sin altura indicada, se mantuvo como CBP).
-  - En la columna Evento se escribe "CA ID [N°] – EMPRESA: …". Para el nivel y la prioridad cuenta como CAAP. En la franja de indicadores se mantiene la clasificación del Excel (sigue contándose como CBP).
-  - Toda revalorización debe informarse al usuario en el control de calidad (ID, clasificación original y motivo). Ante la duda, no revalorices y menciónalo como posible CA.
+LECTURA DE LA DESCRIPCIÓN Y REVALORACIÓN DE CRITICIDAD (obligatorio)
+  - La clasificación del Excel es el punto de partida, no la palabra final. Lee la "Descripción" de TODOS los eventos del período (incluidos los HBP) y evalúa si lo descrito es más grave que su clasificación. Un evento solo puede SUBIR de criticidad, nunca bajar.
+  - Sube a CA (cuasi accidente de alto potencial; cuenta como CAAP → N1) cualquier CBP, HAP o HBP cuya descripción muestre a una persona EFECTIVAMENTE EXPUESTA a un riesgo con potencial grave o fatal: (1) línea de fuego de un equipo o vehículo en movimiento (retroceso, aculatamiento, giro); (2) carga suspendida; (3) energía peligrosa energizada (eléctrica, presión, térmica); (4) trabajo en altura sin protección contra caídas; (5) ingreso o trabajo en zanja/excavación sin protección o sin autorización; (6) atmósfera peligrosa o espacio confinado sin control. Ej.: CBP 549924 – rigger a 2 m de un camión pluma en retroceso, sin radio → la gerencia lo registró como "CA ID 549924".
+  - Sube a HAP (hallazgo de alto potencial → N2) un HBP cuya descripción muestre un CONTROL CRÍTICO no implementado o erosionado MIENTRAS se ejecutaba la tarea de riesgo crítico, aunque nadie haya quedado expuesto (p. ej., izaje en curso con accesorio sin certificar; trabajo en altura en curso con plataforma sin baranda; intervención eléctrica sin bloqueo). La columna "CONTROL CRITICO" con "(C.C.)" es un indicio, no una condición suficiente.
+  - NO se revaloriza (mantener la clasificación del Excel): condiciones detectadas en inspección sin tarea de riesgo en curso y sin persona expuesta, riesgos solo potenciales o descripciones sin exposición concreta. Ejemplos en que la gerencia NO revalorizó: CBP 554227 (retiro de eslinga en borde de zanja, sin altura indicada) se mantuvo CBP; HBP 549965 (plataforma de acceso sin rodapiés) y HBP 549552 (extintores despresurizados) se mantuvieron HBP.
+  - Cómo se escribe: en la columna Evento, el tipo revalorizado: "CA ID [N°] – EMPRESA: …" o "HAP ID [N°] (rev.) – EMPRESA: …". Para selección de focos, reiteración, nivel y prioridad se usa el tipo revalorizado. En la franja de indicadores se mantiene la clasificación del Excel, para que los totales cuadren con la data.
+  - Toda revalorización debe informarse al usuario en el control de calidad (ID, clasificación original, nueva clasificación y la frase de la descripción que la justifica). Ante la duda, NO revalorices y menciónalo como "posible revalorización" para que el usuario decida.
 PRIORIDAD = orden del foco en la tabla (foco 1 = primera fila). Es el número que va en la celda.
   - Primero todos los focos N1 y después todos los N2.
   - Dentro de N1: (a) focos con 2 o más eventos N1/N2 antes que los de un solo evento (ACC o CAAP aislado); (b) luego, el foco cuyo evento más grave sea de mayor gravedad; (c) luego, más eventos en total; (d) luego, el evento más reciente.
   - Dentro de N2: (a) focos con un evento N1/N2 antes que focos de solo HBP; (b) luego, más eventos en total contando los HBP complementarios (repetición); (c) luego, mayor gravedad; (d) luego, el evento más reciente.
 Comprobación con los Assurance de la gerencia:
   - Cierre 20-09: 1° Izaje – plan (CAAP + HAP, N1) · 2° Izaje – segregación (HAP + CBP, N1: el CAAP es más grave que el CBP) · 3° Vehículos y equipos (HAP + 3 HBP, N2) · 4° Andamios (CBP + 1 HBP, N2: menos eventos que el 3°).
-  - Cierre 08-09: 1° Izaje – certificación y línea de fuego (HAP + CA 549924, N1: el CBP se revaloriza a CA por línea de fuego) · 2° Andamios (HAP + HAP + 2 HBP, N1 por reiteración; su evento más grave es HAP, menos grave que el CA del 1°) · 3° Tableros eléctricos (HAP + 3 HBP, N2). La gerencia agregó un 4° foco de equipos de emergencia con solo 2 HBP: con nuestra regla NO va, porque se necesitan 3 o más HBP del mismo tema. En su lugar entra, si califica, el tema HBP con 3 o más eventos (ver ejemplo 2).
+  - Cierre 08-09: 1° Izaje – certificación y línea de fuego (HAP + CA 549924, N1: el CBP se revaloriza a CA por la descripción: rigger expuesto a línea de fuego) · 2° Andamios (HAP + HAP + 2 HBP, N1 por reiteración; su evento más grave es HAP, menos grave que el CA del 1°) · 3° Tableros eléctricos (HAP + 3 HBP, N2). La gerencia agregó un 4° foco de equipos de emergencia con solo 2 HBP: con nuestra regla NO va, porque se necesitan 3 o más HBP del mismo tema. En su lugar entra, si califica, el tema HBP con 3 o más eventos (ver ejemplo 2).
 - Texto de la celda: número de prioridad + "N1 · CRITICIDAD ALTA" o "N2 · CRITICIDAD INTERMEDIA". Ajusta texto y color de cada fila al nivel real (la plantilla trae 3 filas N1 y 1 N2 solo como referencia).
 
 5. FILA 5 – FOCO SI PRO · ESTRATEGIA DE CONTROLES (fila fija, gris)
@@ -65,7 +68,7 @@ Comprobación con los Assurance de la gerencia:
 
 7. EVENTO / EVIDENCIA ORIGEN (formato de la gerencia)
 - Primero los eventos N1/N2 del foco, del más grave al menos grave; después los HBP complementarios (máximo 3; si hay más, agrega "+ N HBP más"). Foco aislado: su único evento + "(evento aislado)".
-- Formato fijo por evento, igual que la gerencia: "TIPO ID 555505 – EMPRESA:" (en negrita) + qué ocurrió, en una frase concreta de hasta 120 caracteres con los datos del evento (equipo, carga, lugar, medida). TIPO = ACC, CAAP, CA (CBP revalorizado, punto 4), HAP, CBP o HBP. Sin marca de turno.
+- Formato fijo por evento, igual que la gerencia: "TIPO ID 555505 – EMPRESA:" (en negrita) + qué ocurrió, en una frase concreta de hasta 120 caracteres con los datos del evento (equipo, carga, lugar, medida). TIPO = ACC, CAAP, CA (revalorizado, punto 4), HAP, HAP (rev.), CBP o HBP. Sin marca de turno.
 - Si dos HBP describen lo mismo, júntalos: "HBP ID 554110 / 556748: generadores sin horómetro ni responsable."
 
 8. HERRAMIENTA PREVENTIVA SGE (explicar qué se tiene que realizar durante el turno)
@@ -105,9 +108,9 @@ Comprobación con los Assurance de la gerencia:
 Al final de tu respuesta incluye un resumen breve con:
 - total de eventos leídos del período y cuántos de cada tipo (ACC, CAAP, HAP, CBP, HBP);
 - eventos N1/N2 y HBP complementarios usados en cada foco, y los N1/N2 que quedaron fuera, con el motivo;
-- CBP revalorizados como CA (ID, clasificación original y motivo) y posibles CA que no revalorizaste;
+- eventos revalorizados (ID, clasificación original → nueva, y la frase de la descripción que lo justifica) y posibles revalorizaciones que dejaste a decisión del usuario;
 - datos faltantes o inconsistentes y supuestos realizados.
-Antes de entregar, confirma que: el título dice "ASSURANCE TURNO 1-3" o "ASSURANCE TURNO 2-4" (sin corchetes); cada ID existe en el Excel; el nivel de cada foco sigue el punto 4 (2 o más eventos N1/N2 = N1); las áreas son nombres exactos de AREA_GEO; revisaste los eventos abiertos a la fecha de cierre; cada foco nace de al menos un evento N1/N2, salvo los focos de solo HBP, que tienen 3 o más HBP del mismo tema; todos los focos N1 van antes que los N2; dentro de cada nivel, los focos con reiteración/evidencia van antes que los aislados y se ordenan como indica el punto 4; ningún tema se llama "Otro"; los eventos con riesgo "Otro" fueron asignados a un tema leyendo su descripción; cada foco contiene al menos un dato concreto de sus eventos; el NIVEL (color) y la PRIORIDAD (orden) de cada foco siguen el punto 4; ningún HBP definió un nivel; los conteos de indicadores y Recurrente cuadran; y no quedan textos guía.
+Antes de entregar, confirma que: el título dice "ASSURANCE TURNO 1-3" o "ASSURANCE TURNO 2-4" (sin corchetes); cada ID existe en el Excel; el nivel de cada foco sigue el punto 4 (2 o más eventos N1/N2 = N1); las áreas son nombres exactos de AREA_GEO; revisaste los eventos abiertos a la fecha de cierre; leíste la descripción de todos los eventos y aplicaste la revaloración del punto 4; cada foco nace de al menos un evento N1/N2, salvo los focos de solo HBP, que tienen 3 o más HBP del mismo tema; todos los focos N1 van antes que los N2; dentro de cada nivel, los focos con reiteración/evidencia van antes que los aislados y se ordenan como indica el punto 4; ningún tema se llama "Otro"; los eventos con riesgo "Otro" fueron asignados a un tema leyendo su descripción; cada foco contiene al menos un dato concreto de sus eventos; el NIVEL (color) y la PRIORIDAD (orden) de cada foco siguen el punto 4; ningún HBP definió un nivel; los conteos de indicadores y Recurrente cuadran; y no quedan textos guía.
 
 16. EJEMPLO RESUELTO 1 – ASSURANCE REAL DE LA GERENCIA, CIERRE 20-09 (modelo a imitar)
 Datos: período del 10 al 23 SEP 2026. Eventos N1/N2: CAAP 555505, HAP 555358, HAP 556119, HAP 553767, CBP 554227, CBP 554901. Así lo armó la gerencia (texto real; el nivel y el orden ya aplican las reglas N1/N2 y de prioridad de este formato):
