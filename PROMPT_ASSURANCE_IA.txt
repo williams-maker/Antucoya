@@ -1,5 +1,5 @@
 Adjunto dos archivos:
-1) FORMATO_ASSURANCE_ITO_v1.1.pptx: plantilla del Assurance.
+1) FORMATO_ASSURANCE_ITO_v1.2.pptx: plantilla del Assurance.
 2) El Excel de eventos de seguridad (hoja "Export").
 
 Tu tarea es preparar el Assurance del turno entrante completando la lámina 1 de la plantilla.
@@ -12,15 +12,15 @@ PASO 2 – Datos de este Assurance:
 - Turno ENTRANTE (para el que se prepara el Assurance): [1-3 o 2-4]
 - Vigencia del turno entrante: del [DD] al [DD] [MES]
 - Fecha de cierre de los datos: [DD MES AAAA]  (se analizan los 14 días que terminan en esta fecha)
-- Turno que trabajó en el período de los datos (turno saliente): [1-3 o 2-4]
 - Inspector ITO: [nombre o dejar en blanco]
 - Proyecto / EECC: [dato o dejar en blanco]
 - Área / Sector: [dato o dejar en blanco]
 
-PASO 3 – Arma el Assurance siguiendo las instrucciones del formato, en especial:
+PASO 3 – Arma el Assurance siguiendo las instrucciones del formato. El resultado debe quedar lo más parecido posible al Assurance de la gerencia que viene como ejemplo resuelto en el punto 16 de las instrucciones (misma agrupación, orden, formato de eventos, estilo y nivel de detalle). En especial:
 - NIVEL (N1/N2, color) y PRIORIDAD (orden de los focos) son dos cosas distintas.
-- Prioridad: 1° N1 reiterados, 2° N1 aislados, 3° N2 reiterados, 4° N2 aislados.
-- Los HBP (N3) no son foco; solo van en la franja Recurrente.
+- Prioridad: 1° N1 con reiteración/evidencia, 2° N1 aislados, 3° N2 con reiteración/evidencia, 4° N2 aislados.
+- Los HBP (N3) nunca generan un foco, pero sí pueden ir como evidencia complementaria de un foco y en la franja Recurrente.
+- Agrupa por brecha específica leyendo título y descripción; nunca uses "Otro riesgo de seguridad" como tema.
 - Cada foco debe ser una instrucción muy específica para el turno entrante (dónde, qué, qué control, quién y cuándo).
 - La fila 5 (SI PRO) se deja tal cual.
 
