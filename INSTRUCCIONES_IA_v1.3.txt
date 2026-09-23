@@ -1,0 +1,189 @@
+INSTRUCCIONES PARA ASISTENTES IA – FORMATO ASSURANCE ITO v1.3
+
+OBJETIVO
+El resultado debe quedar lo más parecido posible al Assurance que prepara la gerencia: misma lógica de agrupación, mismo orden, mismo formato de eventos y mismo estilo y nivel de detalle en la redacción. Los puntos 16 y 17 traen dos Assurance reales de la gerencia como modelo: imítalos.
+Con el Excel de eventos de seguridad que entrega el usuario, completar la lámina 1 "PLANTILLA" de este archivo con los focos prioritarios de verificación en terreno para el turno y período indicados.
+
+NOTA METODOLÓGICA (criterio obligatorio)
+La clasificación se basa en las categorías N1, N2 y N3, según el nivel de riesgo/potencial de la desviación y el tratamiento que corresponde a cada una:
+- N1 · CRITICIDAD ALTA: situaciones de alta criticidad, asociadas a riesgos con potencial de consecuencias graves o fatales, que requieren intervención y gestión prioritaria. Incluye: accidentes con lesión a personas, accidentes con daño material (DM), cuasi accidentes de alto potencial (CAAP) y la REITERACIÓN de eventos N2 en una misma brecha (2 o más HAP/CBP del mismo tema).
+- N2 · CRITICIDAD INTERMEDIA: desviaciones de criticidad intermedia que requieren gestión y seguimiento según el riesgo identificado. Incluye: CBP (interacción próxima entre personas y la situación de riesgo) y HAP (hallazgos asociados a controles críticos no implementados o erosionados, antes de que se generen las interacciones).
+- N3: desviaciones de menor criticidad (HBP), que se resuelven con corrección inmediata o gestión directa en terreno. Los HBP no definen el nivel de un foco. Acompañan a los focos como evidencia complementaria, se usan en la franja RECURRENTE y un tema con 3 o más HBP puede ser foco N2 si queda una fila libre (ver punto 3). Con 1 o 2 HBP de un tema nunca se arma un foco.
+
+1. ENTRADAS Y DATOS
+- Excel de eventos: hoja "Export". Columnas: "ID del Evento", "Fecha Evento", "Empresa", "Clasificación", "Potencialidad", "Titulo", "Descripción", "RIESGO INVOLUCRADO", "CONTROL CRITICO", "AREA_GEO", "Fecha cierre evento". Si el Excel tiene otras columnas equivalentes, úsalas.
+- Tipo de evento: Clasificación "Accidente" = ACC (cualquier potencialidad; "DM" en el título = daño material). "Cuasi accidente" + "Alto Potencial" = CAAP. "Cuasi accidente" + "Bajo Potencial" = CBP. "Hallazgo" + "Alto Potencial" = HAP. "Hallazgo" + "Bajo Potencial" = HBP.
+- El Excel no trae el turno. El usuario debe indicar: (a) el turno ENTRANTE para el que se prepara el Assurance, (b) su período de vigencia y (c) la fecha de cierre de los datos. Si falta alguno, pregunta antes de completar.
+- Usa exclusivamente datos del Excel. Nunca inventes IDs, empresas, fechas, áreas ni eventos. Copia los IDs exactamente como aparecen.
+- Si falta un dato necesario, escribe [DATO FALTANTE] en esa casilla e infórmalo al usuario.
+- No incluyas nombres de personas; usa el cargo o rol (trabajador, rigger, operador, supervisor).
+
+2. INDICADORES 14 DÍAS (franja "EVENTOS ÚLTIMOS 14 DÍAS")
+- Período actual: la fecha de cierre y los 13 días previos, según "Fecha Evento". Escríbelo como "del DD al DD MES". Ej.: cierre 23 SEP → del 10 al 23 SEP.
+- Total N1+N2: suma de ACC + CAAP + HAP + CBP del período. Los HBP (N3) no se cuentan aquí.
+- vs. 14 días anteriores: Total N1+N2 de los 14 días inmediatamente previos, sin superponerse (en el ejemplo: del 27 AGO al 09 SEP), seguido de ▲ si el total actual es mayor, ▼ si es menor o = si es igual. Ej.: "5 ▲". Si el Excel no cubre ese período, escribe [DATO FALTANTE].
+- Verifica que ACC + CAAP + HAP + CBP = Total.
+
+3. SELECCIÓN DE FOCOS (filas 1 a 4)
+- Los focos nacen de los eventos N1/N2 del período (ACC, CAAP, HAP, CBP).
+- TEMA = brecha o control específico, NO la categoría general de riesgo. Ej.: "plan de izaje por maniobra", "segregación y comunicación en izaje", "certificación de elementos de izaje y línea de fuego", "inspección pre-uso de vehículos y equipos", "liberación de andamios", "tableros eléctricos", "equipos de emergencia". Si un mismo riesgo tiene brechas distintas, van en focos distintos.
+- Para asignar el tema lee "Titulo" y "Descripción" de cada evento, no solo "RIESGO INVOLUCRADO": más del 70% de los eventos dice "Otro riesgo de seguridad" pero sí pertenece a un tema. Ojo: el título puede traer un prefijo distinto a la clasificación real (p. ej., un HBP titulado "CBP - …"); manda la clasificación de las columnas. PROHIBIDO usar "Otro", "Otro riesgo de seguridad" o "Sin Información" como tema en focos, Recurrente o tendencias.
+- EVIDENCIA COMPLEMENTARIA (HBP): después de definir los focos, agrega a cada uno los HBP del período que correspondan a la misma brecha. Sus detalles (equipo, lugar, condición) hacen más específica la instrucción. Un HBP no cambia el nivel del foco.
+- FOCO DE SOLO HBP: solo si hay 3 o más HBP del período relacionados con la misma brecha y que no estén ya en otro foco. Con 1 o 2 HBP de un tema NUNCA se arma un foco (van como evidencia complementaria o en Recurrente). Estos focos son siempre N2, van después de todos los focos con eventos N1/N2 y solo entran si queda una fila libre (máx. 4 focos). Si hay varios temas HBP que califican, entra primero el de más HBP y, si empatan, el asociado a control crítico o emergencia. OJO: la gerencia al 08-09 puso un foco con solo 2 HBP (extintores); según esta regla ese foco NO va.
+- Máximo 4 focos. Si hay más, se quedan los de mayor PRIORIDAD (punto 4) y se informa al usuario cuáles quedaron fuera. Si hay menos, elimina las filas sobrantes (nunca la fila 5).
+
+4. NIVEL Y PRIORIDAD – SON DOS COSAS DISTINTAS
+NIVEL = criticidad del foco. Determina el texto y el COLOR de la celda.
+  - N1 · CRITICIDAD ALTA (celda roja C62828) si el foco tiene: un ACC (con lesión o daño material), o un CAAP, o un CBP revalorizado como CA, o 2 o más eventos N1/N2 del mismo tema (reiteración: p. ej., HAP + CBP, o HAP + HAP).
+  - N2 · CRITICIDAD INTERMEDIA (celda naranja E67E22) si el foco tiene un solo evento N1/N2 (HAP o CBP), con o sin HBP complementarios, o si es un foco de solo HBP (3 o más HBP del mismo tema, punto 3).
+  - Los HBP nunca cuentan para definir el nivel.
+  - Gravedad de los tipos de evento: ACC con lesión > ACC con daño material > CAAP > CBP > HAP > HBP.
+REVALORACIÓN DE POTENCIAL – CBP → CA (criterio de la gerencia)
+  - Un CBP se trata como CA (cuasi accidente de alto potencial, equivalente a CAAP: N1) cuando su "Descripción" muestra a una persona efectivamente expuesta a: (1) línea de fuego de un equipo o vehículo en movimiento (p. ej., retroceso, aculatamiento, giro), (2) carga suspendida, o (3) energía peligrosa energizada (eléctrica, presión). Ej.: CBP 549924 – rigger a 2 m de un camión pluma en retroceso, sin radio → la gerencia lo registró como "CA ID 549924".
+  - NO se revaloriza por riesgos solo potenciales o sin exposición concreta descrita (p. ej., CBP 554227, retiro de eslinga en borde de zanja sin altura indicada, se mantuvo como CBP).
+  - En la columna Evento se escribe "CA ID [N°] – EMPRESA: …". Para el nivel y la prioridad cuenta como CAAP. En la franja de indicadores se mantiene la clasificación del Excel (sigue contándose como CBP).
+  - Toda revalorización debe informarse al usuario en el control de calidad (ID, clasificación original y motivo). Ante la duda, no revalorices y menciónalo como posible CA.
+PRIORIDAD = orden del foco en la tabla (foco 1 = primera fila). Es el número que va en la celda.
+  - Primero todos los focos N1 y después todos los N2.
+  - Dentro de N1: (a) focos con 2 o más eventos N1/N2 antes que los de un solo evento (ACC o CAAP aislado); (b) luego, el foco cuyo evento más grave sea de mayor gravedad; (c) luego, más eventos en total; (d) luego, el evento más reciente.
+  - Dentro de N2: (a) focos con un evento N1/N2 antes que focos de solo HBP; (b) luego, más eventos en total contando los HBP complementarios (repetición); (c) luego, mayor gravedad; (d) luego, el evento más reciente.
+Comprobación con los Assurance de la gerencia:
+  - Cierre 20-09: 1° Izaje – plan (CAAP + HAP, N1) · 2° Izaje – segregación (HAP + CBP, N1: el CAAP es más grave que el CBP) · 3° Vehículos y equipos (HAP + 3 HBP, N2) · 4° Andamios (CBP + 1 HBP, N2: menos eventos que el 3°).
+  - Cierre 08-09: 1° Izaje – certificación y línea de fuego (HAP + CA 549924, N1: el CBP se revaloriza a CA por línea de fuego) · 2° Andamios (HAP + HAP + 2 HBP, N1 por reiteración; su evento más grave es HAP, menos grave que el CA del 1°) · 3° Tableros eléctricos (HAP + 3 HBP, N2). La gerencia agregó un 4° foco de equipos de emergencia con solo 2 HBP: con nuestra regla NO va, porque se necesitan 3 o más HBP del mismo tema. En su lugar entra, si califica, el tema HBP con 3 o más eventos (ver ejemplo 2).
+- Texto de la celda: número de prioridad + "N1 · CRITICIDAD ALTA" o "N2 · CRITICIDAD INTERMEDIA". Ajusta texto y color de cada fila al nivel real (la plantilla trae 3 filas N1 y 1 N2 solo como referencia).
+
+5. FILA 5 – FOCO SI PRO · ESTRATEGIA DE CONTROLES (fila fija, gris)
+- Por ahora es fija: déjala exactamente como está en la plantilla, sin completar ni modificar ninguna de sus casillas (incluido su texto guía), y no la elimines. Es la única excepción a la regla de reemplazar los corchetes.
+
+6. FOCO DE ASSURANCE – INSTRUCCIÓN ESPECÍFICA PARA EL TURNO ENTRANTE (estilo de la gerencia)
+- El foco es una instrucción operacional para el turno que entra. Mientras más específica, mejor; una instrucción general no sirve.
+- Estilo de la gerencia: una sola oración que empieza con "Verificar…", seguida de dos puntos o punto y coma con la lista de controles concretos a revisar, tomados de las brechas de los eventos (incluidos los HBP complementarios). Debe quedar claro qué se revisa, quién lo hace y cuándo (antes de izar, antes de habilitar, al inicio del turno…). Máximo unos 350 caracteres.
+- Formato en la celda: "Tema del foco." corto en negrita (2 a 5 palabras) + la instrucción. Luego, en línea aparte, "Criterio de restricción:" (en negrita) + la condición concreta en que se prohíbe o se detiene la tarea (máximo unos 150 caracteres).
+- Ejemplo NO válido (general): "Verificar que los izajes se realicen de forma segura."
+- Ejemplos válidos: los de los puntos 16 y 17 (textos reales de la gerencia).
+- Redacta solo a partir de las brechas reales de los eventos. No cites números de estándares o procedimientos que no estén en el Excel.
+
+7. EVENTO / EVIDENCIA ORIGEN (formato de la gerencia)
+- Primero los eventos N1/N2 del foco, del más grave al menos grave; después los HBP complementarios (máximo 3; si hay más, agrega "+ N HBP más"). Foco aislado: su único evento + "(evento aislado)".
+- Formato fijo por evento, igual que la gerencia: "TIPO ID 555505 – EMPRESA:" (en negrita) + qué ocurrió, en una frase concreta de hasta 120 caracteres con los datos del evento (equipo, carga, lugar, medida). TIPO = ACC, CAAP, CA (CBP revalorizado, punto 4), HAP, CBP o HBP. Sin marca de turno.
+- Si dos HBP describen lo mismo, júntalos: "HBP ID 554110 / 556748: generadores sin horómetro ni responsable."
+
+8. HERRAMIENTA PREVENTIVA SGE (explicar qué se tiene que realizar durante el turno)
+- Combinación de herramientas unida con "+", como la gerencia (p. ej., "GCC + CdP Maniobras de Izaje + ASP"), seguida de ":" y la acción concreta a realizar durante el turno (qué, dónde, frecuencia). Ej.: "GCC + CdP Maniobras de Izaje + ASP: CdP al inicio del turno en cada frente con izaje; ASP antes de cada levante."
+- Herramientas de referencia: GCC, CdP [tema], ASP, PTS, Gestión del Cambio, Desafío en Terreno, Inspección de Plataformas (de andamios), EdC Vehículo Liviano, Inspección de Equipos, Acompañamiento ASP. Usa también las que figuren en el Excel (prefijos "CdP-", "ASP-", "EdC-", "GCC-" en el título).
+
+9. EVIDENCIA / REGISTRO ESPERADO
+- Como la gerencia: 2 a 4 registros concretos y verificables, relacionados con los controles del foco, separados por "/" y terminando en "registro fotográfico". Ej.: "Plan de izaje específico por maniobra / validación del supervisor / registro fotográfico".
+
+10. RECURRENTE
+- Temas de HBP que se repiten en el período (2 o más eventos del mismo tema) y que NO son foco. Agrúpalos por lo que describe el evento (título/descripción), nunca por "Otro riesgo de seguridad".
+- Formato: "N eventos HBP — tema (n) · tema (n). Refuerzo transversal en todos los recorridos y al cierre de cada tarea." N = suma de los temas mostrados (1 a 3 temas más repetidos). Un HBP usado como evidencia complementaria también puede contarse aquí si su tema se repite. Ej.: "7 eventos HBP — acopio de material y housekeeping deficiente (4) · extensiones eléctricas sin pasacable (3)."
+
+11. SÍNTESIS Y RECORRIDOS
+- Bloque AM y Bloque Mediodía: nombres EXACTOS de "AREA_GEO" de los eventos de los focos asignados a cada bloque (como la gerencia: "Pila Oeste · Piscinas ILS–PLS · Izaje"; "Pilas de Lixiviación · Botadero de Ripios · Aglomerado"; nunca inventes nombres de áreas), más 3 controles cortos (máx. ~45 caracteres), cada uno con el N° de foco entre paréntesis, p. ej. "Plan de izaje específico por maniobra (1)". Asigna al AM los focos de inicio de jornada (izaje, pre-uso de vehículos y equipos) y al Mediodía los de intervención (plataformas, instalaciones eléctricas, excavaciones) más los temas de la franja Recurrente (p. ej., "Extensiones eléctricas con pasacable", "Acopio y housekeeping en zonas habilitadas").
+- Bloque PM: mantén "Gestión SAP · CdP pendientes · Entrega de turno" y sus líneas fijas. Si hay eventos del período que seguían ABIERTOS a la fecha de cierre ("Fecha cierre evento" vacía o posterior a la fecha de cierre, o "Cierre Evento" distinto de "Si"), la primera línea es: "Cerrar eventos pendientes de [EMPRESA]: [temas] ([área])." Ej. gerencia 08-09: "Cerrar eventos pendientes de JEJ: MIPER, instructivo y TNC de carga/descarga (Edificio H)." En "Actualizar PTS con brechas de CdP:" indica las brechas concretas que detectaron las CdP del período (eventos con "CdP" en el título, incluidos HBP), p. ej.: "maxisacos sobre tubería HDPE, pletinas en acople campana-espiga y vienteros en desacople"; si no hay, elimina esa línea.
+- Recuadro "TENDENCIAS ASOCIADAS A CONTROLES CRÍTICOS": patrones del período (N1, N2 y N3) cuyo "CONTROL CRITICO" corresponde a un control crítico específico (por ejemplo, los marcados "(C.C.)"). Formato: "Tema: control crítico afectado (n)".
+- Recuadro "TENDENCIAS NO ASOCIADAS A CONTROLES CRÍTICOS": patrones cuyo "CONTROL CRITICO" es "Otro", "Sin Información" o está vacío. Formato: "Tema (n)". Nunca uses "Otro" como tema: deduce el tema del título y la descripción.
+- Máximo 5 viñetas de 1 línea (unos 50 caracteres) por recuadro, de mayor a menor cantidad.
+
+12. ENCABEZADO
+- Título: "ASSURANCE TURNO 1-3" o "ASSURANCE TURNO 2-4", según el turno ENTRANTE. FECHA / PERÍODO: vigencia del turno entrante, "DD al DD MES" (el período de los datos va en la franja de indicadores, no aquí). TURNO: marca ☒ en el turno entrante.
+- Inspector ITO, Proyecto/EECC y Área/Sector: complétalos solo si el usuario los entrega; si no, deja la línea en blanco.
+
+13. FORMATO (obligatorio)
+- No cambies estructura, columnas, colores (salvo el de la celda de nivel según el punto 4), fuentes, íconos ni tamaño de la lámina.
+- Reemplaza todo texto gris entre [corchetes] por contenido real en color de texto normal (negro, sin cursiva). No debe quedar ningún corchete, salvo [DATO FALTANTE] y la fila 5 (fija).
+- Letra mínima 6 pt. Si el texto no cabe, resume; no reduzcas más la letra ni agrandes filas.
+- Antes de entregar: elimina la lámina 2 (instructivo). No modifiques ni muevas el cuadro de texto oculto "Instrucciones IA" de la lámina 1.
+- Nombre del archivo: ASSURANCE_TURNO_[1-3 o 2-4]_[DD-DD]_[MES].pptx (ej.: ASSURANCE_TURNO_1-3_07-20_SEP.pptx).
+
+14. ENTREGA
+- Si puedes editar archivos .pptx: entrega el archivo completado.
+- Si no puedes: entrega el contenido en texto, ordenado por sección y por fila de la plantilla (Encabezado; Indicadores 14 días; Focos 1 a 4 con sus 5 columnas; Fila 5 SI PRO; Recurrente; Bloques AM/Mediodía/PM; Tendencias no asociadas; Tendencias asociadas a controles críticos), listo para copiar y pegar en cada casilla.
+
+15. CONTROL DE CALIDAD (en tu respuesta al usuario, no dentro del archivo)
+Al final de tu respuesta incluye un resumen breve con:
+- total de eventos leídos del período y cuántos de cada tipo (ACC, CAAP, HAP, CBP, HBP);
+- eventos N1/N2 y HBP complementarios usados en cada foco, y los N1/N2 que quedaron fuera, con el motivo;
+- CBP revalorizados como CA (ID, clasificación original y motivo) y posibles CA que no revalorizaste;
+- datos faltantes o inconsistentes y supuestos realizados.
+Antes de entregar, confirma que: el título dice "ASSURANCE TURNO 1-3" o "ASSURANCE TURNO 2-4" (sin corchetes); cada ID existe en el Excel; el nivel de cada foco sigue el punto 4 (2 o más eventos N1/N2 = N1); las áreas son nombres exactos de AREA_GEO; revisaste los eventos abiertos a la fecha de cierre; cada foco nace de al menos un evento N1/N2, salvo los focos de solo HBP, que tienen 3 o más HBP del mismo tema; todos los focos N1 van antes que los N2; dentro de cada nivel, los focos con reiteración/evidencia van antes que los aislados y se ordenan como indica el punto 4; ningún tema se llama "Otro"; los eventos con riesgo "Otro" fueron asignados a un tema leyendo su descripción; cada foco contiene al menos un dato concreto de sus eventos; el NIVEL (color) y la PRIORIDAD (orden) de cada foco siguen el punto 4; ningún HBP definió un nivel; los conteos de indicadores y Recurrente cuadran; y no quedan textos guía.
+
+16. EJEMPLO RESUELTO 1 – ASSURANCE REAL DE LA GERENCIA, CIERRE 20-09 (modelo a imitar)
+Datos: período del 10 al 23 SEP 2026. Eventos N1/N2: CAAP 555505, HAP 555358, HAP 556119, HAP 553767, CBP 554227, CBP 554901. Así lo armó la gerencia (texto real; el nivel y el orden ya aplican las reglas N1/N2 y de prioridad de este formato):
+
+FOCO 1 · N1 · CRITICIDAD ALTA (N1 con reiteración)
+- Foco: "Verificar que toda maniobra de izaje cuente con plan de izaje específico y vigente para la carga y el equipo que se iza; el rigger debe portarlo en terreno y el supervisor validar que corresponda a la maniobra antes de autorizar el levante."
+- Evento: "CAAP ID 555505 – PUMA: plan de izaje exhibido por el rigger correspondía a descarga de cañería HDPE 12 m y no a la escala modular izada. HAP ID 555358 – PUMA: izaje de equipo de electrofusión sin plan específico; se detiene la actividad."
+- Herramienta: "GCC + CdP Maniobras de Izaje + ASP"
+- Evidencia: "Plan de izaje específico por maniobra / validación del supervisor / registro fotográfico"
+
+FOCO 2 · N1 · CRITICIDAD ALTA (N1 por reiteración: 2 eventos N1/N2 + 1 HBP)
+- Foco: "Verificar segregación efectiva y comunicación bidireccional en el área de influencia de la carga: control de acceso antes de izar, operador y rigger con radio en frecuencia acordada, uso de vientos y posicionamiento fuera de bordes de zanja al desacoplar."
+- Evento: "HAP ID 556119 – PUMA: carga de maxisacos con grúa horquilla sin segregación efectiva ni comunicación operador–personal. CBP ID 554227 – PUMA: trabajador retira eslinga con un pie al borde de zanja y otro sobre tubería Ø1.200 mm. HBP ID 554488: falta de vienteros."
+  (Ojo: el CBP 554227 figura en el Excel como "Otro riesgo de seguridad", pero por su descripción es de izaje.)
+- Herramienta: "GCC + CdP Maniobras de Izaje + Desafío en Terreno"
+- Evidencia: "Área segregada / radio operativa en operador y rigger / vientos en uso / registro fotográfico"
+
+FOCO 3 · N2 · CRITICIDAD INTERMEDIA (N2 con evidencia: 1 evento N1/N2 + 3 HBP)
+- Foco: "Verificar inspección pre-uso de vehículos y equipos antes de habilitarlos: neumáticos y elementos críticos sin daño, check list del turno completo con registro de horómetro, letrero de supervisor con frecuencia radial y plan de tránsito firmado por el relator."
+- Evento: "HAP ID 553767 – J.E.J.: camioneta con neumático dañado (llantazo) detectado en inspección previa al uso. HBP ID 554865 – PUMA: camión pluma TW PT-21 sin letrero de supervisor y plan de tránsito sin firma. HBP ID 554110 / 556748: generadores sin horómetro ni responsable."
+- Herramienta: "EdC Vehículo Liviano + Inspección de Equipos + ASP"
+- Evidencia: "Check list pre-uso del turno / letrero y plan de tránsito firmados / registro fotográfico"
+
+FOCO 4 · N2 · CRITICIDAD INTERMEDIA (N2 con evidencia: 1 evento N1/N2 + 1 HBP)
+- Foco: "Verificar plataformas temporales antes de habilitar el acceso: rodapié y peldaños instalados aunque la tarjeta verde esté vigente, doble baranda en vanos y bordes, y superficie de trabajo libre de material acopiado."
+- Evento: "CBP ID 554901 – PUMA: andamio en canaletas lado Oeste con tarjeta verde vigente, sin rodapié ni peldaños en la plataforma. HBP ID 554468 – COX: material mal acopiado sobre plataforma de andamio a 70 cm, con riesgo de caída a distinto nivel."
+- Herramienta: "Inspección de Plataformas + CdP Trabajos en Altura"
+- Evidencia: "Rodapié y peldaños instalados / tarjeta coherente con la condición real / registro fotográfico"
+
+Por qué ese orden: focos 1 y 2 son N1 (reiteración); el 1 va primero porque su evento más grave es un CAAP (el del 2 es un CBP). Focos 3 y 4 son N2 (un solo evento N1/N2); el 3 va primero porque tiene más eventos en total (4 contra 2).
+
+RECURRENTE: "7 eventos HBP — Clusters más repetidos del turno: acopio de material y housekeeping deficiente (4) y extensiones eléctricas sin pasacable, en contacto con estructura o tendidas en piso (3). Refuerzo transversal en todos los recorridos y al cierre de cada tarea."
+
+RECORRIDOS:
+- BLOQUE AM · INICIO DE TURNO: "Piscinas ILS–PLS · Pila Oeste · Izaje" — ✔ Plan de izaje específico por maniobra · ✔ Segregación y radio en área de la carga · ✔ Check list pre-uso de vehículos y equipos
+- BLOQUE MEDIODÍA · INTERVENCIÓN: "Pilas de Lixiviación · Botadero de Ripios · Patio Contratistas" — ✔ Rodapié y peldaños en plataformas · ✔ Extensiones eléctricas con pasacable · ✔ Acopio y housekeeping en zonas habilitadas
+- BLOQUE PM · CIERRE DE JORNADA: "Gestión SAP · CdP pendientes · Entrega de turno" — ✔ Actualizar PTS con brechas de CdP: maxisacos sobre tubería HDPE, pletinas en acople campana-espiga y vienteros en desacople.
+
+Con otros datos, aplica las mismas reglas y el mismo estilo: frases concretas, con datos de los eventos, del mismo largo que este ejemplo.
+
+17. EJEMPLO RESUELTO 2 – ASSURANCE REAL DE LA GERENCIA, CIERRE 08-09 (modelo a imitar)
+Datos: período del 26 AGO al 08 SEP 2026. Eventos N1/N2: HAP 547596, HAP 547717, HAP 548036, HAP 552385, CBP 549924 (no hubo ACC ni CAAP). Así lo armó la gerencia (texto real):
+
+FOCO 1 · N1 · CRITICIDAD ALTA (N1: incluye un CA – CBP revalorizado por línea de fuego – y además hay reiteración)
+- Foco: "Verificar maniobras de izaje: elementos de izaje (grilletes, eslingas, tecles) certificados y con placa legible; segregación y control de acceso al área de influencia de la carga; y rigger con radio y fuera de la línea de fuego durante el aculatamiento."
+- Evento: "HAP ID 547717 – PUMA: izaje de ducto Ø1.200 mm con grillete sin certificación. CA ID 549924 – PUMA: rigger expuesto a línea de fuego en aculatamiento de camión pluma, sin radio."
+  (Ojo: en el Excel el 549924 es CBP y su riesgo dice "Operación de vehículos livianos". La gerencia lo revalorizó a CA porque el rigger quedó expuesto a la línea de fuego de un equipo en retroceso, y por su descripción es de izaje.)
+- Herramienta: "GCC + CdP Maniobras de Izaje + ASP"
+- Evidencia: "Elementos de izaje certificados / área segregada / rigger con radio / registro fotográfico"
+
+FOCO 2 · N1 · CRITICIDAD ALTA (N1 por reiteración: HAP + HAP + 2 HBP)
+- Foco: "Verificar plataformas temporales y andamios en altura: rodapiés y doble baranda instalados, tarjeta de andamio vigente, y piezas de andamio acopiadas sobre atril (no a nivel de piso) antes de habilitar el acceso."
+- Evento: "HAP ID 552385 – PUMA: plataforma Módulo 6 sin rodapié. HAP ID 548036 – COX: tarjeta de andamio desactualizada. HBP ID 549965 / 549134 – PUMA: plataforma sin rodapiés / piezas de andamio mal acopiadas."
+- Herramienta: "Inspección de Plataformas + CdP Trabajos en Altura + ASP"
+- Evidencia: "Tarjeta de andamio vigente / rodapié y doble baranda instalados / registro fotográfico"
+
+FOCO 3 · N2 · CRITICIDAD INTERMEDIA (un solo evento N1/N2: HAP + 3 HBP)
+- Foco: "Verificar tableros eléctricos y líneas por energizar: check list vigente y trazable, letrero de responsable de turno al día, señalización legible, sin sobretamaños ni conexiones en contacto con estructuras, y housekeeping en sectores próximos a energizar."
+- Evento: "HAP ID 547596 – PUMA: check list de tablero eléctrico desactualizado. HBP ID 549403 – COX: despuntes de cable en línea 23 kV próxima a energizar. HBP ID 549386 / 551579: conexión sobre estructura / sobretamaños en acceso a tablero."
+- Herramienta: "Desafío en Terreno + CdP Energía + ASP"
+- Evidencia: "Tablero con checklist trazable y letrero al día / accesos despejados / registro fotográfico"
+
+FOCO 4 DE LA GERENCIA – NO SE REPLICA (solo 2 HBP; nuestra regla exige 3 o más HBP del mismo tema). Se deja solo como referencia de redacción:
+- Foco: "Verificar equipos de emergencia: accesos a extintores despejados, extintores presurizados (manómetro en rango) y con inspección vigente, y vías de evacuación libres de despuntes y residuos."
+- Evento: "HBP ID 548906 – COX: acceso a extintor obstruido por escalerilla porta conductores. HBP ID 549552 – PUMA: dos extintores PQS despresurizados (manómetro en zona de recarga)."
+  (Ojo: el 549552 tiene título "CBP - …" pero su clasificación en el Excel es HBP.)
+- Herramienta: "Inspección de Equipos + CdP Emergencia + PASSO"
+- Evidencia: "Extintor accesible y presurizado / vías despejadas / registro fotográfico"
+
+Por qué ese orden: focos 1 y 2 son N1; el 1 va primero porque contiene un CA (equivale a CAAP) y el 2 solo HAP. Foco 3 es N2 con un evento N1/N2. Con nuestra regla, la fila 4 la ocupa el tema de HBP con 3 o más eventos que no esté en otro foco (en este período: materiales sin segregar y piezas/herramientas de andamio a nivel de piso, 8 HBP), como foco N2; el Recurrente pasa a mostrar el siguiente tema HBP repetido. Si no hubiera ningún tema con 3 o más HBP, se elimina la fila 4.
+
+RECURRENTE: "8 eventos HBP — Cluster más repetido del turno: materiales sin segregar y piezas/herramientas de andamio a nivel de piso. Refuerzo transversal en todos los recorridos y al cierre de cada tarea."
+
+RECORRIDOS:
+- BLOQUE AM · INICIO DE TURNO: "Pila Oeste · Piscinas ILS–PLS · Izaje" — ✔ Certificación de elementos de izaje · ✔ Rodapié y tarjeta de andamio vigente · ✔ Segregación del área de la carga
+- BLOQUE MEDIODÍA · INTERVENCIÓN: "Pilas de Lixiviación · Botadero de Ripios · Aglomerado" — ✔ Tableros con checklist trazable · ✔ Housekeeping y materiales segregados · ✔ Extintores accesibles y presurizados
+- BLOQUE PM · CIERRE DE JORNADA: "Gestión SAP · CAP pendiente · Entrega de turno" — ✔ Cerrar eventos pendientes de JEJ: MIPER, instructivo y TNC de carga/descarga (Edificio H). (Eventos HBP 547590, 547604 y 547610, abiertos a la fecha de cierre.)
+
+Con otros datos, aplica las mismas reglas y el mismo estilo que estos dos ejemplos.
