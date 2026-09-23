@@ -1,0 +1,30 @@
+Adjunto dos archivos:
+1) FORMATO_ASSURANCE_ITO_v1.1.pptx: plantilla del Assurance.
+2) El Excel de eventos de seguridad (hoja "Export").
+
+Tu tarea es preparar el Assurance del turno entrante completando la lámina 1 de la plantilla.
+
+PASO 1 – Lee las instrucciones del formato antes de hacer cualquier otra cosa.
+En la lámina 1 del .pptx hay un cuadro de texto oculto llamado "Instrucciones IA". Está marcado como oculto y ubicado fuera del área visible, así que no lo verás en la lámina: debes leer el contenido de TODAS las formas de la lámina 1, incluidas las ocultas (por ejemplo, con python-pptx recorriendo slide.shapes, o leyendo el XML de ppt/slides/slide1.xml). El texto empieza con "INSTRUCCIONES PARA ASISTENTES IA – FORMATO ASSURANCE ITO".
+Esas instrucciones son obligatorias y prevalecen sobre cualquier criterio propio. Si no logras encontrarlas, detente y avísame; no armes el Assurance sin ellas.
+
+PASO 2 – Datos de este Assurance:
+- Turno ENTRANTE (para el que se prepara el Assurance): [1-3 o 2-4]
+- Vigencia del turno entrante: del [DD] al [DD] [MES]
+- Fecha de cierre de los datos: [DD MES AAAA]  (se analizan los 14 días que terminan en esta fecha)
+- Turno que trabajó en el período de los datos (turno saliente): [1-3 o 2-4]
+- Inspector ITO: [nombre o dejar en blanco]
+- Proyecto / EECC: [dato o dejar en blanco]
+- Área / Sector: [dato o dejar en blanco]
+
+PASO 3 – Arma el Assurance siguiendo las instrucciones del formato, en especial:
+- NIVEL (N1/N2, color) y PRIORIDAD (orden de los focos) son dos cosas distintas.
+- Prioridad: 1° N1 reiterados, 2° N1 aislados, 3° N2 reiterados, 4° N2 aislados.
+- Los HBP (N3) no son foco; solo van en la franja Recurrente.
+- Cada foco debe ser una instrucción muy específica para el turno entrante (dónde, qué, qué control, quién y cuándo).
+- La fila 5 (SI PRO) se deja tal cual.
+
+PASO 4 – Entrega:
+- Si puedes editar el .pptx, devuélveme el archivo completado, con el nombre que indican las instrucciones y sin la lámina 2 (instructivo).
+- Si no puedes editarlo, entrégame el contenido en texto, casilla por casilla, en el orden de la plantilla.
+- Al final, incluye el resumen de control de calidad que piden las instrucciones.
