@@ -40,7 +40,8 @@ NIVEL = criticidad del foco. Determina el texto y el COLOR de la celda.
   - Los HBP nunca cuentan para definir el nivel. La reiteración que sube a N1 es SOLO entre eventos N1/N2 (HAP, CBP, CAAP, ACC); los HBP, aunque sean muchos, tienen como techo N2.
   - Ejemplos de nivel:
       · 1 HAP + 1 HBP → N2.   · 1 HAP + 5 HBP → N2.   · 1 CBP + 3 HBP → N2.
-      · 1 HAP + 1 HAP → N1.   · 1 HAP + 1 CBP → N1.   · 1 CAAP (solo) → N1.
+      · 2 o más HAP → N1.   · 2 o más CBP → N1.   · 1 CBP + 1 HAP → N1.
+      · Un CAAP SIEMPRE es N1, vaya solo o acompañado de cualquier otro evento (CAAP solo → N1; CAAP + HBP → N1; CAAP + HAP → N1). Lo mismo aplica a un ACC y a un evento revalorizado a CA.
       · Solo HBP (3 o más del mismo tema) → N2. Nunca N1, sin importar cuántos sean.
       · Un HBP solo cuenta como HAP/CBP si fue revalorizado con el criterio de este punto (excepción, con hechos en la descripción).
   - Gravedad de los tipos de evento: ACC con lesión > ACC con daño material > CAAP > CBP > HAP > HBP.
