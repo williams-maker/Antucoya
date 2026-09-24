@@ -26,7 +26,7 @@ PASO 3 – Arma el Assurance siguiendo las instrucciones del formato. El resulta
 - Reemplaza el título por "ASSURANCE TURNO 1-3" o "ASSURANCE TURNO 2-4".
 - Agrupa por brecha específica leyendo título y descripción; nunca uses "Otro riesgo de seguridad" como tema.
 - Cada foco debe ser una instrucción muy específica para el turno entrante (dónde, qué, qué control, quién y cuándo).
-- La fila 5 (SI PRO) se deja tal cual.
+- Máximo 5 focos (filas 1 a 5), sin contar la fila SI PRO (fila 6), que se deja tal cual.
 
 PASO 4 – Entrega:
 - Si puedes editar el .pptx, devuélveme el archivo completado, con el nombre que indican las instrucciones y sin la lámina 2 (instructivo).

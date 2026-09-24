@@ -24,14 +24,14 @@ La clasificación se basa en las categorías N1, N2 y N3, según el nivel de rie
 - vs. 14 días anteriores: Total N1+N2 de los 14 días inmediatamente previos, sin superponerse (en el ejemplo: del 27 AGO al 09 SEP), seguido de ▲ si el total actual es mayor, ▼ si es menor o = si es igual. Ej.: "5 ▲". Si el Excel no cubre ese período, escribe [DATO FALTANTE].
 - Verifica que ACC + CAAP + HAP + CBP = Total.
 
-3. SELECCIÓN DE FOCOS (filas 1 a 4)
+3. SELECCIÓN DE FOCOS (filas 1 a 5)
 - Antes de agrupar, lee la "Descripción" de todos los eventos y aplica la revaloración del punto 4: un HBP revalorizado a CBP, HAP o CA pasa a ser un evento N1/N2 y puede originar un foco o contar para la reiteración.
 - Los focos nacen de los eventos N1/N2 del período (ACC, CAAP, HAP, CBP, incluidos los revalorizados).
 - TEMA = brecha o control específico, NO la categoría general de riesgo. Ej.: "plan de izaje por maniobra", "segregación y comunicación en izaje", "certificación de elementos de izaje y línea de fuego", "inspección pre-uso de vehículos y equipos", "liberación de andamios", "tableros eléctricos", "equipos de emergencia". Si un mismo riesgo tiene brechas distintas, van en focos distintos.
 - Para asignar el tema lee "Titulo" y "Descripción" de cada evento, no solo "RIESGO INVOLUCRADO": más del 70% de los eventos dice "Otro riesgo de seguridad" pero sí pertenece a un tema. Ojo: el título puede traer un prefijo distinto a la clasificación real (p. ej., un HBP titulado "CBP - …"); manda la clasificación de las columnas. PROHIBIDO usar "Otro", "Otro riesgo de seguridad" o "Sin Información" como tema en focos, Recurrente o tendencias.
 - EVIDENCIA COMPLEMENTARIA (HBP): después de definir los focos, agrega a cada uno los HBP del período que correspondan a la misma brecha. Sus detalles (equipo, lugar, condición) hacen más específica la instrucción. Un HBP no cambia el nivel del foco.
-- FOCO DE SOLO HBP: solo si hay 3 o más HBP del período relacionados con la misma brecha y que no estén ya en otro foco. Con 1 o 2 HBP de un tema NUNCA se arma un foco (van como evidencia complementaria o en Recurrente). Estos focos son siempre N2, van después de todos los focos con eventos N1/N2 y solo entran si queda una fila libre (máx. 4 focos). Si hay varios temas HBP que califican, entra primero el de más HBP y, si empatan, el asociado a control crítico o emergencia. OJO: la gerencia al 08-09 puso un foco con solo 2 HBP (extintores); según esta regla ese foco NO va.
-- Máximo 4 focos. Si hay más, se quedan los de mayor PRIORIDAD (punto 4) y se informa al usuario cuáles quedaron fuera. Si hay menos, elimina las filas sobrantes (nunca la fila 5).
+- FOCO DE SOLO HBP: solo si hay 3 o más HBP del período relacionados con la misma brecha y que no estén ya en otro foco. Con 1 o 2 HBP de un tema NUNCA se arma un foco (van como evidencia complementaria o en Recurrente). Estos focos son siempre N2, van después de todos los focos con eventos N1/N2 y solo entran si queda una fila libre (máx. 5 focos). Si hay varios temas HBP que califican, entra primero el de más HBP y, si empatan, el asociado a control crítico o emergencia. OJO: la gerencia al 08-09 puso un foco con solo 2 HBP (extintores); según esta regla ese foco NO va.
+- Máximo 5 focos, SIN contar la fila fija "FOCO – SI PRO – ESTRATEGIA DE CONTROLES" (es decir, hasta 5 focos + la fila SI PRO). Si hay más, se quedan los de mayor PRIORIDAD (punto 4) y se informa al usuario cuáles quedaron fuera. Si hay menos, elimina las filas sobrantes (nunca la fila SI PRO).
 
 4. NIVEL Y PRIORIDAD – SON DOS COSAS DISTINTAS
 NIVEL = criticidad del foco. Determina el texto y el COLOR de la celda.
@@ -68,9 +68,9 @@ PRIORIDAD = orden del foco en la tabla (foco 1 = primera fila). Es el número qu
 Comprobación con los Assurance de la gerencia:
   - Cierre 20-09: 1° Izaje – plan (CAAP + HAP, N1) · 2° Izaje – segregación (HAP + CBP, N1: el CAAP es más grave que el CBP) · 3° Vehículos y equipos (HAP + 3 HBP, N2) · 4° Andamios (CBP + 1 HBP, N2: menos eventos que el 3°).
   - Cierre 08-09: 1° Izaje – certificación y línea de fuego (HAP + CA 549924, N1: el CBP se revaloriza a CA por la descripción: rigger expuesto a línea de fuego) · 2° Andamios (HAP + HAP + 2 HBP, N1 por reiteración; su evento más grave es HAP, menos grave que el CA del 1°) · 3° Tableros eléctricos (HAP + 3 HBP, N2). La gerencia agregó un 4° foco de equipos de emergencia con solo 2 HBP: con nuestra regla NO va, porque se necesitan 3 o más HBP del mismo tema. En su lugar entra, si califica, el tema HBP con 3 o más eventos (ver ejemplo 2).
-- Texto de la celda: número de prioridad + "N1 · CRITICIDAD ALTA" o "N2 · CRITICIDAD INTERMEDIA". Ajusta texto y color de cada fila al nivel real (la plantilla trae 3 filas N1 y 1 N2 solo como referencia).
+- Texto de la celda: número de prioridad + "N1 · CRITICIDAD ALTA" o "N2 · CRITICIDAD INTERMEDIA". Ajusta texto y color de cada fila al nivel real (la plantilla trae 3 filas N1 y 2 N2 solo como referencia).
 
-5. FILA 5 – FOCO SI PRO · ESTRATEGIA DE CONTROLES (fila fija, gris)
+5. FILA SI PRO – FOCO SI PRO · ESTRATEGIA DE CONTROLES (última fila, N° 6, fija, gris; no cuenta dentro de los 5 focos)
 - Por ahora es fija: déjala exactamente como está en la plantilla, sin completar ni modificar ninguna de sus casillas (incluido su texto guía), y no la elimines. Es la única excepción a la regla de reemplazar los corchetes.
 
 6. FOCO DE ASSURANCE – INSTRUCCIÓN ESPECÍFICA PARA EL TURNO ENTRANTE (estilo de la gerencia)
@@ -110,14 +110,14 @@ Comprobación con los Assurance de la gerencia:
 
 13. FORMATO (obligatorio)
 - No cambies estructura, columnas, colores (salvo el de la celda de nivel según el punto 4), fuentes, íconos ni tamaño de la lámina.
-- Reemplaza todo texto gris entre [corchetes] por contenido real en color de texto normal (negro, sin cursiva). No debe quedar ningún corchete, salvo [DATO FALTANTE] y la fila 5 (fija).
+- Reemplaza todo texto gris entre [corchetes] por contenido real en color de texto normal (negro, sin cursiva). No debe quedar ningún corchete, salvo [DATO FALTANTE] y la fila SI PRO (fija).
 - Letra mínima 6 pt. Si el texto no cabe, resume; no reduzcas más la letra ni agrandes filas.
 - Antes de entregar: elimina la lámina 2 (instructivo). No modifiques ni muevas el cuadro de texto oculto "Instrucciones IA" de la lámina 1.
 - Nombre del archivo: ASSURANCE_TURNO_[1-3 o 2-4]_[DD-DD]_[MES].pptx (ej.: ASSURANCE_TURNO_1-3_07-20_SEP.pptx).
 
 14. ENTREGA
 - Si puedes editar archivos .pptx: entrega el archivo completado.
-- Si no puedes: entrega el contenido en texto, ordenado por sección y por fila de la plantilla (Encabezado; Indicadores 14 días; Focos 1 a 4 con sus 5 columnas; Fila 5 SI PRO; Recurrente; Bloques AM/Mediodía/PM; Tendencias no asociadas; Tendencias asociadas a controles críticos), listo para copiar y pegar en cada casilla.
+- Si no puedes: entrega el contenido en texto, ordenado por sección y por fila de la plantilla (Encabezado; Indicadores 14 días; Focos 1 a 5 con sus 5 columnas; Fila SI PRO; Recurrente; Bloques AM/Mediodía/PM; Tendencias no asociadas; Tendencias asociadas a controles críticos), listo para copiar y pegar en cada casilla.
 
 15. CONTROL DE CALIDAD (en tu respuesta al usuario, no dentro del archivo)
 Al final de tu respuesta incluye un resumen breve con:
