@@ -37,7 +37,12 @@ La clasificación se basa en las categorías N1, N2 y N3, según el nivel de rie
 NIVEL = criticidad del foco. Determina el texto y el COLOR de la celda.
   - N1 · CRITICIDAD ALTA (celda roja C62828) si el foco tiene: un ACC (con lesión o daño material), o un CAAP, o un evento revalorizado como CA, o 2 o más eventos N1/N2 del mismo tema (reiteración: p. ej., HAP + CBP, o HAP + HAP).
   - N2 · CRITICIDAD INTERMEDIA (celda naranja E67E22) si el foco tiene un solo evento N1/N2 (HAP o CBP), con o sin HBP complementarios, o si es un foco de solo HBP (3 o más HBP del mismo tema, punto 3).
-  - Los HBP nunca cuentan para definir el nivel.
+  - Los HBP nunca cuentan para definir el nivel. La reiteración que sube a N1 es SOLO entre eventos N1/N2 (HAP, CBP, CAAP, ACC); los HBP, aunque sean muchos, tienen como techo N2.
+  - Ejemplos de nivel:
+      · 1 HAP + 1 HBP → N2.   · 1 HAP + 5 HBP → N2.   · 1 CBP + 3 HBP → N2.
+      · 1 HAP + 1 HAP → N1.   · 1 HAP + 1 CBP → N1.   · 1 CAAP (solo) → N1.
+      · Solo HBP (3 o más del mismo tema) → N2. Nunca N1, sin importar cuántos sean.
+      · Un HBP solo cuenta como HAP/CBP si fue revalorizado con el criterio de este punto (excepción, con hechos en la descripción).
   - Gravedad de los tipos de evento: ACC con lesión > ACC con daño material > CAAP > CBP > HAP > HBP.
 LECTURA DE LA DESCRIPCIÓN Y REVALORACIÓN DE CRITICIDAD (obligatorio)
   - La clasificación del Excel es el punto de partida, no la palabra final. Lee la "Descripción" de TODOS los eventos del período (HBP, CBP y HAP) y evalúa si lo descrito es más grave que su clasificación. Un evento solo puede SUBIR de criticidad, nunca bajar.
@@ -119,7 +124,7 @@ Al final de tu respuesta incluye un resumen breve con:
 - eventos N1/N2 y HBP complementarios usados en cada foco, y los N1/N2 que quedaron fuera, con el motivo;
 - eventos revalorizados (ID, clasificación original → nueva, y la frase de la descripción que lo justifica) y posibles revalorizaciones que dejaste a decisión del usuario;
 - datos faltantes o inconsistentes y supuestos realizados.
-Antes de entregar, confirma que: el título dice "ASSURANCE TURNO 1-3" o "ASSURANCE TURNO 2-4" (sin corchetes); cada ID existe en el Excel; el nivel de cada foco sigue el punto 4 (2 o más eventos N1/N2 = N1); las áreas son nombres exactos de AREA_GEO; revisaste los eventos abiertos a la fecha de cierre; leíste la descripción de todos los eventos y aplicaste la revaloración del punto 4; cada foco nace de al menos un evento N1/N2, salvo los focos de solo HBP, que tienen 3 o más HBP del mismo tema; todos los focos N1 van antes que los N2; dentro de cada nivel, los focos con reiteración/evidencia van antes que los aislados y se ordenan como indica el punto 4; ningún tema se llama "Otro"; los eventos con riesgo "Otro" fueron asignados a un tema leyendo su descripción; cada foco contiene al menos un dato concreto de sus eventos; el NIVEL (color) y la PRIORIDAD (orden) de cada foco siguen el punto 4; ningún HBP definió un nivel; los conteos de indicadores y Recurrente cuadran; y no quedan textos guía.
+Antes de entregar, confirma que: el título dice "ASSURANCE TURNO 1-3" o "ASSURANCE TURNO 2-4" (sin corchetes); cada ID existe en el Excel; el nivel de cada foco sigue el punto 4 (2 o más eventos N1/N2 = N1; los HBP nunca suben un foco a N1); las áreas son nombres exactos de AREA_GEO; revisaste los eventos abiertos a la fecha de cierre; leíste la descripción de todos los eventos y aplicaste la revaloración del punto 4; cada foco nace de al menos un evento N1/N2, salvo los focos de solo HBP, que tienen 3 o más HBP del mismo tema; todos los focos N1 van antes que los N2; dentro de cada nivel, los focos con reiteración/evidencia van antes que los aislados y se ordenan como indica el punto 4; ningún tema se llama "Otro"; los eventos con riesgo "Otro" fueron asignados a un tema leyendo su descripción; cada foco contiene al menos un dato concreto de sus eventos; el NIVEL (color) y la PRIORIDAD (orden) de cada foco siguen el punto 4; ningún HBP definió un nivel; los conteos de indicadores y Recurrente cuadran; y no quedan textos guía.
 
 16. EJEMPLO RESUELTO 1 – ASSURANCE REAL DE LA GERENCIA, CIERRE 20-09 (modelo a imitar)
 Datos: período del 10 al 23 SEP 2026. Eventos N1/N2: CAAP 555505, HAP 555358, HAP 556119, HAP 553767, CBP 554227, CBP 554901. Así lo armó la gerencia (texto real; el nivel y el orden ya aplican las reglas N1/N2 y de prioridad de este formato):

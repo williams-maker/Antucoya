@@ -19,7 +19,7 @@ PASO 2 – Datos de este Assurance:
 PASO 3 – Arma el Assurance siguiendo las instrucciones del formato. El resultado debe quedar lo más parecido posible al Assurance de la gerencia que vienen como ejemplos resueltos en los puntos 16 y 17 de las instrucciones (misma agrupación, orden, formato de eventos, estilo y nivel de detalle). En especial:
 - NIVEL (N1/N2, color) y PRIORIDAD (orden de los focos) son dos cosas distintas.
 - Lee la DESCRIPCIÓN de todos los eventos (incluidos los HBP): si lo descrito es más grave que su clasificación, súbelo (HBP → CBP, HAP o CA; CBP o HAP → CA) según el punto 4 de las instrucciones (nunca lo bajes) e infórmalo en el control de calidad. Ten criterio: revaloriza solo cuando la descripción, con hechos concretos, sea claramente más grave; es una excepción, y ante la duda mantén la clasificación del Excel.
-- Nivel: N1 = ACC, CAAP, evento revalorizado a CA o 2 o más HAP/CBP del mismo tema; N2 = un solo HAP o CBP, o foco de 3 o más HBP del mismo tema.
+- Nivel: N1 = ACC, CAAP, evento revalorizado a CA o 2 o más HAP/CBP del mismo tema; N2 = un solo HAP o CBP (aunque tenga HBP), o foco de 3 o más HBP del mismo tema. Los HBP nunca suben un foco a N1: 1 HAP + 1 HBP = N2; 1 HAP + 1 HAP = N1.
 - Prioridad: todo N1 antes que todo N2 (orden detallado en el punto 4 de las instrucciones).
 - Los HBP no definen nivel: van como evidencia complementaria, en Recurrente y un tema con 3 o más HBP puede ser foco N2 si queda fila libre (con 1 o 2 HBP nunca se arma un foco).
 - Áreas: nombres exactos de AREA_GEO. Bloque PM: primero los eventos que seguían abiertos a la fecha de cierre.
