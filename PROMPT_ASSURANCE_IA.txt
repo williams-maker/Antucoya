@@ -26,7 +26,8 @@ PASO 3 – Arma el Assurance siguiendo las instrucciones del formato. El resulta
 - Reemplaza el título por "ASSURANCE TURNO 1-3" o "ASSURANCE TURNO 2-4".
 - Agrupa por brecha específica leyendo título y descripción; nunca uses "Otro riesgo de seguridad" como tema.
 - Cada foco debe ser una instrucción muy específica para el turno entrante (dónde, qué, qué control, quién y cuándo).
-- Máximo 5 focos (filas 1 a 5), sin contar la fila SI PRO (fila 6), que se deja tal cual.
+- Máximo 4 focos (filas 1 a 4) + la fila SI PRO (fila 5), que se deja tal cual: 5 filas en total.
+- La plantilla NO trae niveles predefinidos (filas en gris): la cantidad de N1 y N2 sale solo de los eventos (pueden ser 4 N1, 1 N1 y 3 N2, etc.). Nunca bajes o subas un nivel para llenar filas; pinta cada celda de nivel en rojo (N1) o naranja (N2).
 
 PASO 4 – Entrega:
 - Si puedes editar el .pptx, devuélveme el archivo completado, con el nombre que indican las instrucciones y sin la lámina 2 (instructivo).
