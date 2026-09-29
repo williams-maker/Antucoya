@@ -1,0 +1,48 @@
+Asunto: Nuevo formato Assurance ITO – instructivo de uso con IA
+
+Hola Miguel y Pabla:
+
+Les comparto el nuevo formato del Assurance ITO y el prompt para prepararlo con apoyo de IA (Gemini, ChatGPT, Claude u otra que permita adjuntar y analizar archivos). La idea es que el Assurance salga siempre con la misma estructura y el mismo criterio que utiliza la gerencia, sin importar quién lo prepare.
+
+ARCHIVOS ADJUNTOS
+1. FORMATO_ASSURANCE_ITO_v1.3.pptx: plantilla del Assurance (lámina 1) e instructivo de llenado (lámina 2). La plantilla ya contiene los criterios que la IA debe aplicar; no es necesario modificarla.
+2. PROMPT_ASSURANCE_IA.txt: texto que se copia y pega en la IA.
+
+CÓMO USARLO (paso a paso)
+1. Descarguen el Excel de eventos actualizado (hoja "Export"), con datos al menos hasta la fecha de cierre del Assurance.
+2. Abran su IA en una conversación nueva y adjunten los dos archivos: la plantilla FORMATO_ASSURANCE_ITO_v1.3.pptx y el Excel de eventos.
+3. Copien el contenido de PROMPT_ASSURANCE_IA.txt y completen el PASO 2 con los datos del Assurance:
+   - Turno ENTRANTE (1-3 o 2-4).
+   - Vigencia del turno entrante (del __ al __).
+   - Fecha de cierre de los datos (se analizan los 14 días que terminan en esa fecha).
+   - Inspector ITO, Proyecto/EECC y Área (opcional).
+4. Envíen el prompt. La IA debería devolver el .pptx completado o, si no puede editar PowerPoint, el contenido casilla por casilla para pegarlo en la plantilla.
+5. Revisen el resultado antes de publicarlo (ver lista de revisión más abajo).
+6. Para publicar: dejen solo la lámina 1 (eliminen la lámina 2, instructivo) y guarden con el nombre ASSURANCE_TURNO_[1-3 o 2-4]_[DD-DD]_[MES].pptx. Ejemplo: ASSURANCE_TURNO_1-3_07-20_SEP.pptx.
+
+LISTA DE REVISIÓN (2 a 3 minutos)
+Al final de su respuesta, la IA entrega un resumen de control de calidad. Revisen especialmente:
+- Que el título y el turno correspondan al turno entrante.
+- Que los IDs de los eventos existan en el Excel.
+- El nivel de cada foco:
+  · N1 (rojo): ACC, CAAP, evento revalorizado a CA, o 2 o más HAP/CBP del mismo tema.
+  · N2 (naranja): un solo HAP o CBP (aunque vaya acompañado de HBP), o un tema con 3 o más HBP.
+  · Los HBP nunca suben un foco a N1. Un CAAP siempre es N1.
+  · La cantidad de N1 y N2 depende de los eventos del período; las 2 filas rojas y 2 naranjas de la plantilla son solo de ejemplo.
+- El orden de los focos: primero todos los N1 y después los N2.
+- Los eventos que la IA revalorizó (por ejemplo, un CBP que pasó a CA por exposición a línea de fuego). Si no están de acuerdo, pídanle que lo mantenga con la clasificación del Excel.
+- Que no queden textos entre [corchetes], salvo [DATO FALTANTE] (que deben completar ustedes) y la fila SI PRO, que por ahora queda fija.
+- Que los focos sean instrucciones específicas para el turno (dónde, qué, qué control, quién y cuándo) y no frases generales.
+
+RECOMENDACIONES
+- Usen siempre la última versión de la plantilla y del prompt (hoy v1.3). No reutilicen un Assurance anterior como base.
+- No modifiquen columnas, colores ni la estructura de la plantilla.
+- Máximo 4 focos más la fila SI PRO.
+- Si la IA responde que no encontró las instrucciones del formato, no continúen: prueben nuevamente adjuntando el .pptx original o usen otra IA que pueda analizar archivos PowerPoint.
+- La IA apoya, pero la revisión final es nuestra. Si detectan una diferencia recurrente con el criterio de la gerencia, avísenme para ajustar las reglas del formato.
+
+Quedo atento a sus comentarios o dudas. Si les parece, podemos hacer la primera prueba juntos en el próximo cierre.
+
+Saludos,
+[Tu nombre]
+[Cargo]
