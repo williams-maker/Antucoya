@@ -28,7 +28,7 @@ Al final de su respuesta, la IA entrega un resumen de control de calidad. Revise
   · N1 (rojo): ACC, CAAP, evento revalorizado a CA, o 2 o más HAP/CBP del mismo tema.
   · N2 (naranja): un solo HAP o CBP (aunque vaya acompañado de HBP), o un tema con 3 o más HBP.
   · Los HBP nunca suben un foco a N1. Un CAAP siempre es N1.
-  · La cantidad de N1 y N2 depende de los eventos del período; las 2 filas rojas y 2 naranjas de la plantilla son solo de ejemplo.
+  · La cantidad de N1 y N2 depende de los eventos del período; las 2 filas rojas y 3 naranjas de la plantilla son solo de ejemplo.
 - El orden de los focos: primero todos los N1 y después los N2.
 - Los eventos que la IA revalorizó (por ejemplo, un CBP que pasó a CA por exposición a línea de fuego). Si no están de acuerdo, pídanle que lo mantenga con la clasificación del Excel.
 - Que no queden textos entre [corchetes], salvo [DATO FALTANTE] (que deben completar ustedes) y la fila SI PRO, que por ahora queda fija.
@@ -37,7 +37,7 @@ Al final de su respuesta, la IA entrega un resumen de control de calidad. Revise
 RECOMENDACIONES
 - Usen siempre la última versión de la plantilla y del prompt (hoy v1.3). No reutilicen un Assurance anterior como base.
 - No modifiquen columnas, colores ni la estructura de la plantilla.
-- Máximo 4 focos más la fila SI PRO.
+- Máximo 5 focos, sin contar la fila SI PRO.
 - Si la IA responde que no encontró las instrucciones del formato, no continúen: prueben nuevamente adjuntando el .pptx original o usen otra IA que pueda analizar archivos PowerPoint.
 - La IA apoya, pero la revisión final es nuestra. Si detectan una diferencia recurrente con el criterio de la gerencia, avísenme para ajustar las reglas del formato.
 
