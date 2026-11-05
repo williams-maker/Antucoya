@@ -81,12 +81,15 @@ const b64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
 const pyListo = (async () => {
   const py = await loadPyodide();
   await py.loadPackage(["lxml", "pillow", "micropip"]);
-  const base = new URL("py/", location.href).href;
+  const ruedas = ["typing_extensions-4.16.0-py3-none-any.whl", "xlsxwriter-3.3.1-py3-none-any.whl",
+                  "python_pptx-1.0.2-py3-none-any.whl"];
+  for (const w of ruedas) {
+    const buf = new Uint8Array(await (await fetch("py/" + w)).arrayBuffer());
+    py.FS.writeFile("/tmp/" + w, buf);
+  }
   await py.runPythonAsync(`
 import micropip
-await micropip.install(["${base}typing_extensions-4.16.0-py3-none-any.whl",
-                        "${base}xlsxwriter-3.3.1-py3-none-any.whl",
-                        "${base}python_pptx-1.0.2-py3-none-any.whl"], deps=False)
+await micropip.install([${ruedas.map(w => `"emfs:/tmp/${w}"`).join(",")}], deps=False)
 `);
   const src = await (await fetch("foro_engine.py?v=" + Date.now())).text();
   py.FS.writeFile("foro_engine.py", src);
