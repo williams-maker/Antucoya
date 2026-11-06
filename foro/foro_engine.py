@@ -17,7 +17,7 @@ from pptx.chart.data import CategoryChartData
 from pptx.dml.color import RGBColor
 from lxml import etree
 
-VERSION = "7 (06-11 RECSS)"
+VERSION = "8 (06-11 avisos ⚠, redondeo, cambio de año)"
 A = "{http://schemas.openxmlformats.org/drawingml/2006/main}"
 C = "{http://schemas.openxmlformats.org/drawingml/2006/chart}"
 
@@ -50,10 +50,21 @@ def buscar_lamina(prs, *claves):
     return None
 
 
+_FALTAN = []  # formas buscadas y no encontradas en la sección en curso (se informan con ⚠)
+
+
+def _redondear(x, d=0):
+    """Redondeo 'medio hacia arriba', como Power BI (_redondear() de Python redondea al par)."""
+    from decimal import Decimal, ROUND_HALF_UP
+    q = Decimal(str(x)).quantize(Decimal(1).scaleb(-d), rounding=ROUND_HALF_UP)
+    return int(q) if d == 0 else float(q)
+
+
 def forma(slide, nombre):
     for sh in _iter_shapes(slide.shapes):
         if sh.name == nombre:
             return sh
+    _FALTAN.append(nombre)
     return None
 
 
@@ -145,7 +156,7 @@ def fvar(v):
 def var_pct(ant, act):
     if not ant:
         return "-%" if act else "0%"
-    return f"{round((act - ant) / ant * 100):d}%"
+    return f"{_redondear((act - ant) / ant * 100):d}%"
 
 
 # ------------------------------------------------------------------ láminas
@@ -224,17 +235,25 @@ def _aplicar_como_vamos(s, d, nombre, log):
             y = ind["ytd"]
             num = lambda x: float(str(x).replace(",", ".") or 0)
             fmt = lambda v: (f"{v:.2f}".replace(".", ",") if isinstance(v, float) and v != int(v) else str(int(v)))
+            anio = max(y)
+            prev = str(int(anio) - 1)
+            if anio not in t.table.cell(2, 0).text:  # cambio de año: la fila del año que terminó pasa arriba
+                for j in range(1, 5):
+                    poner_celda(t.table.cell(1, j), t.table.cell(2, j).text)
+                poner_celda(t.table.cell(1, 0), f"YTD {prev}")
+                poner_celda(t.table.cell(2, 0), f"YTD {anio}")
             for j, k in enumerate(("IF", "TRIFR", "IG", "AAP"), start=1):
-                if "2025" in y:
-                    poner_celda(t.table.cell(1, j), fmt(y["2025"][k]))
+                if prev in y:
+                    poner_celda(t.table.cell(1, j), fmt(y[prev][k]))
                 ant = num(t.table.cell(1, j).text)
-                act = y["2026"][k]
+                act = y[anio][k]
                 poner_celda(t.table.cell(2, j), fmt(act))
-                poner_celda(t.table.cell(3, j), f"{round((act - ant) / ant * 100)}%" if ant else "0%")
+                poner_celda(t.table.cell(3, j), f"{_redondear((act - ant) / ant * 100)}%" if ant else "0%")
         t = forma(s, "Tabla 25")
         if t and t.has_table and ind.get("abp"):
             for j, k in enumerate(("DM", "STP", "CTP")):
-                a0, a1 = ind["abp"]["2025"][k], ind["abp"]["2026"][k]
+                ya = sorted(ind["abp"])
+                a0, a1 = ind["abp"][ya[-2]][k], ind["abp"][ya[-1]][k]
                 poner_celda(t.table.cell(1, j), str(a0))
                 poner_celda(t.table.cell(2, j), str(a1))
                 poner_celda(t.table.cell(3, j), var_pct(a0, a1))
@@ -306,12 +325,12 @@ def aplicar_passo_eecc(prs, d, log):
                 if not p:
                     poner_celda(t.table.cell(i, j), "Sin programa\n0 programadas", GRIS, FONDO_GRIS)
                     continue
-                pct = round(r / p * 100)
+                pct = _redondear(r / p * 100)
                 col, fon = color_pct(pct)
                 poner_celda(t.table.cell(i, j), f"{pct}%\n{r}/{p}", col, fon)
     g = forma(s, "Chart")
     if g and g.has_chart:
-        vals = [round(e["total"][0] / e["total"][1] * 100, 1) if e["total"][1] else 0 for e in filas]
+        vals = [_redondear(e["total"][0] / e["total"][1] * 100, 1) if e["total"][1] else 0 for e in filas]
         reemplazar_grafico(g.chart, [e["nombre"] for e in filas], [("", vals)], "0.0")
     log.append("PASSO EECC ✔")
 
@@ -338,9 +357,9 @@ def aplicar_passo_ant(prs, d, log):
         ajustar_filas(t.table, len(acts), pie=1)
         filas = acts + [{"nombre": "KPI mensual actividades", "kpi": tot_kpi, "aplic_ant": tot_ant, "aplic": tot_act}]
         for i, a in enumerate(filas, start=1):
-            pct = min(100, round(a["aplic"] / a["kpi"] * 100)) if a["kpi"] else None
+            pct = min(100, _redondear(a["aplic"] / a["kpi"] * 100)) if a["kpi"] else None
             var = a["aplic"] - a["aplic_ant"]
-            peso = round(a["kpi"] / tot_kpi * 100) if tot_kpi else 0
+            peso = _redondear(a["kpi"] / tot_kpi * 100) if tot_kpi else 0
             col, _ = color_pct(pct)
             vals = [a["nombre"], str(a["kpi"]), str(a["aplic_ant"]), str(a["aplic"]),
                     fpct(pct), fvar(var), f"{peso}%"]
@@ -398,6 +417,12 @@ def aplicar_gcc(prs, d, log):
             poner_texto(forma(s, rol["rotulo"]), f"{rol['titulo']}  ·  {hechas} de {total}")
         # gráfico: puntos pares = EdC, impares = separador
         graf = next((sh for sh in s.shapes if sh.shape_id == rol["grafico_id"]), None)
+        if graf is None:  # la lámina se copió o editó: usar el gráfico en la misma posición
+            graficos = [sh for sh in s.shapes if getattr(sh, "has_chart", False) and sh.has_chart]
+            k = d["roles"].index(rol)
+            graf = graficos[k] if k < len(graficos) else None
+            log.append(f"⚠ GCC: no encontré el gráfico id {rol['grafico_id']} ({rol['titulo']}); "
+                       + ("usé el gráfico n° %d de la lámina, revísalo" % (k + 1) if graf is not None else "no se actualizó"))
         if graf is not None and graf.has_chart:
             ser = graf.chart.plots[0].series[0]._element
             dpts = {int(x.find(C + "idx").get("val")): x for x in ser.findall(C + "dPt")}
@@ -412,6 +437,7 @@ def aplicar_gcc(prs, d, log):
         for sid in rol.get("etiquetas", []):
             sh = next((x for x in s.shapes if x.shape_id == sid), None)
             if sh is None or not sh.has_text_frame:
+                _FALTAN.append(f"etiqueta id {sid}")
                 continue
             nombre = re.sub(r"\s*\d+/\d+$", "", sh.text_frame.text.strip())
             if nombre in rol["edc"]:
@@ -506,7 +532,7 @@ def aplicar_calendario(prs, d, log):
     import datetime as _dt
     desde = _dt.date.fromisoformat(d["fecha"])
     hechas = {_sin_tildes(k): {str(x) for x in v} for k, v in d["hechas"].items()}
-    quitadas = []
+    quitadas, vistos = [], set()
     for s in list(prs.slides):
         tit = forma_texto(s, "EDC — CALENDARIO DE VERIFICACIONES") or forma_texto(s, "EDC - CALENDARIO DE VERIFICACIONES")
         if not tit:
@@ -530,6 +556,7 @@ def aplicar_calendario(prs, d, log):
             j = col_de[id(c._tc)]
             modelo = planas.get(j) or next((planas[k] for k in range(5) if k in planas), None)
             txt = c.text.strip()
+            vistos.update(p for p in hechas if p in _sin_tildes(txt))
             dia = re.match(r"^(\d{1,2})", txt)
             if not dia or "EDC" not in txt.upper() or modelo is None:
                 continue
@@ -558,6 +585,8 @@ def aplicar_calendario(prs, d, log):
             log.append("Lámina 'EDC — Verificaciones de la semana' eliminada")
     log.append("Calendario EDC ✔ " + (f"(quitadas por GCC completada: {', '.join(quitadas)})" if quitadas
                                       else "(sin visitas que quitar)"))
+    for p in sorted(set(hechas) - vistos):
+        log.append(f"⚠ Calendario EDC: no encontré a '{p}' en ningún calendario (¿cambió el dueño o verificador?)")
 
 
 def aplicar_passo_persona_mes(prs, d, log):
@@ -636,8 +665,11 @@ def aplicar_gcc_imagen(prs, b64png, log):
     alto = int(ancho * h / w)
     top = old.top + (old.height - alto) // 2
     nueva = s.shapes.add_picture(io.BytesIO(data), old.left, top, ancho, alto)
+    rid = old._element.xpath(".//a:blip/@r:embed")
     old._element.addprevious(nueva._element)  # misma posición en el orden de capas
     old._element.getparent().remove(old._element)
+    if rid and not s._element.xpath(f'.//a:blip[@r:embed="{rid[0]}"]'):
+        s.part.drop_rel(rid[0])  # no dejar la imagen anterior guardada sin uso
     log.append("Matriz EDC (imagen) ✔")
 
 
@@ -701,7 +733,7 @@ def aplicar_recss(prs, d, log):
         poner_celda(r.cells[1], f["categoria"])
         for k, (texto, tipo, v) in enumerate(f["celdas"]):
             if tipo == "nota":
-                tipo = "nota_ok" if v >= 80 else ("nota_media" if v >= 60 else "nota_baja")
+                tipo = "nota_ok" if v >= 90 else ("nota_media" if v >= 80 else "nota_baja")
             fondo, color = ESTILO_RECSS[tipo]
             celda = r.cells[primera + k]
             base = "nota" if tipo.startswith("nota") else ("na" if tipo == "na" else "vacio")
@@ -720,6 +752,8 @@ def aplicar_recss(prs, d, log):
     esc = forma(s, "Escala")
     if esc is not None:
         for run in [r_ for p_ in esc.text_frame.paragraphs for r_ in p_.runs]:
+            for a, b in (("≥ 80%", "≥ 90%"), ("60–79%", "80–89%"), ("< 60%", "< 80%")):
+                run.text = run.text.replace(a, b)
             if "Sin presencia" in run.text:
                 run.text = run.text.replace("Sin presencia", "Atrasada")
             if "contrato sin actividad en faena, no se evalúa" in run.text:
@@ -750,10 +784,13 @@ def actualizar(pptx_bytes, datos):
     for clave, fn in APLICADORES:
         if clave not in datos:
             continue
+        _FALTAN.clear()
         try:
             fn(prs, datos[clave], log)
         except Exception as e:  # una lámina con problemas no bloquea las demás
             log.append(f"⚠ {clave}: {type(e).__name__}: {e}")
+        if _FALTAN:  # el ✔ no basta: avisar qué elementos no se encontraron y quedaron sin actualizar
+            log.append(f"⚠ {clave}: no encontré {', '.join(dict.fromkeys(_FALTAN))}; esos elementos quedaron como estaban")
     out = io.BytesIO()
     prs.save(out)
     return out.getvalue(), log
