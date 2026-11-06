@@ -418,14 +418,76 @@ def aplicar_gcc(prs, d, log):
     log.append("GCC ✔")
 
 
+# ------------------------------------------------------------- roles del foro
+def _roles_desde_programa(prs, fecha):
+    """Lee la tabla 'PROGRAMA PRÓXIMOS LÍDERES' del mismo foro y devuelve los
+    roles de la fecha (dd-mm-aaaa)."""
+    s = buscar_lamina(prs, "PROXIMOS LIDERES", "PRÓXIMOS LÍDERES")
+    if not s:
+        return None
+    t = next((sh for sh in s.shapes if getattr(sh, "has_table", False) and sh.has_table), None)
+    if t is None:
+        return None
+    filas = [[c.text.strip() for c in r.cells] for r in t.table.rows]
+    enc = [_norm(x) for x in filas[0]]
+    col = lambda clave: next((j for j, h in enumerate(enc) if clave in h), None)
+    out = {}
+    for rol, clave in (("lider", "FECHA"), ("timekeeper", "TIME KEEPER"), ("compromisos", "COMPROMISOS"),
+                       ("feedback", "CONFIRMACI")):
+        j = col(clave)
+        if j is None:
+            continue
+        for f in filas[1:]:
+            if len(f) > j and f[j] == fecha:
+                out[rol] = f[0]
+                break
+    return out
+
+
+def aplicar_roles(prs, d, log):
+    r = _roles_desde_programa(prs, d["fecha"])
+    if not r:
+        return log.append("Roles: no encontré el programa de líderes o la fecha " + d["fecha"])
+    etiquetas = {"lider": ("1. LÍDER", "LÍDER"), "timekeeper": ("2. TIME KEEPER", "TIMEKEEPER"),
+                 "compromisos": ("4. REGISTRA COMPROMISOS", "REGISTRA COMPROMISOS"),
+                 "feedback": ("5. FEEDBACK", "FEEDBACK")}
+    hechos = 0
+    for s in prs.slides:
+        textos = [sh for sh in s.shapes if sh.has_text_frame and sh.text_frame.text.strip()]
+        for rol, nombre in r.items():
+            for lab in etiquetas[rol]:
+                et = next((sh for sh in textos if _norm(sh.text_frame.text) == lab), None)
+                if et is None:
+                    continue
+                # nombre en la misma fila (a la derecha); si no hay, en la misma columna (debajo)
+                excl = {_norm(x) for v in etiquetas.values() for x in v} | {"TODOS", "ROL", "PARTICIPANTES"}
+                ok = lambda sh: (sh is not et and len(sh.text_frame.text) < 40 and
+                                 _norm(sh.text_frame.text) not in excl and
+                                 not re.match(r"^\d+\.", sh.text_frame.text.strip()))
+                cand = [sh for sh in textos if ok(sh) and abs(sh.top - et.top) < 15 * 12700
+                        and sh.left > et.left + et.width // 2]
+                if not cand:
+                    cand = [sh for sh in textos if ok(sh) and abs(sh.left - et.left) < 15 * 12700
+                            and 0 < sh.top - et.top < 90 * 12700]
+                if cand:
+                    dest = min(cand, key=lambda sh: abs(sh.top - et.top) + abs(sh.left - et.left))
+                    poner_texto(dest, nombre)
+                    hechos += 1
+                break
+    log.append(f"Roles del foro ✔ (Líder {r.get('lider', '—')}, Time keeper {r.get('timekeeper', '—')}, "
+               f"Compromisos {r.get('compromisos', '—')}, Feedback {r.get('feedback', '—')})" if hechos
+               else "Roles: no encontré dónde escribirlos")
+
+
 APLICADORES = [
     ("portada", aplicar_portada),
+    ("roles", aplicar_roles),
     # ("radar", aplicar_radar),  # lámina enviada por SSO: no se modifica
     ("como_vamos", aplicar_como_vamos),
     ("como_nos_fue", aplicar_como_nos_fue),
     ("passo_eecc", aplicar_passo_eecc),
     ("passo_ant", aplicar_passo_ant),
-    ("passo_persona", aplicar_passo_persona),
+    # ("passo_persona", aplicar_passo_persona),  # la actualiza SSO manualmente
     ("gcc", aplicar_gcc),
 ]
 
