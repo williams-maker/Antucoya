@@ -17,6 +17,7 @@ from pptx.chart.data import CategoryChartData
 from pptx.dml.color import RGBColor
 from lxml import etree
 
+VERSION = "6 (06-11 10:00)"
 A = "{http://schemas.openxmlformats.org/drawingml/2006/main}"
 C = "{http://schemas.openxmlformats.org/drawingml/2006/chart}"
 
@@ -658,7 +659,7 @@ APLICADORES = [
 def actualizar(pptx_bytes, datos):
     """Devuelve (bytes_pptx_actualizado, lista_de_mensajes)."""
     prs = Presentation(io.BytesIO(pptx_bytes))
-    log = []
+    log = [f"Motor versión {VERSION}"]
     for clave, fn in APLICADORES:
         if clave not in datos:
             continue
