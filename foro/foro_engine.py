@@ -17,7 +17,7 @@ from pptx.chart.data import CategoryChartData
 from pptx.dml.color import RGBColor
 from lxml import etree
 
-VERSION = "6 (06-11 10:00)"
+VERSION = "7 (06-11 RECSS)"
 A = "{http://schemas.openxmlformats.org/drawingml/2006/main}"
 C = "{http://schemas.openxmlformats.org/drawingml/2006/chart}"
 
@@ -641,12 +641,99 @@ def aplicar_gcc_imagen(prs, b64png, log):
     log.append("Matriz EDC (imagen) ✔")
 
 
+ESTILO_RECSS = {"nota_ok": ("4EC7BE", "FFFFFF"), "nota_media": ("F2A900", "FFFFFF"), "nota_baja": ("D22630", "FFFFFF"),
+                "na": ("EEF1F3", "8A97A0"), "vacio": ("F7F9FA", "8A97A0"), "atrasada": ("FBEAEB", "D22630")}
+
+
+def _ajustar_columnas_meses(tabla, primera, n_actual, n_objetivo):
+    """Agrega/quita columnas de meses (copiando la última) manteniendo el ancho total."""
+    tbl = tabla._tbl
+    grid = list(tbl.tblGrid)
+    ancho_total = sum(int(grid[primera + k].get("w")) for k in range(n_actual))
+    while n_actual < n_objetivo:
+        ult = primera + n_actual - 1
+        g = copy.deepcopy(list(tbl.tblGrid)[ult]); list(tbl.tblGrid)[ult].addnext(g)
+        for tr in tbl.tr_lst:
+            tc = copy.deepcopy(tr.tc_lst[ult]); tr.tc_lst[ult].addnext(tc)
+        n_actual += 1
+    while n_actual > n_objetivo:
+        ult = primera + n_actual - 1
+        tbl.tblGrid.remove(list(tbl.tblGrid)[ult])
+        for tr in tbl.tr_lst:
+            tr.remove(tr.tc_lst[ult])
+        n_actual -= 1
+    w = ancho_total // n_objetivo
+    for k in range(n_objetivo):
+        list(tbl.tblGrid)[primera + k].set("w", str(w))
+
+
+def aplicar_recss(prs, d, log):
+    s = buscar_lamina(prs, "DESEMPEÑO RECSS")
+    if not s:
+        return log.append("RECSS: lámina no encontrada")
+    t = next((sh for sh in s.shapes if getattr(sh, "has_table", False) and sh.has_table), None)
+    if t is None:
+        return log.append("RECSS: tabla no encontrada")
+    tb = t.table
+    enc = [c.text.strip().upper() for c in tb.rows[0].cells]
+    i_prom = next(j for j, h in enumerate(enc) if "PROMEDIO" in h)
+    primera = 2
+    # formato de referencia (tamaño/negrita) para cada tipo de celda, tomado de la tabla actual
+    refs = {}
+    for r in list(tb.rows)[1:]:
+        for c in list(r.cells)[primera:i_prom]:
+            x = c.text.strip()
+            tipo = "nota" if x.endswith("%") else ("na" if x == "N/A" else ("vacio" if x in ("—", "-") else "otro"))
+            rp = c._tc.find(".//" + A + "rPr")
+            if rp is not None and tipo not in refs:
+                refs[tipo] = copy.deepcopy(rp)
+    _ajustar_columnas_meses(tb, primera, i_prom - primera, len(d["meses"]))
+    for k, m in enumerate(d["meses"]):
+        poner_celda(tb.cell(0, primera + k), m)
+    i_prom = primera + len(d["meses"])
+    hechos = []
+    for r in list(tb.rows)[1:]:
+        txt = r.cells[0].text
+        contrato = next((c for c in d["filas"] if c in txt), None)
+        if not contrato:
+            continue
+        f = d["filas"][contrato]
+        poner_celda(r.cells[1], f["categoria"])
+        for k, (texto, tipo, v) in enumerate(f["celdas"]):
+            if tipo == "nota":
+                tipo = "nota_ok" if v >= 80 else ("nota_media" if v >= 60 else "nota_baja")
+            fondo, color = ESTILO_RECSS[tipo]
+            celda = r.cells[primera + k]
+            base = "nota" if tipo.startswith("nota") else ("na" if tipo == "na" else "vacio")
+            ref = refs.get(base) if refs.get(base) is not None else refs.get("otro")
+            if ref is not None:
+                for rp in celda._tc.findall(".//" + A + "rPr"):
+                    rp.getparent().replace(rp, copy.deepcopy(ref))
+            poner_celda(celda, texto, color, fondo)
+        prom = f["promedio"]
+        poner_celda(r.cells[i_prom], (str(prom).replace(".", ",") + "%") if prom is not None else "—")
+        poner_celda(r.cells[i_prom + 1], f["evaluaciones"], VERDE if f["todas_sobre"] else ROJO)
+        hechos.append(contrato)
+    for nombre, clave in (("Subtitulo", "subtitulo"), ("Lectura", "lectura")):
+        if d.get(clave) and forma(s, nombre):
+            poner_texto(forma(s, nombre), d[clave])
+    esc = forma(s, "Escala")
+    if esc is not None:
+        for run in [r_ for p_ in esc.text_frame.paragraphs for r_ in p_.runs]:
+            if "Sin presencia" in run.text:
+                run.text = run.text.replace("Sin presencia", "Atrasada")
+            if "contrato sin actividad en faena, no se evalúa" in run.text:
+                run.text = run.text.replace("contrato sin actividad en faena, no se evalúa", "evaluación del mes no registrada")
+    log.append(f"RECSS ✔ ({len(hechos)} contratos, {d['meses'][0]}–{d['meses'][-1]})")
+
+
 APLICADORES = [
     ("portada", aplicar_portada),
     ("roles", aplicar_roles),
     # ("radar", aplicar_radar),  # lámina enviada por SSO: no se modifica
     ("como_vamos", aplicar_como_vamos),
     ("como_nos_fue", aplicar_como_nos_fue),
+    ("recss", aplicar_recss),
     ("passo_eecc", aplicar_passo_eecc),
     ("passo_ant", aplicar_passo_ant),
     ("passo_persona", aplicar_passo_persona_mes),  # solo el mes en curso
