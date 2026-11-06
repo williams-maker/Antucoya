@@ -183,9 +183,11 @@ _b, _log = foro_engine.actualizar(bytes(ENTRADA.to_py()), json.loads(DATOS_JSON)
 `);
     const [out, log] = res.toJs();
     SALIDA = new Blob([out], {type: "application/vnd.openxmlformats-officedocument.presentationml.presentation"});
-    NOMBRE = (DATOS.meta || {}).nombre_archivo || PPTX.name.replace(/\.pptx$/i, "") + " (actualizado).pptx";
+    const hh = new Date().toTimeString().slice(0,5).replace(":", "h");
+    NOMBRE = ((DATOS.meta || {}).nombre_archivo || PPTX.name.replace(/\.pptx$/i, "") + " (actualizado).pptx")
+             .replace(/\.pptx$/i, "") + " " + hh + ".pptx";
     $("log").innerHTML = log.map(l => `<li class="${l.includes("⚠") || l.includes("no encontr") ? "warn" : ""}">${l}</li>`).join("");
-    $("c3").style.display = ""; $("e2").innerHTML = '<span class="ok">✔ Listo</span>';
+    $("c3").style.display = ""; $("e2").innerHTML = '<span class="ok">✔ Listo · se descargará como «' + NOMBRE + '»</span>';
     res.destroy();
   } catch (e) {
     console.error(e);
