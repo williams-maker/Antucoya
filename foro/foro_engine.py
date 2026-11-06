@@ -479,6 +479,86 @@ def aplicar_roles(prs, d, log):
                else "Roles: no encontré dónde escribirlos")
 
 
+# ------------------------------------------------------- calendarios EDC
+MESES_NOM = ["ENERO", "FEBRERO", "MARZO", "ABRIL", "MAYO", "JUNIO", "JULIO", "AGOSTO",
+             "SEPTIEMBRE", "OCTUBRE", "NOVIEMBRE", "DICIEMBRE"]
+
+
+def _sin_tildes(x):
+    import unicodedata
+    return unicodedata.normalize("NFKD", x).encode("ascii", "ignore").decode().lower()
+
+
+def _eliminar_lamina(prs, slide):
+    sldIdLst = prs.slides._sldIdLst
+    for sid in list(sldIdLst):
+        if prs.slides.part.related_part(sid.rId) is slide.part:
+            prs.part.drop_rel(sid.rId)
+            sldIdLst.remove(sid)
+            return True
+    return False
+
+
+def aplicar_calendario(prs, d, log):
+    """Quita del calendario las visitas de EDC ya completadas (según GCC) del
+    dueño/verificador correspondiente, desde la fecha del foro en adelante."""
+    import datetime as _dt
+    desde = _dt.date.fromisoformat(d["fecha"])
+    hechas = {_sin_tildes(k): {str(x) for x in v} for k, v in d["hechas"].items()}
+    quitadas = []
+    for s in list(prs.slides):
+        tit = forma_texto(s, "EDC — CALENDARIO DE VERIFICACIONES") or forma_texto(s, "EDC - CALENDARIO DE VERIFICACIONES")
+        if not tit:
+            continue
+        m = re.search(r"(" + "|".join(MESES_NOM) + r")\s+(\d{4})", _norm(tit.text_frame.text))
+        if not m:
+            continue
+        mes, anio = MESES_NOM.index(m.group(1)) + 1, int(m.group(2))
+        tabla = next((sh.table for sh in s.shapes if getattr(sh, "has_table", False) and sh.has_table), None)
+        if tabla is None:
+            continue
+        filas = [list(r.cells) for r in list(tabla.rows)[1:]]
+        celdas = [c for f in filas for c in f]
+        planas = {}  # columna -> celda de día sin actividad (para copiar su formato)
+        for f in filas:
+            for j, c in enumerate(f):
+                if re.fullmatch(r"\d{1,2}", c.text.strip()):
+                    planas.setdefault(j, c)
+        col_de = {id(c._tc): j for f in filas for j, c in enumerate(f)}
+        for c in celdas:
+            j = col_de[id(c._tc)]
+            modelo = planas.get(j) or next((planas[k] for k in range(5) if k in planas), None)
+            txt = c.text.strip()
+            dia = re.match(r"^(\d{1,2})", txt)
+            if not dia or "EDC" not in txt.upper() or modelo is None:
+                continue
+            try:
+                fecha = _dt.date(anio, mes, int(dia.group(1)))
+            except ValueError:
+                continue
+            if fecha < desde:
+                continue
+            edc = re.search(r"EDC\s*(\d+(?:\.\d+)?)", txt, re.I)
+            if not edc:
+                continue
+            personas = _sin_tildes(txt.split("Con:")[0])
+            dueños = [p for p in hechas if p in personas]
+            if dueños and all(edc.group(1) in hechas[p] for p in dueños):
+                # dejar la celda como un día sin actividad (formato de una celda vacía)
+                nuevo_tc = copy.deepcopy(modelo._tc)
+                c._tc.getparent().replace(c._tc, nuevo_tc)
+                from pptx.table import _Cell
+                poner_texto(_Cell(nuevo_tc, c._parent).text_frame, dia.group(1))
+                quitadas.append(f"{fecha.strftime('%d-%m')} EDC {edc.group(1)}")
+    # la lámina de verificaciones de la semana ya no se usa
+    for s in list(prs.slides):
+        if forma_texto(s, "EDC — VERIFICACIONES DE LA SEMANA") or forma_texto(s, "EDC - VERIFICACIONES DE LA SEMANA"):
+            _eliminar_lamina(prs, s)
+            log.append("Lámina 'EDC — Verificaciones de la semana' eliminada")
+    log.append("Calendario EDC ✔ " + (f"(quitadas por GCC completada: {', '.join(quitadas)})" if quitadas
+                                      else "(sin visitas que quitar)"))
+
+
 APLICADORES = [
     ("portada", aplicar_portada),
     ("roles", aplicar_roles),
@@ -489,6 +569,7 @@ APLICADORES = [
     ("passo_ant", aplicar_passo_ant),
     # ("passo_persona", aplicar_passo_persona),  # la actualiza SSO manualmente
     ("gcc", aplicar_gcc),
+    ("calendario", aplicar_calendario),
 ]
 
 
