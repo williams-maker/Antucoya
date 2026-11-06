@@ -216,14 +216,20 @@ def _aplicar_como_vamos(s, d, nombre, log):
         if g and g.has_chart:
             series = [(n, ind["series"].get(n, [None] * len(meses)))
                       for n in ("CTP", "STP TM", "STP PA", "AAP", "TRIFR YTD", "IF YTD", "IAAP")]
+            # (los 4 primeros van en barras apiladas, los 3 últimos en líneas)
             reemplazar_grafico(g.chart, meses, series)
         t = forma(s, "Tabla 24")
         if t and t.has_table and ind.get("ytd"):
             y = ind["ytd"]
+            num = lambda x: float(str(x).replace(",", ".") or 0)
+            fmt = lambda v: (f"{v:.2f}".replace(".", ",") if isinstance(v, float) and v != int(v) else str(int(v)))
             for j, k in enumerate(("IF", "TRIFR", "IG", "AAP"), start=1):
-                poner_celda(t.table.cell(1, j), str(y["2025"][k]).replace(".", ","))
-                poner_celda(t.table.cell(2, j), str(y["2026"][k]).replace(".", ","))
-                poner_celda(t.table.cell(3, j), var_pct(y["2025"][k], y["2026"][k]))
+                if "2025" in y:
+                    poner_celda(t.table.cell(1, j), fmt(y["2025"][k]))
+                ant = num(t.table.cell(1, j).text)
+                act = y["2026"][k]
+                poner_celda(t.table.cell(2, j), fmt(act))
+                poner_celda(t.table.cell(3, j), f"{round((act - ant) / ant * 100)}%" if ant else "0%")
         t = forma(s, "Tabla 25")
         if t and t.has_table and ind.get("abp"):
             for j, k in enumerate(("DM", "STP", "CTP")):

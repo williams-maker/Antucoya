@@ -6,7 +6,7 @@
 <meta name="robots" content="noindex, nofollow">
 <title>Foro SSO GPRO · Actualizador</title>
 <style>
-  :root{--teal:#00778B;--teal2:#01778B;--ink:#1f2a30;--mut:#6B7780;--bg:#F4F6F7;--line:#D9E2E5;--ok:#3B6E22;--warn:#B07A00;--bad:#D22630}
+  :root{--teal:#00778B;--ink:#1f2a30;--mut:#6B7780;--bg:#F4F6F7;--line:#D9E2E5;--ok:#3B6E22;--warn:#B07A00;--bad:#D22630}
   *{box-sizing:border-box}
   body{margin:0;font-family:"Segoe UI",system-ui,-apple-system,sans-serif;color:var(--ink);background:var(--bg)}
   header{background:var(--teal);color:#fff;padding:18px 28px;display:flex;align-items:center;gap:14px}
@@ -20,9 +20,13 @@
   input[type=password]{padding:10px 12px;border:1px solid var(--line);border-radius:6px;font-size:14px;width:260px}
   button{background:var(--teal);color:#fff;border:0;border-radius:6px;padding:10px 18px;font-size:14px;cursor:pointer}
   button:disabled{background:#AEBBC0;cursor:not-allowed}
-  .drop{border:2px dashed var(--line);border-radius:10px;padding:34px;text-align:center;color:var(--mut);cursor:pointer;transition:.15s}
+  .drop{display:block;border:2px dashed var(--line);border-radius:10px;padding:30px;text-align:center;color:var(--mut);cursor:pointer;transition:.15s}
   .drop.on{border-color:var(--teal);background:#EAF2F4;color:var(--teal)}
   .drop b{color:var(--ink)}
+  .archivos{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+  .arch{border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-size:13px}
+  .arch span{display:block;color:var(--mut);font-size:11px;text-transform:uppercase;letter-spacing:.5px}
+  .arch.ok{border-color:#9CC58A;background:#F2F8EE}
   .estado{font-size:13px;color:var(--mut);margin-top:10px;min-height:18px}
   .ok{color:var(--ok)} .bad{color:var(--bad)} .warn{color:var(--warn)}
   table{border-collapse:collapse;width:100%;font-size:13px}
@@ -30,11 +34,11 @@
   td:first-child{color:var(--mut);width:42%}
   ul.log{list-style:none;padding:0;margin:8px 0 0;font-size:13px}
   ul.log li{padding:4px 0;border-bottom:1px solid #EEF1F3}
-  .bloqueado{opacity:.45;pointer-events:none}
   footer{text-align:center;color:var(--mut);font-size:12px;margin:30px 0}
   .bar{height:6px;background:#EEF1F3;border-radius:4px;overflow:hidden;margin-top:10px;display:none}
   .bar i{display:block;height:100%;width:30%;background:var(--teal);animation:mv 1.2s infinite ease-in-out}
   @keyframes mv{0%{margin-left:-30%}100%{margin-left:100%}}
+  #clavebox{display:none;margin-top:12px}
 </style>
 </head>
 <body>
@@ -43,21 +47,29 @@
   <div><h1>Foro SSO · Gerencia de Proyectos</h1><small>Actualizador semanal de gráficos y tablas desde Power BI</small></div>
 </header>
 <main>
-  <div class="card" id="c1">
-    <h2><span class="paso">1</span>Clave del equipo</h2>
-    <input type="password" id="clave" placeholder="Clave del foro" autocomplete="current-password">
-    <button id="bClave">Abrir datos</button>
-    <div class="estado" id="e1"></div>
+  <div class="card">
+    <h2><span class="paso">1</span>Arrastra los dos archivos</h2>
+    <label class="drop" id="drop">
+      <input type="file" id="archivo" accept=".pptx,.json" multiple hidden>
+      <b>Arrastra aquí tu foro (.pptx) y el archivo de datos de la semana (.json)</b><br>
+      o haz clic para elegirlos.<br>
+      <small>El archivo de datos lo deja el agente cada miércoles en Teams › GPRO › 1. General › Foro Seguridad › Datos semanales.</small>
+    </label>
+    <div class="archivos">
+      <div class="arch" id="aPptx"><span>Foro</span>— pendiente —</div>
+      <div class="arch" id="aDatos"><span>Datos de la semana</span>— pendiente —</div>
+    </div>
+    <div id="clavebox">
+      <input type="password" id="clave" placeholder="Clave del foro" autocomplete="current-password">
+      <button id="bClave">Abrir datos</button>
+    </div>
     <table id="resumen" style="display:none;margin-top:14px"></table>
+    <div class="estado" id="e1"></div>
   </div>
 
-  <div class="card bloqueado" id="c2">
-    <h2><span class="paso">2</span>Sube la presentación del foro</h2>
-    <label class="drop" id="drop">
-      <input type="file" id="archivo" accept=".pptx" hidden>
-      <b>Arrastra aquí tu foro (.pptx)</b><br>o haz clic para elegirlo.<br>
-      <small>Tu reflexión de seguridad y las láminas que editaste no se modifican.</small>
-    </label>
+  <div class="card">
+    <h2><span class="paso">2</span>Actualizar</h2>
+    <button id="bAct" disabled>Actualizar foro</button>
     <div class="bar" id="bar"><i></i></div>
     <div class="estado" id="e2"></div>
   </div>
@@ -68,16 +80,16 @@
     <ul class="log" id="log"></ul>
     <p class="estado">Revisa el foro antes de presentarlo. Las láminas marcadas con ⚠ quedaron como estaban.</p>
   </div>
-  <footer>El archivo se procesa solo en tu navegador: no se sube a ningún servidor.</footer>
+  <footer>Los archivos se procesan solo en tu navegador: no se suben a ningún servidor.<br>Esta página no contiene datos de Antucoya.</footer>
 </main>
 
 <script src="https://cdn.jsdelivr.net/pyodide/v0.27.2/full/pyodide.js"></script>
 <script>
 const $ = id => document.getElementById(id);
-let DATOS = null, PY = null, SALIDA = null, NOMBRE = "Foro SSO GPRO.pptx";
+let DATOS = null, ENV = null, PPTX = null, PY = null, SALIDA = null, NOMBRE = "Foro SSO GPRO (actualizado).pptx";
 const b64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
 
-// --- precarga de Python en segundo plano
+// --- precarga del motor (Python en el navegador)
 const pyListo = (async () => {
   const py = await loadPyodide();
   await py.loadPackage(["lxml", "pillow", "micropip"]);
@@ -105,44 +117,64 @@ async function descifrar(env, clave) {
   return JSON.parse(new TextDecoder().decode(pt));
 }
 
-$("bClave").onclick = async () => {
-  $("e1").textContent = "Abriendo…";
-  try {
-    const env = await (await fetch("datos.enc.json?v=" + Date.now())).json();
-    DATOS = await descifrar(env, $("clave").value);
-    const m = DATOS.meta || {};
-    const sec = {portada:"Portada", radar:"Radar SSO semanal", como_vamos:"¿Cómo vamos? Antucoya y GPRO",
-                 como_nos_fue:"¿Cómo nos fue en el mes?", passo_eecc:"PASSO EECC", passo_ant:"PASSO Antucoya",
-                 passo_persona:"PASSO por persona", gcc:"Gestión EDC mediante GCC"};
-    $("resumen").innerHTML =
-      `<tr><td>Foro</td><td><b>${m.fecha_foro_txt || m.fecha_foro || "—"}</b></td></tr>` +
-      `<tr><td>Datos extraídos de Power BI</td><td>${m.extraido_txt || m.extraido || "—"}</td></tr>` +
-      `<tr><td>Período semanal</td><td>${m.periodo_txt || "—"}</td></tr>` +
-      `<tr><td>Láminas con datos</td><td>${Object.keys(sec).filter(k => DATOS[k]).map(k => sec[k]).join(" · ")}</td></tr>`;
-    $("resumen").style.display = "";
-    $("e1").innerHTML = '<span class="ok">✔ Datos listos</span>';
-    $("c2").classList.remove("bloqueado");
-  } catch (e) {
-    $("e1").innerHTML = '<span class="bad">Clave incorrecta o datos no disponibles.</span>';
+const SEC = {portada:"Portada", como_vamos:"¿Cómo vamos? Antucoya y GPRO", como_nos_fue:"¿Cómo nos fue en el mes?",
+             passo_eecc:"PASSO EECC", passo_ant:"PASSO Antucoya", passo_persona:"PASSO por persona", gcc:"Gestión EDC mediante GCC"};
+
+function mostrarDatos() {
+  const m = DATOS.meta || {};
+  $("resumen").innerHTML =
+    `<tr><td>Foro</td><td><b>${m.fecha_foro_txt || m.fecha_foro || "—"}</b></td></tr>` +
+    `<tr><td>Datos extraídos de Power BI</td><td>${m.extraido_txt || m.extraido || "—"}</td></tr>` +
+    `<tr><td>Período semanal</td><td>${m.periodo_txt || "—"}</td></tr>` +
+    `<tr><td>Láminas con datos</td><td>${Object.keys(SEC).filter(k => DATOS[k]).map(k => SEC[k]).join(" · ")}</td></tr>`;
+  $("resumen").style.display = "";
+  $("aDatos").innerHTML = `<span>Datos de la semana</span>✔ ${m.fecha_foro_txt || "cargados"}`;
+  $("aDatos").classList.add("ok");
+  $("clavebox").style.display = "none";
+  listo();
+}
+function listo() {
+  $("bAct").disabled = !(PPTX && DATOS);
+  $("e1").innerHTML = PPTX && DATOS ? '<span class="ok">✔ Todo listo para actualizar</span>' :
+    (!PPTX ? "Falta el foro (.pptx)." : "Falta el archivo de datos (.json).");
+}
+
+async function recibir(files) {
+  for (const f of files) {
+    const n = f.name.toLowerCase();
+    if (n.endsWith(".pptx")) {
+      PPTX = f;
+      $("aPptx").innerHTML = `<span>Foro</span>✔ ${f.name}`; $("aPptx").classList.add("ok");
+    } else if (n.endsWith(".json")) {
+      try {
+        const j = JSON.parse(await f.text());
+        if (j.datos && j.sal && j.iv) { ENV = j; $("clavebox").style.display = "block"; $("clave").focus();
+          $("aDatos").innerHTML = `<span>Datos de la semana</span>🔒 ${f.name} (pide clave)`; }
+        else { DATOS = j; mostrarDatos(); }
+      } catch (e) { $("e1").innerHTML = '<span class="bad">El archivo de datos no es válido.</span>'; }
+    }
   }
+  listo();
+}
+$("bClave").onclick = async () => {
+  try { DATOS = await descifrar(ENV, $("clave").value); mostrarDatos(); }
+  catch (e) { $("e1").innerHTML = '<span class="bad">Clave incorrecta.</span>'; }
 };
 $("clave").addEventListener("keydown", e => { if (e.key === "Enter") $("bClave").click(); });
 
 const drop = $("drop");
 ["dragover","dragenter"].forEach(t => drop.addEventListener(t, e => { e.preventDefault(); drop.classList.add("on"); }));
 ["dragleave","drop"].forEach(t => drop.addEventListener(t, e => { e.preventDefault(); drop.classList.remove("on"); }));
-drop.addEventListener("drop", e => procesar(e.dataTransfer.files[0]));
-$("archivo").onchange = e => procesar(e.target.files[0]);
+drop.addEventListener("drop", e => recibir([...e.dataTransfer.files]));
+$("archivo").onchange = e => recibir([...e.target.files]);
 
-async function procesar(f) {
-  if (!f || !f.name.toLowerCase().endsWith(".pptx")) { $("e2").innerHTML = '<span class="bad">Sube un archivo .pptx</span>'; return; }
-  $("c3").style.display = "none"; $("bar").style.display = "block";
+$("bAct").onclick = async () => {
+  $("c3").style.display = "none"; $("bar").style.display = "block"; $("bAct").disabled = true;
   $("e2").textContent = PY ? "Actualizando…" : "Preparando el motor (solo la primera vez, ~20 s)…";
   try {
     const py = await pyListo;
     $("e2").textContent = "Actualizando gráficos y tablas…";
-    const bytes = new Uint8Array(await f.arrayBuffer());
-    py.globals.set("ENTRADA", bytes);
+    py.globals.set("ENTRADA", new Uint8Array(await PPTX.arrayBuffer()));
     py.globals.set("DATOS_JSON", JSON.stringify(DATOS));
     const res = await py.runPythonAsync(`
 import json, foro_engine
@@ -151,16 +183,15 @@ _b, _log = foro_engine.actualizar(bytes(ENTRADA.to_py()), json.loads(DATOS_JSON)
 `);
     const [out, log] = res.toJs();
     SALIDA = new Blob([out], {type: "application/vnd.openxmlformats-officedocument.presentationml.presentation"});
-    const m = DATOS.meta || {};
-    NOMBRE = m.nombre_archivo || f.name.replace(/\.pptx$/i, "") + " (actualizado).pptx";
+    NOMBRE = (DATOS.meta || {}).nombre_archivo || PPTX.name.replace(/\.pptx$/i, "") + " (actualizado).pptx";
     $("log").innerHTML = log.map(l => `<li class="${l.includes("⚠") || l.includes("no encontr") ? "warn" : ""}">${l}</li>`).join("");
     $("c3").style.display = ""; $("e2").innerHTML = '<span class="ok">✔ Listo</span>';
     res.destroy();
   } catch (e) {
     console.error(e);
     $("e2").innerHTML = '<span class="bad">No se pudo procesar el archivo: ' + (e.message || e).toString().slice(-300) + '</span>';
-  } finally { $("bar").style.display = "none"; }
-}
+  } finally { $("bar").style.display = "none"; listo(); }
+};
 $("bDesc").onclick = () => {
   const a = document.createElement("a"); a.href = URL.createObjectURL(SALIDA); a.download = NOMBRE; a.click();
 };
