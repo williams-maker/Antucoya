@@ -324,13 +324,14 @@ def aplicar_passo_ant(prs, d, log):
         reemplazar_grafico(g.chart, [a["nombre"] for a in acts], [("Realizadas", [a["kpi"] for a in acts])])
     t = forma(s, "Mapa de calor PASSO")
     if t and t.has_table:
+        cap = lambda v, k: min(v, k) if k else v
         tot_kpi = sum(a["kpi"] for a in acts)
-        tot_ant = sum(a["aplic_ant"] for a in acts)
-        tot_act = sum(a["aplic"] for a in acts)
+        tot_ant = sum(cap(a["aplic_ant"], a["kpi"]) for a in acts)
+        tot_act = sum(cap(a["aplic"], a["kpi"]) for a in acts)
         ajustar_filas(t.table, len(acts), pie=1)
         filas = acts + [{"nombre": "KPI mensual actividades", "kpi": tot_kpi, "aplic_ant": tot_ant, "aplic": tot_act}]
         for i, a in enumerate(filas, start=1):
-            pct = round(a["aplic"] / a["kpi"] * 100) if a["kpi"] else None
+            pct = min(100, round(a["aplic"] / a["kpi"] * 100)) if a["kpi"] else None
             var = a["aplic"] - a["aplic_ant"]
             peso = round(a["kpi"] / tot_kpi * 100) if tot_kpi else 0
             col, _ = color_pct(pct)
@@ -355,6 +356,18 @@ def aplicar_passo_persona(prs, d, log):
         for j, m in enumerate(meses, start=2):
             poner_celda(tb.cell(0, j), f"% {m}")
         personas = d["personas"]  # [{nombre, rol, pct:[..]}]
+        # conservar la ortografía/rol con que la lámina ya nombra a cada persona
+        import unicodedata
+        sin = lambda x: unicodedata.normalize("NFKD", x).encode("ascii", "ignore").decode().lower().split()
+        previos = {}
+        for r in list(tb.rows)[1:-1]:
+            nom = r.cells[0].text.strip()
+            if nom:
+                previos[tuple(sin(nom)[-2:])] = (nom, r.cells[1].text.strip())
+        for p in personas:
+            prev = previos.get(tuple(sin(p["nombre"])[-2:]))
+            if prev:
+                p["nombre"], p["rol"] = prev
         ajustar_filas(tb, len(personas), pie=1)
         filas = personas + [{"nombre": "Total Proyectos", "rol": f"{len(personas)} personas", "pct": d["total"]}]
         for i, p in enumerate(filas, start=1):
