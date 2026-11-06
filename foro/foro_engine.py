@@ -401,7 +401,7 @@ def aplicar_gcc(prs, d, log):
 
 APLICADORES = [
     ("portada", aplicar_portada),
-    ("radar", aplicar_radar),
+    # ("radar", aplicar_radar),  # lámina enviada por SSO: no se modifica
     ("como_vamos", aplicar_como_vamos),
     ("como_nos_fue", aplicar_como_nos_fue),
     ("passo_eecc", aplicar_passo_eecc),
