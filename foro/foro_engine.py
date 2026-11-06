@@ -560,8 +560,7 @@ def aplicar_calendario(prs, d, log):
 
 
 def aplicar_passo_persona_mes(prs, d, log):
-    """Actualiza solo la columna del mes en curso; los meses anteriores quedan como
-    los dejó SSO (si cambia el mes, las columnas se corren a la izquierda)."""
+    """Deja la tabla por persona solo con el mes en curso (PERSONA | ROL | % MES)."""
     import unicodedata
     s = buscar_lamina(prs, "PASSO — CUMPLIMIENTO POR PERSONA", "PASSO - CUMPLIMIENTO POR PERSONA")
     if not s:
@@ -570,53 +569,53 @@ def aplicar_passo_persona_mes(prs, d, log):
     if t is None or not t.has_table:
         return log.append("PASSO por persona: tabla no encontrada")
     tb = t.table
+    tbl = tb._tbl
+    # quitar columnas de meses anteriores (todas menos la última), repartiendo su ancho
+    grid = tbl.tblGrid
+    gcols = list(grid)
+    sobra = 0
+    while len(gcols) > 3:
+        quitar = gcols[2]
+        sobra += int(quitar.get("w"))
+        for tr in tbl.tr_lst:
+            tr.remove(tr.tc_lst[2])
+        grid.remove(quitar)
+        gcols = list(grid)
+    if sobra:
+        for g, frac in zip(gcols, (0.45, 0.35, 0.20)):
+            g.set("w", str(int(g.get("w")) + int(sobra * frac)))
     sin = lambda x: unicodedata.normalize("NFKD", x).encode("ascii", "ignore").decode().lower().split()
     clave = lambda nom: tuple(sin(nom)[-2:])
-    ncol = len(tb.columns)
-    meses = [tb.cell(0, j).text.replace("%", "").replace("*", "").strip().upper() for j in range(2, ncol)]
-    filas = list(tb.rows)
-    previos = {}  # clave -> (nombre, rol, [valores])
-    for r in filas[1:-1]:
+    previos = {}
+    for r in list(tb.rows)[1:-1]:
         nom = r.cells[0].text.strip()
         if nom:
-            previos[clave(nom)] = (nom, r.cells[1].text.strip(), [r.cells[j].text.strip() for j in range(2, ncol)])
-    tot_prev = [filas[-1].cells[j].text.strip() for j in range(2, ncol)]
-    mes = d["mes"].upper()
-    correr = meses[-1] != mes
-    if correr:
-        meses = meses[1:] + [mes]
+            previos[clave(nom)] = (nom, r.cells[1].text.strip())
     personas = []
     for p in d["personas"]:
-        prev = previos.get(clave(p["nombre"]))
-        nombre, rol, vals = prev if prev else (p["nombre"], p["rol"], ["—"] * len(meses))
-        vals = (vals[1:] + [None]) if correr else vals[:-1] + [None]
-        vals[-1] = p["pct"]
-        personas.append((nombre, rol, vals))
-    personas.sort(key=lambda x: (-(x[2][-1] or 0), x[0]))
-    tot = (tot_prev[1:] + [None]) if correr else tot_prev[:-1] + [None]
-    tot[-1] = d["total"]
-    for j, m in enumerate(meses, start=2):
-        poner_celda(tb.cell(0, j), f"% {m}" + ("*" if j == ncol - 1 else ""))
+        nombre, rol = previos.get(clave(p["nombre"]), (p["nombre"], p["rol"]))
+        personas.append((nombre, rol, p["pct"]))
+    personas.sort(key=lambda x: (-(x[2] or 0), x[0]))
+    poner_celda(tb.cell(0, 2), f"% {d['mes']}")
     ajustar_filas(tb, len(personas), pie=1)
-    num = lambda v: None if v in (None, "—", "") else (v if isinstance(v, (int, float)) else int(str(v).replace("%", "") or 0))
-    fmt = lambda v: v if isinstance(v, str) else fpct(v)
-    for i, (nombre, rol, vals) in enumerate(personas, start=1):
+    for i, (nombre, rol, v) in enumerate(personas, start=1):
         poner_celda(tb.cell(i, 0), nombre)
         poner_celda(tb.cell(i, 1), rol)
-        for j, v in enumerate(vals, start=2):
-            poner_celda(tb.cell(i, j), fmt(v), color_pct(num(v))[0])
+        poner_celda(tb.cell(i, 2), fpct(v), color_pct(v)[0])
     n = len(personas)
     poner_celda(tb.cell(n + 1, 1), f"{n} personas")
-    for j, v in enumerate(tot, start=2):
-        poner_celda(tb.cell(n + 1, j), fmt(v))
-    en100 = sum(1 for p in personas if (p[2][-1] or 0) >= 100)
+    poner_celda(tb.cell(n + 1, 2), fpct(d["total"]), color_pct(d["total"])[0])
+    en100 = sum(1 for p in personas if (p[2] or 0) >= 100)
+    mes = d["mes_nombre"]
+    if forma(s, "Subtitulo"):
+        poner_texto(forma(s, "Subtitulo"), f"{mes.capitalize()} {d['total']}%  ·  {en100} de {n} personas en 100%")
     if forma(s, "Grupo barras"):
-        poner_texto(forma(s, "Grupo barras"), f"CUMPLIMIENTO PASSO POR PERSONA  ·  Proyectos  ·  *{d['mes_nombre']} en curso")
+        poner_texto(forma(s, "Grupo barras"), f"CUMPLIMIENTO PASSO POR PERSONA  ·  Proyectos  ·  {mes} en curso")
     if forma(s, "Lectura"):
-        poner_texto(forma(s, "Lectura"), f"Reconocimiento y compromiso\nEn {d['mes_nombre']} el cumplimiento va en "
+        poner_texto(forma(s, "Lectura"), f"Reconocimiento y compromiso\nEn {mes} el cumplimiento va en "
                     f"{d['total']}%: {en100} de {n} personas en 100%. Cerremos las actividades a tiempo; "
                     f"el liderazgo visible en terreno depende de cada uno.")
-    log.append(f"PASSO por persona ✔ (mes en curso {mes}" + (", columnas corridas)" if correr else ")"))
+    log.append(f"PASSO por persona ✔ (solo {mes})")
 
 
 def aplicar_gcc_imagen(prs, b64png, log):
