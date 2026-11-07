@@ -986,6 +986,9 @@ async function alternarIncluir(tid) {
   if (!ok) {
     if (estaba) AS.incluir.add(tid); else AS.incluir.delete(tid);
     pintarTodo();
+  } else if (!estaba) {
+    const en = (AS.res.qa && AS.res.qa.incluidos_manual || []).some(x => x.tema_id === tid);
+    if (!en) reg("⚠ No se pudo agregar el tema al Assurance (no hay eventos que lo formen). Revisa el motivo en el control de calidad.", "warn");
   }
 }
 

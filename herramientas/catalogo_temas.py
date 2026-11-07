@@ -1022,10 +1022,21 @@ def armar_plan(analisis, params, decisiones=None, calcular=None):
         fuera_l = list(res_calc.get("fuera") or [])
         excl_l = list(res_calc.get("excluidos") or [])
         for tid in incluir:
-            if tid not in cat or any(f["tema"] == tid for f in lista):
+            if tid not in cat:
                 continue
             src = next((x for x in fuera_l + excl_l if x.get("tema") == tid), None)
-            if src is None:
+            if fijo_activo and tid == FIJO and src is not None:
+                # el foco fijo ya existe: los eventos de ese tema pasan a ser su evidencia
+                fx = next((f for f in lista if f.get("fijo")), None)
+                if fx is not None:
+                    ya = {e["id"] for e in fx.get("eventos") or []}
+                    fx["eventos"] = list(fx.get("eventos") or []) + [e for e in src.get("eventos") or [] if e["id"] not in ya]
+                    fuera_l = [x for x in fuera_l if x is not src]
+                    excl_l = [x for x in excl_l if x is not src]
+                    incluidos_manual.append({"tema_id": tid, "tema": cat[tid]["tema"], "ids": [e["id"] for e in src.get("eventos") or []],
+                                             "motivo_original": src.get("motivo")})
+                    continue
+            if any(f["tema"] == tid for f in lista):
                 continue
             fuera_l = [x for x in fuera_l if x is not src]
             excl_l = [x for x in excl_l if x is not src]
