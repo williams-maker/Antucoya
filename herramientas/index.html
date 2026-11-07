@@ -833,7 +833,7 @@ function pintarFocos() {
     (f.eventos || []).forEach((ev, j) => {
       tarjeta.appendChild(campo({
         clave: fid + "|ev:" + claveEv(ev, j), etiqueta: `Evento ${j + 1}`,
-        prefijo: etiquetaEv(ev, j), auto: ev.texto, max: 120
+        prefijo: etiquetaEv(ev, j), auto: ev.texto, max: 200
       }));
     });
     cont.appendChild(tarjeta);

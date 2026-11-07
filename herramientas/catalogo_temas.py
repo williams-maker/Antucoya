@@ -526,9 +526,10 @@ def _tema_por_id(tema):
                 return t
     return None
 
-def titulo_evento(evento, max_chars=120):
+def titulo_evento(evento, max_chars=200):
     """Solo el título (sin prefijo de tipo ni nombres, minúscula inicial, con punto final) para el PPT."""
-    t = re.sub(r"^\s*(?:ACC|CAAP|CA|CBP|HAP|HBP)\s*[-–—:.]*\s*", "", str(evento.get("titulo") or ""), flags=re.I)
+    t = re.sub(r"^\s*(?:(?:SH\d+|ACC|CAAP|CA|CBP|HAP|HBP|ABP|ASP)\s*[-–—:.]+\s*)+", "", str(evento.get("titulo") or ""),
+               flags=re.I)
     t = _sin_nombres(t)
     t = re.sub(r"\s+", " ", t).strip(" ,;:-–.")
     t = _cortar(_minuscula_inicial(t), max(max_chars - 1, 1))

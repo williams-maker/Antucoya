@@ -1009,8 +1009,8 @@ def _llenar_fila(tbl, fila, prioridad, f, log):
     lineas, n_hbp = [], 0
     for ev in f.get("eventos") or []:
         texto = (ev.get("texto") or "").strip() or DATO_FALTANTE
-        if len(texto) > 120:
-            log.append(f"⚠ Foco {prioridad}: texto de evento de {len(texto)} caracteres (máx. 120)")
+        if len(texto) > 200:
+            log.append(f"⚠ Foco {prioridad}: texto de evento de {len(texto)} caracteres (máx. 200)")
         if str(ev.get("tipo") or "").upper() == "HBP":
             n_hbp += len(ev.get("ids") or [1])
         lineas.append((_etiqueta_evento(ev, log, prioridad), " " + texto))
