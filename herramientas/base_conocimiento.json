@@ -1,0 +1,98 @@
+{
+ "meta": {
+  "fuente": "PDF Gestión documental Antucoya (estándares) · 07-11-2026",
+  "privado": false
+ },
+ "temas": {
+  "izaje_plan": {
+   "instruccion": "Antes de izar, contar con plan de izaje y análisis de riesgos vigentes, conocidos por todo el personal; verificar capacidad según tabla de carga, estado de eslingas y grilletes y rigger autorizado.",
+   "criterio": "no se inicia el izaje sin plan vigente conocido por el equipo ni rigger autorizado.",
+   "herramienta": "CdP Izaje + Desafío en Terreno: revisión del plan y accesorios antes de cada maniobra.",
+   "evidencia": "Plan de izaje firmado / tabla de carga / eslingas y grilletes con inspección vigente"
+  },
+  "izaje_segregacion": {
+   "instruccion": "Delimitar el área de izaje, con al menos dos vientos y señalero/rigger designado; con más de un equipo, definir un Rigger Líder. Nadie bajo la carga ni dentro del radio de maniobra.",
+   "criterio": "se detiene el izaje si hay personas bajo la carga o no hay vientos ni señalero.",
+   "herramienta": "Verificación de Interacción Personas-Equipos + CdP Izaje + Desafío en Terreno.",
+   "evidencia": "Área delimitada / vientos instalados / rigger identificado / registro fotográfico"
+  },
+  "izaje_certificacion": {
+   "instruccion": "Verificar antes de izar que eslingas, grilletes, ganchos y cáncamos estén certificados, rotulados e inspeccionados vigentes, que el equipo de izaje tenga certificación al día y que el operador y rigger estén autorizados.",
+   "criterio": "accesorio sin certificación ni inspección vigente queda fuera de servicio.",
+   "herramienta": "Inspección de Equipos + CdP Izaje: revisión de accesorios y certificaciones antes de cada maniobra.",
+   "evidencia": "Certificados vigentes / tarjeta de inspección de accesorios / autorización de operador y rigger"
+  },
+  "herramientas_manuales": {
+   "instruccion": "Usar solo herramientas con cinta del color del mes: sin cinta o con cinta anterior queda fuera de servicio (cinta roja o tarjeta). Trasladarlas en bolsas, cajas o carretillas resistentes y almacenarlas ordenadas.",
+   "criterio": "herramienta sin cinta del mes o dañada no se usa; queda fuera de servicio.",
+   "herramienta": "Inspección de Equipos + Desafío en Terreno: revisión de cintas y estado antes de la tarea.",
+   "evidencia": "Cinta del mes en herramientas / estado de la herramienta / orden y almacenamiento"
+  },
+  "bloqueo_energias": {
+   "instruccion": "Antes de intervenir, aislar, bloquear y comprobar energía cero en todas las fuentes (eléctrica, hidráulica, neumática); cada persona con su candado y tarjeta. No bloquear con dispositivo faltante, dañado o no funcional.",
+   "criterio": "no se interviene sin energía cero comprobada ni candado personal.",
+   "herramienta": "CdP Energía + Desafío en Terreno + ASP: verificación de candados, tarjetas y energía cero.",
+   "evidencia": "Candado y tarjeta personal / energía cero comprobada / punto de aislamiento identificado"
+  },
+  "trabajos_caliente": {
+   "instruccion": "Contar con permiso de trabajo en caliente y ART/ARTP, vigía contra incendios y extintor; inspeccionar el área y los equipos antes, durante y después. Preferir zonas alejadas de áreas operativas o aislar el área.",
+   "criterio": "sin permiso ni vigía contra incendios no se inicia el trabajo en caliente.",
+   "herramienta": "CdP Trabajos en Caliente + Desafío en Terreno + ASP: verificación de permiso, vigía y extintor.",
+   "evidencia": "Permiso en caliente vigente / vigía asignado / extintor / área despejada o aislada"
+  },
+  "tableros_electricos": {
+   "instruccion": "Verificar tablero de distribución con diferencial 30 mA, parada de emergencia y tierra de protección visible y continua, sin puentes ni ajustes de protecciones modificados; la protección con adhesivo de revisión vigente.",
+   "criterio": "tablero sin diferencial, tierra o parada de emergencia operativos queda sin energizar.",
+   "herramienta": "CdP Energía + Inspección de Equipos + ASP: inspección del tablero antes de energizar.",
+   "evidencia": "Diferencial 30 mA / tierra de protección / adhesivo de revisión / tablero sin puentes"
+  },
+  "generadores_equipos_menores": {
+   "instruccion": "Inspeccionar el grupo electrógeno o luminaria antes de usarlo: tierra de protección visible y permanente, botón de emergencia operativo, equipo identificado con número del área y estabilizadores/nivelación.",
+   "criterio": "equipo sin tierra de protección ni parada de emergencia operativa no se usa.",
+   "herramienta": "Inspección de Equipos + CdP Energía + ASP: inspección pre-uso al inicio del turno.",
+   "evidencia": "Tarjeta de inspección vigente / tierra de protección / botón de emergencia / identificación del equipo"
+  },
+  "altura_caidas": {
+   "instruccion": "En trabajo desde 1,8 m usar arnés completo inspeccionado con lista de chequeo, cabo de vida con absorbedor y punto de anclaje identificado con su capacidad; nunca trabajar solo.",
+   "criterio": "sin arnés inspeccionado ni anclaje certificado no se trabaja en altura.",
+   "herramienta": "CdP Altura + Desafío en Terreno + ASP: inspección de arnés y anclaje antes de subir.",
+   "evidencia": "Arnés con lista de chequeo / cabo de vida / anclaje con capacidad visible / segundo trabajador"
+  },
+  "andamios_plataformas": {
+   "instruccion": "Usar solo andamios con tarjeta verde vigente, instalada por la supervisión del armado, e inspeccionar la plataforma al inicio del turno; con tarjeta roja o sin tarjeta, prohibido su uso.",
+   "criterio": "andamio sin tarjeta verde vigente no se usa.",
+   "herramienta": "CdP Altura + Inspección de Equipos: revisión de tarjeta y plataforma antes de usar.",
+   "evidencia": "Tarjeta verde vigente / plataforma completa con barandas / inspección del turno"
+  },
+  "pretiles_bordes": {
+   "instruccion": "Mantener pretiles de contención en bordes y áreas de aculatamiento, y barreras duras en vanos, inspeccionadas turno a turno con tarjeta verde (operativa) o roja (fuera de servicio).",
+   "criterio": "borde o vano sin protección operativa se segrega hasta repararlo.",
+   "herramienta": "Inspección de Equipos + Desafío en Terreno: revisión de barreras al inicio del turno.",
+   "evidencia": "Pretil o barrera dura instalada / tarjeta verde vigente / registro fotográfico"
+  },
+  "segregacion_acceso": {
+   "instruccion": "Segregar con barreras duras (no con cintas ni conos) las áreas con riesgo, con acceso controlado; el plan de tránsito define circulación, señalización y segregación de vehículos, equipos y peatones.",
+   "criterio": "área de riesgo sin barrera dura ni acceso controlado se detiene hasta segregarla.",
+   "herramienta": "Verificación de Interacción Personas-Equipos + Desafío en Terreno.",
+   "evidencia": "Barrera dura instalada / señalización / acceso controlado / registro fotográfico"
+  },
+  "transito_peaton_equipo": {
+   "instruccion": "Mantener segregados peatones y equipos: pasos peatonales demarcados, comunicación radial con el operador y verificación de interacción personas-equipos completada antes de trabajar cerca de equipos en movimiento.",
+   "criterio": "no se ingresa al radio de un equipo sin contacto radial ni verificación de interacción.",
+   "herramienta": "Verificación de Interacción Personas-Equipos + Desafío en Terreno.",
+   "evidencia": "Verificación de interacción completada / paso peatonal demarcado / radio operativo"
+  },
+  "espacios_confinados": {
+   "instruccion": "Ingresar solo con permiso vigente, vigía exterior con comunicación constante, monitoreo de gases, arnés completo y anclaje identificado con su capacidad.",
+   "criterio": "sin permiso, vigía ni monitoreo de gases no se ingresa.",
+   "herramienta": "CdP Espacios Confinados + Desafío en Terreno + ASP: verificación de permiso, vigía y atmósfera.",
+   "evidencia": "Permiso vigente / vigía asignado / registro de gases / arnés y anclaje"
+  },
+  "documentacion_terreno": {
+   "instruccion": "Contar en terreno con permiso de trabajo firmado por el aprobador autorizado y ART/ARTP conocido por todo el equipo; el supervisor verifica el cumplimiento antes de iniciar.",
+   "criterio": "no se inicia la tarea sin permiso firmado ni ART/ARTP conocido por el equipo.",
+   "herramienta": "Desafío en Terreno + CdP Documentación: revisión de permiso y ART/ARTP en terreno.",
+   "evidencia": "Permiso firmado / ART/ARTP firmado por el equipo / verificación del supervisor"
+  }
+ }
+}

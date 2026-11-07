@@ -104,7 +104,7 @@
       <b>Arrastra aquí el Excel de eventos (.xlsx)</b><br>o haz clic para elegirlo.
     </label>
     <div class="arch" id="aRes"><span>Archivo</span>— pendiente —</div>
-    <div class="ayuda" style="margin-top:10px">Base de conocimiento (opcional, privada): JSON con lo aprendido de los PDF. Queda solo en este navegador; no se sube a ningún lado.
+    <div class="ayuda" style="margin-top:10px">Base de conocimiento: el sitio ya trae la aprendida de los PDF. Opcional: cargar otra (JSON), que reemplaza a la integrada solo en este navegador.
       <input type="file" id="archKB" accept=".json" style="display:block;margin-top:4px">
       <span id="kbEstado" class="ruta"></span> <a href="#" id="kbQuitar" style="display:none">quitar</a></div>
     <ul class="errores" id="errRes"></ul>
@@ -365,7 +365,10 @@ await micropip.install([${RUEDAS.map(w => `"emfs:/tmp/${w}"`).join(",")}], deps=
     reg(`Motor Resumen ${v.resumen} · Motor Assurance ${v.assurance} · Reglas v${v.reglas} · Puente ${v.puente}`);
 
     pyOk = true;
-    try { const kb = await IDB.leer("kb_json"); if (kb) await aplicarKB(kb, false); } catch (_) { /* sin base guardada */ }
+    try {   // base integrada en el sitio; una base cargada por el usuario (IndexedDB) la reemplaza
+      const kb = (await IDB.leer("kb_json")) || await bajar("base_conocimiento.json?v=" + Date.now(), "texto");
+      if (kb) await aplicarKB(kb, false);
+    } catch (_) { /* sin base de conocimiento */ }
     $("motorEstado").innerHTML = '<span class="ok">✔ Motor listo</span>';
     reg("✔ Motor listo", "ok");
   } catch (e) {
