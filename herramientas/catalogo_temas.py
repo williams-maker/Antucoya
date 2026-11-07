@@ -938,7 +938,8 @@ def armar_plan(analisis, params, decisiones=None, calcular=None):
                 faltantes.append(f"Evento {e['id']} sin descripción ni título: texto vacío")
             eventos_plan.append({"tipo": tp, "ids": [e["id"]], "empresa": e.get("empresa"), "texto": texto,
                                  "fecha": e.get("fecha"), "dm": bool(e.get("dm")), "rev": rv,
-                                 "en_turno": bool(e.get("en_turno", True))})
+                                 "en_turno": bool(e.get("en_turno", True)),
+                                 "descripcion": _evidencia(e)})   # solo para la página; el PPT lleva el título
         # HBP complementarios: se juntan los que dicen lo mismo (misma empresa) y se listan máx. 3 IDs
         grupos_hbp = []
         for e in hb:
@@ -963,7 +964,9 @@ def armar_plan(analisis, params, decisiones=None, calcular=None):
             eventos_plan.append({"tipo": "HBP", "ids": [e["id"] for e in sel], "empresa": g["empresa"],
                                  "texto": g["texto"], "fecha": max((e.get("fecha") or "") for e in sel),
                                  "dm": False, "rev": False,
-                                 "en_turno": any(e.get("en_turno", True) for e in sel)})
+                                 "en_turno": any(e.get("en_turno", True) for e in sel),
+                                 "descripcion": "\n".join((f"{e['id']}: " if len(sel) > 1 else "") + _evidencia(e)
+                                                          for e in sel)})
         hbp_mas = len(hb) - usados
 
         texto_norm = normalizar(" ".join(f"{e.get('titulo') or ''} {e.get('descripcion') or ''}" for e in evs))
