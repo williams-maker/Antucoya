@@ -1142,9 +1142,6 @@ def generar(plantilla_bytes, plan):
     log.append("✔ Indicadores del turno (sin comparación con los 14 días anteriores)")
 
     # 3. Focos (puntos 3, 4, 5, 7, 8, 9)
-    if len(focos) > 5:
-        log.append(f"⚠ El plan trae {len(focos)} focos; se usan los 5 primeros")
-        focos = focos[:5]
     _validar_niveles(focos, log)
     for f in focos:
         if f["nivel"] not in NIVELES:
@@ -1153,6 +1150,13 @@ def generar(plantilla_bytes, plan):
     tbl = tsh.table
     if len(tbl.rows) != 7:
         raise ValueError(f"la tabla de focos tiene {len(tbl.rows)} filas (se esperaban 7)")
+    import copy as _copy
+    sipro_tr = tbl._tbl.tr_lst[6]
+    for _ in range(len(focos) - 5):          # más de 5 focos (agregados a mano): se clona la última fila de foco
+        sipro_tr.addprevious(_copy.deepcopy(tbl._tbl.tr_lst[5]))
+    if len(focos) > 5:
+        log.append(f"⚠ El plan trae {len(focos)} focos (más de 5 por agregados manuales): la tabla crece y con más de 5-6 puede solaparse con Recurrente y Tendencias; revisa la lámina")
+    sp_row = max(len(focos), 5) + 1             # índice de la fila SI PRO
     for i, f in enumerate(focos, 1):
         _llenar_fila(tbl, i, i, f, log)
     # Foco SI PRO (fila 6): si el usuario escribió texto en la página, se llena; si no, la fila queda intacta
@@ -1160,7 +1164,7 @@ def generar(plantilla_bytes, plan):
     sp_foco = str(sp.get("foco") or "").strip()
     sp_crit = str(sp.get("criterio") or "").strip()
     si_pro_lleno = bool(sp_foco or sp_crit)
-    c0 = tbl.cell(6, 0)               # rótulo: solo «SI PRO», sin número ni apellidos
+    c0 = tbl.cell(sp_row, 0)               # rótulo: solo «SI PRO», sin número ni apellidos
     ps0 = c0.text_frame.paragraphs
     for k, pa in enumerate(ps0):
         rs = list(pa.runs)
@@ -1170,7 +1174,7 @@ def generar(plantilla_bytes, plan):
         for r in rs[1:]:
             r.text = ""
     if si_pro_lleno:
-        c_sp = tbl.cell(6, 1)
+        c_sp = tbl.cell(sp_row, 1)
         if sp_crit:
             ps = _parrafos(c_sp.text_frame, 2)
             _escribir(ps[0], [(sp_foco, NEGRO, False)] if sp_foco else [("", NEGRO, False)])
@@ -1180,7 +1184,7 @@ def generar(plantilla_bytes, plan):
             _escribir(ps[0], [(sp_foco, NEGRO, False)])
         log.append("✔ Foco SI PRO: texto escrito por el usuario")
     trs = list(tbl._tbl.tr_lst)
-    for tr in trs[len(focos) + 1:6]:          # filas de foco sobrantes; la fila 6 (SI PRO) nunca
+    for tr in trs[len(focos) + 1:sp_row]:      # filas de foco sobrantes; la fila SI PRO nunca
         tbl._tbl.remove(tr)
     tsh.height = sum(int(tr.h) for tr in tbl._tbl.tr_lst)
     n1 = sum(1 for f in focos if f["nivel"] == "N1")

@@ -1047,17 +1047,12 @@ def armar_plan(analisis, params, decisiones=None, calcular=None):
             lista.append(nuevo)
             incluidos_manual.append({"tema_id": tid, "tema": cat[tid]["tema"], "ids": [e["id"] for e in nuevo.get("eventos") or []],
                                      "motivo_original": src.get("motivo")})
-        while len(lista) > 5:
-            idx = max((i for i, f in enumerate(lista) if not f.get("fijo") and not f.get("manual")), default=None)
-            if idx is None:
-                break
-            fuera_l.append({**lista.pop(idx), "motivo": "desplazado por un tema agregado manualmente (máximo 5 focos)"})
         for i, f in enumerate(lista, 1):
             f["prioridad"] = i
         res_calc = {**res_calc, "focos": lista, "fuera": fuera_l, "excluidos": excl_l}
         if incluidos_manual:
             supuestos.append("Agregados manualmente al Assurance: " + ", ".join(x["tema"] for x in incluidos_manual)
-                             + " (con el máximo de 5 focos, el último foco calculado pasa a 'fuera').")
+                             + " (sin tope: los agregados a mano se suman a los focos calculados).")
 
     # --- 4. construir los focos del plan ----------------------------------
     focos_plan, grupo_por_prioridad, qa_focos = [], {}, []
