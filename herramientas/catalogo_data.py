@@ -262,7 +262,7 @@ CATALOGO = [
         "criterio": "Andamio o plataforma sin tarjeta de liberación vigente, sin baranda ni rodapié, o con peldaños faltantes.",
         "herramienta": (
             "Inspección de Plataformas + CdP Altura + ASP: verificar tarjeta, barandas, rodapiés "
-            "y peldaños de cada andamio en uso, en un recorrido al inicio del turno y otro a mediodía."
+            "y peldaños de cada andamio en uso."
         ),
         "evidencia": "Tarjetas de liberación vigentes / Registro de Inspección de Plataformas / registro fotográfico",
         "control_corto": "Tarjeta de andamios y plataformas",
@@ -390,7 +390,7 @@ CATALOGO = [
         "criterio": "Extensión con empalme, conductor expuesto o enchufe no industrial; cable cruzando tránsito sin pasacables.",
         "herramienta": (
             "CdP Eléctrico + Desafío en Terreno + ASP: recorrer las extensiones y pasacables en "
-            "uso, en los frentes con cables que cruzan tránsito, una vez a mediodía."
+            "uso, en los frentes con cables que cruzan tránsito."
         ),
         "evidencia": "Registro de inspección de extensiones / ASP del frente / registro fotográfico",
         "control_corto": "Extensiones eléctricas y pasacables",
@@ -477,7 +477,7 @@ CATALOGO = [
         "criterio": "Excavación sin autorización, sin entibación o talud, o con personal dentro sin acceso seguro.",
         "herramienta": (
             "CdP Excavaciones + PTS + ASP: inspeccionar autorización, entibación o talud y accesos "
-            "de cada excavación abierta, antes del ingreso y a mediodía."
+            "de cada excavación abierta, antes del ingreso."
         ),
         "evidencia": "Autorización de excavación / Registro de inspección de zanjas / registro fotográfico",
         "control_corto": "Excavaciones autorizadas y protegidas",
@@ -568,7 +568,7 @@ CATALOGO = [
         "criterio": "Extintor, ducha o vía de evacuación bloqueado, sin carga, sin señalizar o fuera de su lugar.",
         "herramienta": (
             "ASP + Desafío en Terreno + PASSO: revisar estado y ubicación de extintores, duchas y "
-            "vías de evacuación en toda el área, una vez por turno a mediodía."
+            "vías de evacuación en toda el área."
         ),
         "evidencia": "Registro de revisión de equipos de emergencia / Plano de vías de evacuación / registro fotográfico",
         "control_corto": "Extintores y vías de evacuación",
@@ -654,7 +654,7 @@ CATALOGO = [
         "criterio": "Herramienta sin resguardo, con cable o mango dañado, o con disco inadecuado para su velocidad.",
         "herramienta": (
             "ASP + Inspección de Equipos + PASSO: revisar resguardos, cables y discos de las "
-            "herramientas en uso, en cada frente, una vez por turno."
+            "herramientas en uso, en cada frente."
         ),
         "evidencia": "Registro de inspección de herramientas / ASP del frente / registro fotográfico",
         "control_corto": "Resguardos y estado de herramientas",
@@ -702,7 +702,7 @@ CATALOGO = [
         "criterio": "Material que obstruye vías, accesos o salidas de emergencia, o pila inestable en zona de tránsito.",
         "herramienta": (
             "ASP + Desafío en Terreno + PASSO: recorrer frentes y accesos verificando acopios, "
-            "vías y salidas despejadas, a mediodía y al cierre del turno."
+            "vías y salidas despejadas."
         ),
         "evidencia": "Registro de recorrido de orden y aseo / ASP del frente / registro fotográfico",
         "control_corto": "Orden y acopio en áreas de tránsito",

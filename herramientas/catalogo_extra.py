@@ -219,7 +219,7 @@ CATALOGO_EXTRA = [
         "criterio": "Servicio higiénico fuera de uso, sin agua potable disponible o personal ingiriendo alimentos fuera de las zonas definidas.",
         "herramienta": (
             "ASP + Desafío en Terreno + PASSO: revisar servicios higiénicos, sala de hidratación y "
-            "comedor, y observar dónde se ingieren alimentos, una vez por turno a mediodía."
+            "comedor, y observar dónde se ingieren alimentos."
         ),
         "evidencia": "Registro de limpieza y revisión de instalaciones / Registro de reposición de agua e insumos / registro fotográfico",
         "control_corto": "Servicios higiénicos e hidratación",
@@ -307,7 +307,7 @@ CATALOGO_EXTRA = [
         "criterio": "Tramo sin pretil ni berma, tope de descarga ausente o camión tolva detenido o descargando próximo al borde.",
         "herramienta": (
             "CdP Tránsito + Inspección de Equipos + ASP: inspeccionar pretiles, bermas y topes en "
-            "botaderos y caminos, y observar la descarga de camiones, antes de descargar y a mediodía."
+            "botaderos y caminos, y observar la descarga de camiones, antes de descargar."
         ),
         "evidencia": "Registro de inspección de pretiles y bermas / Registro de recorrido de caminos / registro fotográfico",
         "control_corto": "Pretiles, bermas y topes de descarga",
