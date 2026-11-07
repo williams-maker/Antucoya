@@ -635,14 +635,14 @@ FOCO_FIJO = {
     "tema_id": "tableros_electricos",         # tema del catálogo al que se asocia
     "temas_asociados": ("generadores_equipos_menores",),   # sus eventos también se listan en este foco
     "tema": "Controles eléctricos en tableros, generadores y torres.",
-    "instruccion": ("Verificar antes de energizar o usar equipos eléctricos que el tablero tenga diferencial operativo "
-                    "(sin puentes), que generadores y torres de iluminación tengan puesta a tierra y segregación, "
-                    "que la alimentación pase por tablero de distribución y que la soldadora tenga inspección vigente; "
-                    "el supervisor lo valida."),
-    "criterio": "no se energiza ni se usa equipo con diferencial puenteado, sin tierra o sin tablero intermedio.",
-    "herramienta": ("ASP + Inspección de Equipos + Acompañamiento ASP: revisión de tableros, generadores y torres "
-                    "al inicio del turno; ASP antes de cada tarea eléctrica."),
-    "evidencia": "Diferencial operativo / generador y torre con tierra / tablero intermedio / registro fotográfico",
+    "instruccion": ("Verificar antes de energizar que generadores y torres tengan tierra de protección y de servicio a la malla, "
+                    "estabilizadores y nivelación, y tablero de salida con diferencial 30 mA, parada de emergencia y sin "
+                    "puentes; que las herramientas se alimenten desde tablero de distribución y los cables no tengan "
+                    "empalmes; el supervisor lo valida."),
+    "criterio": "no se usa equipo sin tierra, diferencial 30 mA ni parada de emergencia operativos, o con puentes; queda fuera de servicio con tarjeta «NO OPERAR».",
+    "herramienta": ("Inspección de Equipos + CdP Energía + Desafío en Terreno + ASP: inspección pre-uso de generadores, torres y "
+                    "tableros al inicio del turno; ASP antes de cada tarea eléctrica."),
+    "evidencia": "Tarjeta de inspección vigente / tierra de protección y de servicio / diferencial 30 mA sin puentes / tablero de distribución / registro fotográfico",
     "sin_eventos": "Foco fijo del año: verificación permanente (sin eventos N1/N2 de este tema en el período).",
 }
 
