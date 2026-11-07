@@ -793,6 +793,38 @@ def _herramienta_por_causa(herr, causa):
     return (" + ".join(resto) + ":" + der) if resto else herr
 
 
+_RX_SIG_TURNO = re.compile(r"\b(?:siguiente|proximo|proxima) (?:turno|confirmacion)\b|\bturno (?:siguiente|entrante)\b")
+
+
+def _cdp_evento(ev):
+    """CdP si (1) la sigla del título lo dice (p. ej. «CdP-HBP») o (2) la descripción identifica una acción
+    de un trabajador que se deba revisar en el turno siguiente. Devuelve el motivo o None."""
+    if ev.get("cdp") or re.search(r"\bcdp\b", normalizar(ev.get("titulo") or "")):
+        return "sigla CdP en el título"
+    txt = normalizar(f"{ev.get('titulo') or ''} {ev.get('descripcion') or ''}")
+    if _RX_SIG_TURNO.search(txt):
+        return "se indica revisar en el turno siguiente"
+    if _RX_ACTO.search(_RX_ENTORNO.sub(" ", txt)):
+        return "acción de un trabajador a revisar en el turno siguiente"
+    return None
+
+
+def _herramienta_cdp(herr, usar):
+    """Con criterio de CdP cumplido, la herramienta incluye CdP; si no, se retira cualquier CdP del texto."""
+    if not herr or ":" not in herr:
+        return herr
+    izq, der = herr.split(":", 1)
+    partes = [p.strip() for p in izq.split(" + ") if p.strip()]
+    es_cdp = lambda p: p.lower().startswith("cdp")
+    if usar:
+        if not any(es_cdp(p) for p in partes):
+            i = next((k for k, p in enumerate(partes) if p in _ASP), len(partes))
+            partes.insert(i, "CdP")
+    else:
+        partes = [p for p in partes if not es_cdp(p)] or ["Desafío en Terreno"]
+    return " + ".join(partes) + ":" + der
+
+
 # La clasificación del Excel ya está cerrada: no se sugiere ni se aplica ninguna revalorización (HBP→CBP, etc.).
 # Poner True solo para volver al comportamiento anterior.
 REVALORIZACION_ACTIVA = False
@@ -1002,6 +1034,8 @@ def armar_plan(analisis, params, decisiones=None, calcular=None):
         if not f.get("fijo"):
             causa = _causa_foco(evs)
             t = {**t, "herramienta": _herramienta_por_causa(t.get("herramienta"), causa)}
+        motivos_cdp = [m for m in (_cdp_evento(e) for e in evs) if m]
+        t = {**t, "herramienta": _herramienta_cdp(t.get("herramienta"), bool(motivos_cdp))}
         nn = [e for e in evs if tipo_ef(e) != "HBP"]
         hb = [e for e in evs if tipo_ef(e) == "HBP"]
         nn.sort(key=lambda e: (e.get("fecha") or "", e["id"]), reverse=True)
@@ -1074,6 +1108,9 @@ def armar_plan(analisis, params, decisiones=None, calcular=None):
                          "motivo_nivel": f.get("motivo_nivel"),
                          "n1n2": [e["id"] for e in nn], "hbp_listados": hbp_ids, "hbp_mas": max(hbp_mas, 0),
                          "hbp_total": len(hb), "causa": causa})
+    supuestos.append("CdP como herramienta solo si algún evento del foco lo cumple: (1) la sigla del título lo dice "
+                     "(p. ej. CdP-HBP) o (2) la descripción identifica una acción de un trabajador que se deba revisar "
+                     "en el turno siguiente; si no, se retira del texto.")
     supuestos.append("Herramienta preventiva según la causa de los eventos del foco: si predominan actos del trabajador "
                      "(falta o acción de riesgo) → solo ASP; si predominan condiciones del entorno o ausencia/mal estado "
                      "de herramientas y elementos → el resto de las herramientas, sin ASP (empate → condición).")
