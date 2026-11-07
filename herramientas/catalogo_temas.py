@@ -13,7 +13,7 @@ from functools import lru_cache
 from catalogo_data import CATALOGO, REVAL
 
 __all__ = ["UMBRAL", "RATIO_AMBIGUO", "normalizar", "asignar_tema", "asignar_todos",
-           "sugerir_revalorizacion", "resumir_evento", "armar_plan"]
+           "sugerir_revalorizacion", "resumir_evento", "titulo_evento", "armar_plan"]
 
 # ----------------------------------------------------------------------
 # Constantes
@@ -211,11 +211,9 @@ def _frase_corta(texto, max_chars=160):
     return _cortar(_sin_nombres(texto), max_chars)
 
 def _evidencia(ev):
-    """Frase de la descripción (primera oración con contenido) o el título."""
-    for o in _oraciones(ev.get("descripcion")):
-        if len(o.split()) >= 3:
-            return _frase_corta(o)
-    return _frase_corta(ev.get("titulo") or "")
+    """Descripción completa del evento (para la página); si no hay, el título."""
+    desc = re.sub(r"\s+", " ", str(ev.get("descripcion") or "")).strip()
+    return desc or re.sub(r"\s+", " ", str(ev.get("titulo") or "")).strip()
 
 # ----------------------------------------------------------------------
 # Asignación de tema
@@ -527,6 +525,15 @@ def _tema_por_id(tema):
             if t.get("id") == tema:
                 return t
     return None
+
+def titulo_evento(evento, max_chars=120):
+    """Solo el título (sin prefijo de tipo ni nombres, minúscula inicial, con punto final) para el PPT."""
+    t = re.sub(r"^\s*(?:ACC|CAAP|CA|CBP|HAP|HBP)\s*[-–—:.]*\s*", "", str(evento.get("titulo") or ""), flags=re.I)
+    t = _sin_nombres(t)
+    t = re.sub(r"\s+", " ", t).strip(" ,;:-–.")
+    t = _cortar(_minuscula_inicial(t), max(max_chars - 1, 1))
+    return t + "." if t else ""
+
 
 def resumir_evento(evento, tema=None, max_chars=120):
     """Frase concreta (minúscula inicial, sin nombres) elegida de la descripción según el tema."""
@@ -891,7 +898,7 @@ def armar_plan(analisis, params, decisiones=None, calcular=None):
         eventos_plan = []
         for e in nn:
             tp, rv = tipo_plan(e)
-            texto = resumir_evento(e, t)
+            texto = titulo_evento(e) or resumir_evento(e, t)
             if not texto:
                 faltantes.append(f"Evento {e['id']} sin descripción ni título: texto vacío")
             eventos_plan.append({"tipo": tp, "ids": [e["id"]], "empresa": e.get("empresa"), "texto": texto,
@@ -900,7 +907,7 @@ def armar_plan(analisis, params, decisiones=None, calcular=None):
         # HBP complementarios: se juntan los que dicen lo mismo (misma empresa) y se listan máx. 3 IDs
         grupos_hbp = []
         for e in hb:
-            texto = resumir_evento(e, t)
+            texto = titulo_evento(e) or resumir_evento(e, t)
             tok = _tokens(texto)
             for g in grupos_hbp:
                 if g["empresa"] == e.get("empresa") and (texto == g["texto"] or _similares(tok, g["tokens"])):

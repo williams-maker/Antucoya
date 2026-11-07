@@ -125,7 +125,7 @@
     <div class="card bloqueable" id="cForm">
       <h2><span class="paso">3</span>Assurance · datos del turno</h2>
       <div class="campo">
-        <div class="et">Turno entrante *</div>
+        <div class="et">Turno saliente *</div>
         <div class="opts">
           <label><input type="radio" name="turno" value="1-3"><span>1-3</span></label>
           <label><input type="radio" name="turno" value="2-4"><span>2-4</span></label>
@@ -558,7 +558,7 @@ function leerFormulario() {
   const turnoEl = document.querySelector('input[name="turno"]:checked');
   const turno = turnoEl ? turnoEl.value : "";
   const desde = $("fDesde").value, hasta = $("fHasta").value, cierre = $("fCierre").value;
-  if (!turno) errores.push("Elige el turno entrante (1-3 o 2-4).");
+  if (!turno) errores.push("Elige el turno saliente (1-3 o 2-4).");
   if (!desde) errores.push("Indica la vigencia «desde».");
   if (!hasta) errores.push("Indica la vigencia «hasta».");
   if (desde && hasta && hasta < desde) errores.push("La vigencia «hasta» no puede ser anterior a «desde».");
