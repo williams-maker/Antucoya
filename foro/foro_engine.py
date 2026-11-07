@@ -17,7 +17,7 @@ from pptx.chart.data import CategoryChartData
 from pptx.dml.color import RGBColor
 from lxml import etree
 
-VERSION = "8 (06-11 avisos ⚠, redondeo, cambio de año)"
+VERSION = "9 (07-11 RECSS: Sin registro)"
 A = "{http://schemas.openxmlformats.org/drawingml/2006/main}"
 C = "{http://schemas.openxmlformats.org/drawingml/2006/chart}"
 
@@ -343,7 +343,11 @@ def aplicar_passo_ant(prs, d, log):
                           ("Leyenda barras", "leyenda_barras"), ("Lectura", "lectura"),
                           ("Nota personas por rol", "nota_roles")):
         if d.get(clave) and forma(s, nombre):
-            poner_texto(forma(s, nombre), d[clave])
+            txt_ = d[clave]
+            if clave == "lectura":
+                txt_ = (txt_.replace("Evaluaciones atrasadas:", "Evaluaciones sin registro:")
+                            .replace("Sin evaluaciones atrasadas.", "Todas las evaluaciones registradas."))
+            poner_texto(forma(s, nombre), txt_)
     acts = d["actividades"]  # [{nombre, kpi, aplic_ant, aplic}]
     g = forma(s, "Grafico cumplimiento PASSO")
     if g and g.has_chart:
@@ -374,7 +378,11 @@ def aplicar_passo_persona(prs, d, log):
         return log.append("PASSO por persona: lámina no encontrada")
     for nombre, clave in (("Subtitulo", "subtitulo"), ("Grupo barras", "grupo_barras"), ("Lectura", "lectura")):
         if d.get(clave) and forma(s, nombre):
-            poner_texto(forma(s, nombre), d[clave])
+            txt_ = d[clave]
+            if clave == "lectura":
+                txt_ = (txt_.replace("Evaluaciones atrasadas:", "Evaluaciones sin registro:")
+                            .replace("Sin evaluaciones atrasadas.", "Todas las evaluaciones registradas."))
+            poner_texto(forma(s, nombre), txt_)
     t = forma(s, "Mapa de calor PASSO")
     if t and t.has_table:
         tb = t.table
@@ -735,6 +743,8 @@ def aplicar_recss(prs, d, log):
             if tipo == "nota":
                 tipo = "nota_ok" if v >= 90 else ("nota_media" if v >= 80 else "nota_baja")
             fondo, color = ESTILO_RECSS[tipo]
+            if tipo == "atrasada":
+                texto = "Sin registro"  # mes cerrado sin evaluación en Power BI
             celda = r.cells[primera + k]
             base = "nota" if tipo.startswith("nota") else ("na" if tipo == "na" else "vacio")
             ref = refs.get(base) if refs.get(base) is not None else refs.get("otro")
@@ -748,16 +758,22 @@ def aplicar_recss(prs, d, log):
         hechos.append(contrato)
     for nombre, clave in (("Subtitulo", "subtitulo"), ("Lectura", "lectura")):
         if d.get(clave) and forma(s, nombre):
-            poner_texto(forma(s, nombre), d[clave])
+            txt_ = d[clave]
+            if clave == "lectura":
+                txt_ = (txt_.replace("Evaluaciones atrasadas:", "Evaluaciones sin registro:")
+                            .replace("Sin evaluaciones atrasadas.", "Todas las evaluaciones registradas."))
+            poner_texto(forma(s, nombre), txt_)
     esc = forma(s, "Escala")
     if esc is not None:
         for run in [r_ for p_ in esc.text_frame.paragraphs for r_ in p_.runs]:
             for a, b in (("≥ 80%", "≥ 90%"), ("60–79%", "80–89%"), ("< 60%", "< 80%")):
                 run.text = run.text.replace(a, b)
             if "Sin presencia" in run.text:
-                run.text = run.text.replace("Sin presencia", "Atrasada")
+                run.text = run.text.replace("Sin presencia", "Sin registro")
+            if "Atrasada" in run.text:
+                run.text = run.text.replace("Atrasada", "Sin registro")
             if "contrato sin actividad en faena, no se evalúa" in run.text:
-                run.text = run.text.replace("contrato sin actividad en faena, no se evalúa", "evaluación del mes no registrada")
+                run.text = run.text.replace("contrato sin actividad en faena, no se evalúa", "mes cerrado sin evaluación")
     log.append(f"RECSS ✔ ({len(hechos)} contratos, {d['meses'][0]}–{d['meses'][-1]})")
 
 
