@@ -858,7 +858,8 @@ def ruta_guardado(turno, fecha_cierre, vigencia):
     d = _fecha_obl(fecha_cierre, "fecha_cierre")
     carpeta = f"{d.month:02d}. {MESES_LARGOS[d.month - 1]}"
     archivo = nombre_archivo(turno, vigencia)
-    return {"carpeta": carpeta, "archivo": archivo, "ruta": f"Assurance\\{carpeta}\\{archivo}"}
+    return {"carpeta": carpeta, "turno_carpeta": f"Turno {turno}", "archivo": archivo,
+            "ruta": f"Assurance\\{carpeta}\\Turno {turno}\\{archivo}"}
 
 
 REGISTRO_NS = "urn:antucoya:assurance-registro"

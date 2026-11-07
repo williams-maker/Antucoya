@@ -527,7 +527,7 @@ $("bGenRes").onclick = async () => {
     $("cResDesc").hidden = false;
     $("estRes").innerHTML = '<span class="ok">✔ Resumen generado</span>';
     reg(`✔ Resumen generado: ${RS.nombre}`, "ok");
-    const rutaT = await respaldarEnTeams(dirTeams, carpetaMes(), RS.nombre, RS.salida);
+    const rutaT = await respaldarEnTeams(dirTeams, conTurno(carpetaMes()), RS.nombre, RS.salida);
     if (rutaT) $("nomRes").appendChild(el("div", { class: "ok", text: "✔ Guardado en Teams: " + rutaT }));
   } catch (e) {
     console.error(e);
@@ -1136,7 +1136,7 @@ $("bGen").onclick = async () => {
     $("estGen").innerHTML = '<span class="ok">✔ Presentación generada</span>';
     reg(`✔ Presentación generada: ${AS.nombre}`, "ok");
     const subMes = AS.res.ruta && AS.res.ruta.carpeta;
-    const rutaT = await respaldarEnTeams(dirTeams, subMes || carpetaMes(), AS.nombre, AS.salida);
+    const rutaT = await respaldarEnTeams(dirTeams, (subMes && AS.res.ruta.turno_carpeta ? `${subMes}/${AS.res.ruta.turno_carpeta}` : conTurno(subMes || carpetaMes())), AS.nombre, AS.salida);
     if (rutaT) {
       caja.innerHTML = ""; caja.appendChild(el("b", { class: "ok", text: "✔ Guardado en Teams: " })); caja.append(rutaT); caja.hidden = false;
     }
@@ -1160,6 +1160,8 @@ $("bDescAss").onclick = () => {
    (Chrome/Edge). La carpeta recordada vive solo en este navegador; no se sube nada a ningún servidor.
    ===================================================================== */
 const MESES_ES = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+/** Carpeta del mes + subcarpeta del turno elegido (1-3 o 2-4): "09. Septiembre/Turno 1-3". */
+const conTurno = (mes) => { const t = document.querySelector('input[name="turno"]:checked'); return t ? `${mes}/Turno ${t.value}` : mes; };
 const carpetaMes = (d = new Date()) => `${String(d.getMonth() + 1).padStart(2, "0")}. ${MESES_ES[d.getMonth()]}`;
 
 const IDB = {
@@ -1206,11 +1208,12 @@ async function carpetaTeams(clave, pedir) {
 
 /** Guarda `u8` en <carpeta>/<subcarpeta>/<nombre> y devuelve la ruta mostrada. */
 async function escribirEnTeams(dir, subcarpeta, nombre, u8) {
-  const sub = subcarpeta ? await dir.getDirectoryHandle(subcarpeta, { create: true }) : dir;
+  let sub = dir;                                    // subcarpeta anidada: "09. Septiembre/Turno 1-3"
+  for (const parte of (subcarpeta || "").split("/").filter(Boolean)) sub = await sub.getDirectoryHandle(parte, { create: true });
   const fh = await sub.getFileHandle(nombre, { create: true });
   const w = await fh.createWritable();
   await w.write(u8); await w.close();
-  return `${dir.name}\\${subcarpeta ? subcarpeta + "\\" : ""}${nombre}`;
+  return `${dir.name}\\${subcarpeta ? subcarpeta.replace(/\//g, "\\") + "\\" : ""}${nombre}`;
 }
 
 /** Dibuja el selector de carpeta de Teams de una herramienta. */
@@ -1223,7 +1226,7 @@ async function pintarTeams(clave, idCaja, titulo) {
   }
   const dir = await IDB.leer(clave);
   caja.appendChild(el("b", { text: "Respaldo en Teams: " }));
-  caja.appendChild(el("span", { text: dir ? `carpeta «${dir.name}» (se crea la subcarpeta del mes) ` : `sin carpeta elegida (se pedirá solo una vez) ` }));
+  caja.appendChild(el("span", { text: dir ? `carpeta «${dir.name}» (se crean la subcarpeta del mes y la del turno) ` : `sin carpeta elegida (se pedirá solo una vez) ` }));
   caja.appendChild(el("button", { class: "sec", type: "button", text: dir ? "Cambiar carpeta" : titulo,
     onclick: async () => {
       try {
