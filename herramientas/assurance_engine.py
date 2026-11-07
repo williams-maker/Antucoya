@@ -1155,12 +1155,27 @@ def generar(plantilla_bytes, plan):
         raise ValueError(f"la tabla de focos tiene {len(tbl.rows)} filas (se esperaban 7)")
     for i, f in enumerate(focos, 1):
         _llenar_fila(tbl, i, i, f, log)
+    # Foco SI PRO (fila 6): si el usuario escribió texto en la página, se llena; si no, la fila queda intacta
+    sp = plan.get("si_pro") or {}
+    sp_foco = str(sp.get("foco") or "").strip()
+    sp_crit = str(sp.get("criterio") or "").strip()
+    si_pro_lleno = bool(sp_foco or sp_crit)
+    if si_pro_lleno:
+        c_sp = tbl.cell(6, 1)
+        if sp_crit:
+            ps = _parrafos(c_sp.text_frame, 2)
+            _escribir(ps[0], [(sp_foco, NEGRO, False)] if sp_foco else [("", NEGRO, False)])
+            _escribir(ps[1], [("Criterio de restricción: ", None, None), (sp_crit, NEGRO, False)])
+        else:
+            ps = _parrafos(c_sp.text_frame, 1)
+            _escribir(ps[0], [(sp_foco, NEGRO, False)])
+        log.append("✔ Foco SI PRO: texto escrito por el usuario")
     trs = list(tbl._tbl.tr_lst)
     for tr in trs[len(focos) + 1:6]:          # filas de foco sobrantes; la fila 6 (SI PRO) nunca
         tbl._tbl.remove(tr)
     tsh.height = sum(int(tr.h) for tr in tbl._tbl.tr_lst)
     n1 = sum(1 for f in focos if f["nivel"] == "N1")
-    log.append(f"✔ Focos: {len(focos)} ({n1} N1, {len(focos) - n1} N2) + fila SI PRO intacta")
+    log.append(f"✔ Focos: {len(focos)} ({n1} N1, {len(focos) - n1} N2) + fila SI PRO " + ("con texto del usuario" if si_pro_lleno else "intacta"))
     if not focos:
         log.append("⚠ Plan sin focos: solo queda la fila SI PRO")
 

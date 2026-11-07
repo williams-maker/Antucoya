@@ -844,6 +844,13 @@ function pintarFocos() {
     });
     cont.appendChild(tarjeta);
   });
+  // Foco SI PRO (fila 6 de la plantilla): texto libre del usuario; vacío = la fila queda como en la plantilla
+  const sp = el("div", { class: "foco n2" },
+    el("div", { class: "cab" }, "Foco SI PRO · estrategia de controles (opcional)"));
+  sp.appendChild(campo({ clave: "si_pro|foco", etiqueta: "Foco SI PRO", auto: "", max: 350 }));
+  sp.appendChild(campo({ clave: "si_pro|criterio", etiqueta: "Criterio de restricción", auto: "", max: 150 }));
+  sp.appendChild(el("div", { class: "ayuda", text: "Escribe aquí el foco SI PRO tal como irá en la fila 6 del Assurance. Si lo dejas vacío, esa fila queda como en la plantilla." }));
+  cont.appendChild(sp);
 }
 
 /* ---------- Recurrente y tendencias (edición genérica por ruta) ---------- */
@@ -907,6 +914,10 @@ function aplicarEdiciones(plan) {
       if (tiene(EDIC, k)) ev.texto = EDIC[k];
     });
   });
+  if (tiene(EDIC, "si_pro|foco") || tiene(EDIC, "si_pro|criterio")) {
+    p.si_pro = { foco: tiene(EDIC, "si_pro|foco") ? EDIC["si_pro|foco"] : "",
+                 criterio: tiene(EDIC, "si_pro|criterio") ? EDIC["si_pro|criterio"] : "" };
+  }
   Object.keys(EDIC).forEach(k => {
     if (k.startsWith("@|")) asignarRuta(p, k.slice(2).split("."), EDIC[k]);
   });
