@@ -594,7 +594,7 @@ $("bAna").onclick = async () => {
   $("estAss").textContent = "Analizando…";
   try {
     // Nuevo análisis: se descartan elecciones, ediciones y salida previas
-    AS.elec = {}; AS.tocadas = new Set(); AS.incluir = new Set(); AS.res = null; AS.salida = null;
+    AS.elec = {}; AS.tocadas = new Set(); AS.incluir = new Set(); AS.res = null; AS.decs0 = null; AS.salida = null;
     Object.keys(EDIC).forEach(k => delete EDIC[k]);
     VISTOS.clear();
     $("ass-res").hidden = true; $("genResultado").hidden = true; $("estGen").textContent = "";
@@ -611,7 +611,7 @@ $("bAna").onclick = async () => {
       $("estAss").textContent = "";
       return;
     }
-    AS.res = r;
+    AS.res = r; AS.decs0 = Array.isArray(r.decisiones) ? r.decisiones.slice() : [];
     pintarTodo();
     $("estAss").innerHTML = '<span class="ok">✔ Análisis listo. Revisa las decisiones y los focos.</span>';
     reg("✔ Análisis de Assurance listo", "ok");
@@ -628,7 +628,12 @@ $("bAna").onclick = async () => {
    ===================================================================== */
 const claveDec = d => (d.clase || "") + "|" + d.id;
 const valorDec = d => { const k = claveDec(d); return (k in AS.elec) ? AS.elec[k] : d.defecto; };
-const listaDec = () => (AS.res && Array.isArray(AS.res.decisiones)) ? AS.res.decisiones : [];
+const listaDec = () => {   // las tarjetas del análisis se conservan aunque el evento ya tenga tema; se suman las nuevas
+  const act = (AS.res && Array.isArray(AS.res.decisiones)) ? AS.res.decisiones : [];
+  const base = Array.isArray(AS.decs0) ? AS.decs0 : [];
+  const vistas = new Set(base.map(claveDec));
+  return base.concat(act.filter(d => !vistas.has(claveDec(d))));
+};
 const pendientes = () => listaDec().filter(d => !AS.tocadas.has(claveDec(d))).length;
 
 /** Arma el objeto de decisiones que espera puente_web.rearmar (solo lo que el usuario tocó). */
@@ -686,10 +691,11 @@ function pintarDecisiones() {
             el("input", {
               type: "radio", name: nombreGrupo, value: op.valor,
               checked: String(op.valor) === String(actual),
-              onchange: () => cambiarDecision(d, op.valor)
+              onclick: () => cambiarDecision(d, op.valor)   // click: también funciona si la opción ya estaba marcada por defecto
             }),
             el("span", { text: op.etiqueta !== undefined ? op.etiqueta : String(op.valor) })
-          )))
+          ))),
+        (clase === "sin_tema" || clase === "tema_ambiguo") ? estadoEvento(d, actual) : null
       ));
     });
     cuerpo.appendChild(g);
@@ -702,6 +708,27 @@ function pintarContadorPendientes() {
             : `Decisiones pendientes (en su valor por defecto): ${p} de ${total}`;
   const caja = el("span", { class: "pendbox" + (p === 0 ? " cero" : ""), text: txt });
   $("contPend").innerHTML = ""; $("contPend").appendChild(caja);
+}
+
+/** Estado del evento de una tarjeta (¿está en el Assurance?) y botón para agregarlo o quitarlo. */
+function estadoEvento(d, tema) {
+  if (!tema || tema === "ignorar") return el("div", { class: "mut", text: "Elige un tema para poder agregarlo al Assurance." });
+  const id = String(d.id), tid = String(tema), res = AS.res || {}, qa = res.qa || {};
+  const foco = ((res.plan && res.plan.focos) || []).find(f => (f.eventos || []).some(e => (e.ids || []).map(String).includes(id)));
+  const fuera = [].concat(qa.n1n2_fuera || [], qa.temas_solo_hbp_excluidos || [])
+    .find(x => x && Array.isArray(x.ids) && x.ids.map(String).includes(id));
+  const manual = AS.incluir.has(tid);
+  let txt, boton = null;
+  if (foco) {
+    txt = `✔ En el Assurance (foco ${foco.prioridad}${manual ? ", agregado por ti" : ""})`;
+    if (manual) boton = el("button", { class: "sec", type: "button", text: "Quitar del Assurance", onclick: () => alternarIncluir(tid) });
+  } else if (fuera) {
+    txt = `Fuera del Assurance: ${fuera.motivo || "sin motivo"}`;
+    boton = el("button", { class: "sec", type: "button", text: "Agregar al Assurance", onclick: () => alternarIncluir(tid) });
+  } else {
+    txt = "Contado en Tendencias; no forma foco.";
+  }
+  return el("div", { class: "estado-ev", style: "margin-top:6px" }, el("span", { text: txt + " " }), boton);
 }
 
 /** Al cambiar una opción: se guarda la elección y se recalcula el plan. */
