@@ -454,6 +454,14 @@ def _exposiciones():
 _CC_INVALIDOS = {"", "otro", "otros", "sin informacion", "ninguno", "no aplica", "n/a", "na", "-",
                  "sin control", "none", "nan"}
 
+# Temas cuyo estándar es una estrategia de control con controles críticos: un evento de estos temas con
+# «Otro» / sin información en el campo de control crítico cuenta igual como asociado a CC.
+CC_TEMAS = {"izaje_plan", "izaje_segregacion", "izaje_certificacion", "transito_peaton_equipo", "andamios_plataformas",
+            "altura_caidas", "tableros_electricos", "extensiones_electricas", "generadores_equipos_menores",
+            "bloqueo_energias", "excavaciones_zanjas", "espacios_confinados", "trabajos_caliente",
+            "segregacion_acceso", "inmovilizacion_estacionamiento", "pretiles_bordes"}
+
+
 def _control_cc(ev):
     """Nombre del control crítico específico del evento, o None (Otro / Sin Información / vacío)."""
     raw = str(ev.get("control_critico") or "")
@@ -1166,12 +1174,16 @@ def armar_plan(analisis, params, decisiones=None, calcular=None):
 
     # --- 7. tendencias -----------------------------------------------------
     cnt_no, cnt_cc, sin_tema_n = {}, {}, 0
+    inferidos_cc = []
     for ev in validos:
         tid = por_ev.get(ev["id"], {}).get("tema_id")
         if not tid:
             sin_tema_n += 1
             continue
         ctrl = _control_cc(ev)
+        if not ctrl and tid in CC_TEMAS and tid in cat:
+            ctrl = cat[tid].get("control_corto") or cat[tid]["tema"]    # revisado contra las estrategias de control
+            inferidos_cc.append(ev["id"])
         if ctrl:
             cnt_cc[(tid, ctrl)] = cnt_cc.get((tid, ctrl), 0) + 1
         else:
@@ -1183,13 +1195,15 @@ def armar_plan(analisis, params, decisiones=None, calcular=None):
     tendencias = {"no_cc": no_cc, "cc": cc}
     if sin_tema_n:
         supuestos.append(f"{sin_tema_n} evento(s) sin tema no se cuentan en Tendencias.")
+    if inferidos_cc:
+        supuestos.append("Eventos con control crítico «Otro» o sin información, pero cuyo tema corresponde a una estrategia "
+                         "de control con controles críticos, se cuentan en Tendencias asociadas a CC: "
+                         + ", ".join(sorted(inferidos_cc)))
     supuestos.append("El control crítico se toma del campo control_critico (el campo cc del motor solo trae la marca (C.C.)); "
                      "'Otro', 'Sin Información' o vacío cuentan como no CC.")
 
     # --- 8. indicadores y plan --------------------------------------------
     indicadores = copy.deepcopy(analisis.get("indicadores") or {})
-    if not indicadores.get("comparacion_texto") or "[DATO FALTANTE]" in str(indicadores.get("comparacion_texto")):
-        faltantes.append("Comparación con los 14 días anteriores no disponible (el Excel no cubre ese período)")
     base = analisis.get("params") or {}
     vig = base.get("vigencia") or params.get("vigencia")
     if isinstance(vig, dict):

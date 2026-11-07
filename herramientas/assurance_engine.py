@@ -439,7 +439,6 @@ def analizar(excel_bytes, params):
     if not cubierto:
         flecha = None
         comparacion_texto = "[DATO FALTANTE]"
-        log.append("⚠ El Excel no cubre el período anterior de 14 días.")
     else:
         if total_n1n2 > total_n1n2_ant:
             flecha = "▲"
@@ -1136,10 +1135,11 @@ def generar(plantilla_bytes, plan):
     per = ((ind.get("periodo") or {}).get("texto")) or DATO_FALTANTE
     esp = runs[0].text[len(runs[0].text.rstrip()):]
     for i, v in ((0, per + esp), (2, str(total) if total is not None else DATO_FALTANTE), (5, val("ACC")),
-                 (8, val("CAAP")), (11, val("HAP")), (14, val("CBP")),
-                 (17, ind.get("comparacion_texto") or DATO_FALTANTE)):
+                 (8, val("CAAP")), (11, val("HAP")), (14, val("CBP"))):
         _set_run(runs[i], v, NEGRO, False)
-    log.append("✔ Indicadores 14 días")
+    for i in (15, 16, 17):          # sin comparación con los 14 días anteriores
+        _set_run(runs[i], "", NEGRO, False)
+    log.append("✔ Indicadores del turno (sin comparación con los 14 días anteriores)")
 
     # 3. Focos (puntos 3, 4, 5, 7, 8, 9)
     if len(focos) > 5:
@@ -1160,6 +1160,15 @@ def generar(plantilla_bytes, plan):
     sp_foco = str(sp.get("foco") or "").strip()
     sp_crit = str(sp.get("criterio") or "").strip()
     si_pro_lleno = bool(sp_foco or sp_crit)
+    c0 = tbl.cell(6, 0)               # rótulo: solo «SI PRO», sin número ni apellidos
+    ps0 = c0.text_frame.paragraphs
+    for k, pa in enumerate(ps0):
+        rs = list(pa.runs)
+        if not rs:
+            continue
+        rs[0].text = "SI PRO" if k == 0 else ""
+        for r in rs[1:]:
+            r.text = ""
     if si_pro_lleno:
         c_sp = tbl.cell(6, 1)
         if sp_crit:
