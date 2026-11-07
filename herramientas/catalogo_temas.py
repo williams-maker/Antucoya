@@ -821,8 +821,20 @@ def _herramienta_cdp(herr, usar):
             i = next((k for k, p in enumerate(partes) if p in _ASP), len(partes))
             partes.insert(i, "CdP")
     else:
-        partes = [p for p in partes if not es_cdp(p)] or ["Desafío en Terreno"]
+        partes = [p for p in partes if not es_cdp(p)] or ["Inspección de Equipos"]
     return " + ".join(partes) + ":" + der
+
+
+def _herramienta_desafio(herr, usar):
+    """«Desafío en Terreno» solo aplica a accidentes (ACC) o CAAP: si el foco no los tiene, se retira del texto."""
+    if usar or not herr or ":" not in herr:
+        return herr
+    izq, der = herr.split(":", 1)
+    partes = [p.strip() for p in izq.split(" + ") if p.strip()]
+    sin = [p for p in partes if not p.lower().startswith("desafío en terreno") and not p.lower().startswith("desafio en terreno")]
+    if len(sin) == len(partes):
+        return herr
+    return " + ".join(sin or ["Inspección de Equipos"]) + ":" + der
 
 
 # La clasificación del Excel ya está cerrada: no se sugiere ni se aplica ninguna revalorización (HBP→CBP, etc.).
@@ -1036,6 +1048,8 @@ def armar_plan(analisis, params, decisiones=None, calcular=None):
             t = {**t, "herramienta": _herramienta_por_causa(t.get("herramienta"), causa)}
         motivos_cdp = [m for m in (_cdp_evento(e) for e in evs) if m]
         t = {**t, "herramienta": _herramienta_cdp(t.get("herramienta"), bool(motivos_cdp))}
+        hay_acc_caap = any(tipo_ef(e) in ("ACC", "CAAP") for e in evs)
+        t = {**t, "herramienta": _herramienta_desafio(t.get("herramienta"), hay_acc_caap)}
         nn = [e for e in evs if tipo_ef(e) != "HBP"]
         hb = [e for e in evs if tipo_ef(e) == "HBP"]
         nn.sort(key=lambda e: (e.get("fecha") or "", e["id"]), reverse=True)
@@ -1108,6 +1122,7 @@ def armar_plan(analisis, params, decisiones=None, calcular=None):
                          "motivo_nivel": f.get("motivo_nivel"),
                          "n1n2": [e["id"] for e in nn], "hbp_listados": hbp_ids, "hbp_mas": max(hbp_mas, 0),
                          "hbp_total": len(hb), "causa": causa})
+    supuestos.append("«Desafío en Terreno» solo en focos que tengan un accidente (ACC) o un CAAP; en los demás se retira.")
     supuestos.append("CdP como herramienta solo si algún evento del foco lo cumple: (1) la sigla del título lo dice "
                      "(p. ej. CdP-HBP) o (2) la descripción identifica una acción de un trabajador que se deba revisar "
                      "en el turno siguiente; si no, se retira del texto.")
