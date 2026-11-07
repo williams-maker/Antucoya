@@ -104,6 +104,9 @@
       <b>Arrastra aquí el Excel de eventos (.xlsx)</b><br>o haz clic para elegirlo.
     </label>
     <div class="arch" id="aRes"><span>Archivo</span>— pendiente —</div>
+    <div class="ayuda" style="margin-top:10px">Base de conocimiento (opcional, privada): JSON con lo aprendido de los PDF. Queda solo en este navegador; no se sube a ningún lado.
+      <input type="file" id="archKB" accept=".json" style="display:block;margin-top:4px">
+      <span id="kbEstado" class="ruta"></span> <a href="#" id="kbQuitar" style="display:none">quitar</a></div>
     <ul class="errores" id="errRes"></ul>
   </div>
 
@@ -362,6 +365,7 @@ await micropip.install([${RUEDAS.map(w => `"emfs:/tmp/${w}"`).join(",")}], deps=
     reg(`Motor Resumen ${v.resumen} · Motor Assurance ${v.assurance} · Reglas v${v.reglas} · Puente ${v.puente}`);
 
     pyOk = true;
+    try { const kb = await IDB.leer("kb_json"); if (kb) await aplicarKB(kb, false); } catch (_) { /* sin base guardada */ }
     $("motorEstado").innerHTML = '<span class="ok">✔ Motor listo</span>';
     reg("✔ Motor listo", "ok");
   } catch (e) {
@@ -1143,6 +1147,21 @@ const IDB = {
     return new Promise((ok, mal) => { const t = db.transaction("h", "readwrite"); t.objectStore("h").put(v, k); t.oncomplete = () => ok(); t.onerror = () => mal(t.error); });
   }
 };
+async function aplicarKB(texto, guardar) {
+  const r = await llamar("puente_web.cargar_conocimiento(_kb)", { _kb: texto || "" });
+  if (!r.ok) { reg("✖ Base de conocimiento: " + ((r.errores || ["no válida"]).join("; ")), "bad"); return; }
+  if (guardar) { try { await IDB.guardar("kb_json", texto || ""); } catch (_) { /* sin almacenamiento */ } }
+  (r.avisos || []).forEach(a => reg("⚠ Base de conocimiento: " + a, "warn"));
+  $("kbEstado").textContent = r.n ? `✔ ${r.n} temas cargados${r.meta && r.meta.fuente ? " · " + r.meta.fuente : ""}` : "";
+  $("kbQuitar").style.display = r.n ? "inline" : "none";
+  reg(r.n ? `✔ Base de conocimiento cargada: ${r.n} temas` : "Base de conocimiento quitada", r.n ? "ok" : undefined);
+}
+$("archKB").addEventListener("change", async e => {
+  const f = e.target.files[0]; if (!f) return;
+  try { await aplicarKB(await f.text(), true); } catch (x) { reg("✖ Base de conocimiento: " + msgError(x), "bad"); }
+  if (AS && AS.res) reg("Vuelve a pulsar Analizar para aplicar la base de conocimiento.");
+});
+$("kbQuitar").addEventListener("click", async e => { e.preventDefault(); await aplicarKB("", true); $("archKB").value = ""; });
 const TEAMS_OK = typeof window.showDirectoryPicker === "function";
 
 /** Devuelve la carpeta recordada si hay permiso (pide permiso solo si `pedir`, y debe ser con un clic reciente). */

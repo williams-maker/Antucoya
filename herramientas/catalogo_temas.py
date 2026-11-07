@@ -13,7 +13,7 @@ from functools import lru_cache
 from catalogo_data import CATALOGO, REVAL
 
 __all__ = ["UMBRAL", "RATIO_AMBIGUO", "normalizar", "asignar_tema", "asignar_todos",
-           "sugerir_revalorizacion", "resumir_evento", "titulo_evento", "armar_plan"]
+           "sugerir_revalorizacion", "resumir_evento", "titulo_evento", "cargar_conocimiento", "armar_plan"]
 
 # ----------------------------------------------------------------------
 # Constantes
@@ -283,6 +283,47 @@ def _decision_tema(ev, res, catalogo):
 # Eventos que siempre van a un tema concreto (decisión del usuario; no se les pregunta).
 # 569240 (ACC) → foco fijo del año: Controles eléctricos en tableros, generadores y torres.
 TEMA_FORZADO = {"569240": "tableros_electricos"}
+
+
+# ── Base de conocimiento privada (aprendida de los PDF; NO vive en el repo público) ──
+BASE_CONOCIMIENTO = {}
+BASE_CONOCIMIENTO_META = {}
+_CAMPOS_KB = {"instruccion": MAX_INSTRUCCION, "criterio": 150, "herramienta": 400, "evidencia": 300}
+
+
+def cargar_conocimiento(datos):
+    """Carga un JSON {"meta": {...}, "temas": {tema_id: {instruccion, criterio, herramienta, evidencia}}}.
+    Valida ids y largos; devuelve (n_temas, avisos). Un dict vacío/None limpia la base."""
+    global BASE_CONOCIMIENTO, BASE_CONOCIMIENTO_META
+    BASE_CONOCIMIENTO, BASE_CONOCIMIENTO_META = {}, {}
+    if not datos:
+        return 0, []
+    ids = {t["id"] for t in CATALOGO}
+    avisos, ok = [], {}
+    for tid, campos in (datos.get("temas") or {}).items():
+        if tid not in ids:
+            avisos.append(f"tema desconocido ignorado: {tid}")
+            continue
+        limpio = {}
+        for c, mx in _CAMPOS_KB.items():
+            v = str((campos or {}).get(c) or "").strip()
+            if not v:
+                continue
+            if len(v) > mx:
+                avisos.append(f"{tid}.{c}: {len(v)} caracteres (máx. {mx}); se ignora")
+                continue
+            limpio[c] = v
+        if limpio:
+            ok[tid] = limpio
+    BASE_CONOCIMIENTO = ok
+    BASE_CONOCIMIENTO_META = dict(datos.get("meta") or {})
+    return len(ok), avisos
+
+
+def aplicar_conocimiento(catalogo):
+    if not BASE_CONOCIMIENTO:
+        return catalogo
+    return [dict(t, **BASE_CONOCIMIENTO[t["id"]]) if t["id"] in BASE_CONOCIMIENTO else t for t in catalogo]
 
 
 def asignar_todos(eventos, manual=None, catalogo=CATALOGO):
@@ -749,7 +790,10 @@ def armar_plan(analisis, params, decisiones=None, calcular=None):
             raise ValueError(f"falta la función calcular: {e}")
 
     log, supuestos, faltantes = [], [], []
-    catalogo = CATALOGO
+    catalogo = aplicar_conocimiento(CATALOGO)
+    if BASE_CONOCIMIENTO:
+        log.append(f"✔ Base de conocimiento aplicada: {len(BASE_CONOCIMIENTO)} temas"
+                   f" ({BASE_CONOCIMIENTO_META.get('fuente', 'sin fuente')})")
     cat = {t["id"]: t for t in catalogo}
     orden_cat = {t["id"]: i for i, t in enumerate(catalogo)}
 

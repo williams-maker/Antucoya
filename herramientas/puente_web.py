@@ -106,3 +106,14 @@ def generar_pptx(plan_json, plantilla_bytes):
         if l.startswith("✔ Nombre:"):
             nombre = l.split(":", 1)[1].strip()
     return json.dumps({"ok": True, "log": log, "nombre": nombre}, ensure_ascii=False)
+
+
+def cargar_conocimiento(json_texto):
+    """Carga (o limpia con texto vacío) la base de conocimiento privada. No se guarda en el repo."""
+    try:
+        datos = json.loads(json_texto) if json_texto and json_texto.strip() else None
+        n, avisos = T.cargar_conocimiento(datos)
+        return json.dumps({"ok": True, "n": n, "avisos": avisos,
+                           "meta": T.BASE_CONOCIMIENTO_META}, ensure_ascii=False)
+    except Exception as e:
+        return _err(e)
