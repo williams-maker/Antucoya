@@ -146,6 +146,10 @@ def _quitar_intro(t: str) -> str:
         resto = t[i + 1:].strip()
         if len(resto) < _MIN_RESTO:
             break
+        # la coma cierra una cláusula completa (lleva verbo: "se observa …") o lo que sigue es una subordinada
+        # ("la cual…", "que…"): no es la coma de la introducción, se conserva la frase entera
+        if re.search(r"\bse\s+\w+", _plano(t[:i])) or re.match(r"(?:la|el|lo|los|las)\s+cual(?:es)?\b|que\b|donde\b|por\s+lo\s+que\b", _plano(resto)):
+            break
         t = resto
     return t
 

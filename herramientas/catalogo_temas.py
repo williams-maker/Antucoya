@@ -276,15 +276,21 @@ def _decision_tema(ev, res, catalogo):
         cand = [i for i, _ in res["candidatos"]]
         ids = cand + [t["id"] for t in catalogo if t["id"] not in cand]
         clase = "sin_tema"
-        pregunta = f"El evento {ev_id} ({ev.get('tipo')}) no calza con ningún tema del catálogo. ¿A qué tema pertenece?"
+        pregunta = f"El evento {ev_id} no es posible relacionarlo con algún estándar o estrategia de control."
     opciones = [{"valor": i, "etiqueta": nombres[i]} for i in ids if i in nombres]
     opciones.append({"valor": "ignorar", "etiqueta": "Ignorar (no forma foco ni tendencia)"})
     return {"id": ev_id, "clase": clase, "tipo": ev.get("tipo"), "titulo": ev.get("titulo") or "",
             "pregunta": pregunta, "opciones": opciones, "evidencia": _evidencia(ev), "defecto": "ignorar"}
 
+# Eventos que siempre van a un tema concreto (decisión del usuario; no se les pregunta).
+# 569240 (ACC) → foco fijo del año: Controles eléctricos en tableros, generadores y torres.
+TEMA_FORZADO = {"569240": "tableros_electricos"}
+
+
 def asignar_todos(eventos, manual=None, catalogo=CATALOGO):
     """Asigna tema a todos; `manual` {id: tema_id} gana siempre. Devuelve por_id y pendientes."""
     manual = {str(k): v for k, v in (manual or {}).items()}
+    manual.update(TEMA_FORZADO)
     ids_cat = {t["id"] for t in catalogo}
     por_id, pendientes = {}, []
     for ev in eventos:
@@ -302,7 +308,9 @@ def asignar_todos(eventos, manual=None, catalogo=CATALOGO):
             else:
                 res["tema_id"], res["estado"], res["ignorado"] = None, "sin_tema", True
         elif res["estado"] in ("sin_tema", "ambiguo"):
-            pendientes.append(_decision_tema(ev, res, catalogo))
+            # solo se pregunta por los eventos de los 7 días del turno; los del turno anterior no piden decisión
+            if ev.get("en_turno", True):
+                pendientes.append(_decision_tema(ev, res, catalogo))
         por_id[eid] = res
     orden = {str(e.get("id")): GRAVEDAD.get(e.get("tipo"), 0) for e in eventos}
     pendientes.sort(key=lambda d: -orden.get(d["id"], 0))
@@ -637,6 +645,89 @@ def _foco_fijo_activo(params):
     return bool(desde) and desde <= FOCO_FIJO["vigente_hasta"]
 
 
+# ---------------------------------------------------------------------------
+# Causa del evento: ACTO (falta o acción de riesgo del trabajador) o CONDICIÓN (entorno, ausencia o mal estado de
+# herramientas, conos, señalética, equipos…). Define la herramienta preventiva del foco:
+#   - actos o condiciones del ENTORNO → solo ASP (atento socio preventivo)
+#   - ausencia / mal estado de herramientas, conos, equipos → el resto de las herramientas, sin ASP
+#   - ambas a la vez (cada una en ≥1/3 de los eventos) → ASP + el resto de las herramientas
+# ---------------------------------------------------------------------------
+_RX_ACTO = re.compile(
+    r"\b(?:se retira(?:n)?|retira(?:ndo)? (?:el|su|la|los|las)|no (?:utiliza|usa|usan|porta|portan|lleva|respeta|respetan|"
+    r"verifica|verifican|realiza|realizan|realizo|efectua|efectuan|instala|instalan|amarra|asegura|bloquea|inspecciona|revisa|"
+    r"uso|uso el|usa el|cumple con (?:el|la|los|las) (?:procedimiento|norma|estandar|instruccion)|sigue|siguen|se amarra|"
+    r"se encuentra utilizando|utilizo)|omite|omiti\w*|incumple|incumplen|desobedece|ignora|"
+    r"transita(?:n)? (?:por|sin|bajo)|cruza(?:n)? (?:por|bajo|sin)|ingresa(?:n)? (?:sin|a|al) (?:zona|area|sector|espacio)?|"
+    r"ingreso (?:sin|no autorizado)|opera(?:r|n|ndo)? (?:sin|el equipo sin)|manipula(?:n)? (?:sin|con)|improvis\w*|"
+    r"sin autorizacion|no autorizad\w*|sin permiso|se expone(?:n)?|se ubica(?:n)? (?:bajo|debajo|en la linea)|"
+    r"permanece(?:n)? (?:bajo|debajo)|descuido|negligen\w*|imprudenci\w*|acto inseguro|conducta|se sube|salta|mal uso|"
+    r"uso indebido|desactiva|puentea|interviene(?:n)? (?:sin|el|la)|ejecuta(?:n|ndo)? (?:trabajos? )?sin|"
+    r"conversa(?:n|ndo)? (?:sin|con el)|sin utilizar|sin usar|sin portar|sin respetar)\b")
+_RX_CONDICION = re.compile(
+    r"\b(?:falta de|faltan?|faltante|ausencia de|no cuenta con|no cuentan con|no dispone|no disponen|no existe|inexistente|"
+    r"mal estado|defectuos\w*|deteriorad\w*|danad\w*|oxidad\w*|desgastad\w*|vencid\w*|inoperativ\w*|descalibrad\w*|"
+    r"fuera de servicio|no funciona|no cumple su funcion|obstruid\w*|desordenad\w*|mal (?:segregad|senalizad|estibad|ubicad|"
+    r"demarcad|instalad|anclad|conectad)\w*|derrame|fuga|filtracion|puenteado|piezas faltantes|"
+    r"sin (?:senalizacion|senaletica|segregacion|demarcacion|iluminacion|barandas?|cintas?|conos?|tapas?|rodapies?|peldanos?|"
+    r"pasacables?|protecciones?|resguardos?|puesta a tierra|extintores?|diferencial|tarjeta|ventilacion|rotulado|hds|"
+    r"contencion|bandejas?|pretiles?|bermas?|cunas?|delimitacion|barreras?|candados?|check ?list|luminarias?|discos?|"
+    r"manguera|tablero|tierra|conexion|sombra|techo|cubierta|orden|aseo|limpieza))\b")
+
+
+# Condiciones del ENTORNO (terreno, orden, iluminación, derrames, clima…): se tratan con ASP, igual que los actos.
+_RX_ENTORNO = re.compile(
+    r"\b(?:derrame|fuga|filtracion|obstruid\w*|desordenad\w*|sin (?:iluminacion|luminarias?|sombra|orden|aseo|limpieza)|"
+    r"mal (?:ubicad|estibad|demarcad|senalizad)\w*|terreno|piso resbaladiz\w*|desnivel\w*|viento|lluvia|nieve|neblina|polvo|"
+    r"condiciones? (?:del )?(?:entorno|terreno|clima\w*)|entorno)\b")
+
+
+def _causa_evento(ev):
+    """Devuelve (asp, herr): asp = acto del trabajador o condición del entorno; herr = ausencia o mal estado de
+    herramientas, conos, señalética, equipos… Pueden darse a la vez."""
+    txt = normalizar(f"{ev.get('titulo') or ''} {ev.get('descripcion') or ''}")
+    ne = len(_RX_ENTORNO.findall(txt))
+    txt2 = _RX_ENTORNO.sub(" ", txt)
+    return (ne + len(_RX_ACTO.findall(txt2))) > 0, len(_RX_CONDICION.findall(txt2)) > 0
+
+
+def _causa_foco(evs):
+    """'acto' (solo ASP), 'condicion' (demás herramientas sin ASP), 'ambas' (ASP + demás) o None.
+    Una causa cuenta si aparece en al menos un tercio de los eventos clasificables del foco."""
+    c = [_causa_evento(e) for e in evs]
+    c = [x for x in c if x[0] or x[1]]
+    if not c:
+        return None
+    n = len(c)
+    asp = sum(1 for x in c if x[0]) * 3 >= n
+    herr = sum(1 for x in c if x[1]) * 3 >= n
+    if asp and herr:
+        return "ambas"
+    return "acto" if asp else "condicion"
+
+
+_ASP = ("ASP", "Acompañamiento ASP")
+
+
+def _herramienta_por_causa(herr, causa):
+    """Acto/entorno → solo ASP; ausencia de herramientas → demás sin ASP; ambas → ASP + demás.
+    Texto sin ':' o causa None: sin cambios."""
+    if not herr or causa not in ("acto", "condicion", "ambas") or ":" not in herr:
+        return herr
+    izq, der = herr.split(":", 1)
+    partes = [p.strip() for p in izq.split(" + ") if p.strip()]
+    if causa == "acto":
+        return "ASP:" + der
+    resto = [p for p in partes if p not in _ASP]
+    if causa == "ambas":
+        return " + ".join(["ASP"] + resto) + ":" + der
+    return (" + ".join(resto) + ":" + der) if resto else herr
+
+
+# La clasificación del Excel ya está cerrada: no se sugiere ni se aplica ninguna revalorización (HBP→CBP, etc.).
+# Poner True solo para volver al comportamiento anterior.
+REVALORIZACION_ACTIVA = False
+
+
 def armar_plan(analisis, params, decisiones=None, calcular=None):
     """Arma el `plan` para `generar` a partir de la salida de `analizar`. Devuelve plan, qa, decisiones y log."""
     if not isinstance(analisis, dict) or not analisis.get("ok"):
@@ -689,8 +780,8 @@ def armar_plan(analisis, params, decisiones=None, calcular=None):
     rev_aplicadas, rev_info, rev_pend, dec_rev_pend = {}, [], [], []
     for ev in validos:
         eid = ev["id"]
-        sug = sugerir_revalorizacion(ev)
-        dec = dec_rev.get(eid)
+        sug = sugerir_revalorizacion(ev) if REVALORIZACION_ACTIVA else None
+        dec = dec_rev.get(eid) if REVALORIZACION_ACTIVA else None
         if dec and dec != "mantener":
             if dec in TRANSICIONES.get(ev["tipo"], ()):
                 rev_aplicadas[eid] = dec
@@ -708,7 +799,10 @@ def armar_plan(analisis, params, decisiones=None, calcular=None):
     for k in dec_rev:
         if k not in by_id:
             log.append(f"⚠ Decisión de revalorización para un ID que no está en el período: {k}")
-    log.append(f"✔ Revalorizaciones: {len(rev_aplicadas)} aplicadas, {len(rev_pend)} sugeridas sin decidir (no se aplican)")
+    if REVALORIZACION_ACTIVA:
+        log.append(f"✔ Revalorizaciones: {len(rev_aplicadas)} aplicadas, {len(rev_pend)} sugeridas sin decidir (no se aplican)")
+    else:
+        log.append("✔ Sin revalorización: se usa la clasificación del Excel")
 
     def tipo_ef(ev):
         t = rev_aplicadas.get(ev["id"])
@@ -783,6 +877,10 @@ def armar_plan(analisis, params, decisiones=None, calcular=None):
                  "criterio": FOCO_FIJO["criterio"], "herramienta": FOCO_FIJO["herramienta"],
                  "evidencia": FOCO_FIJO["evidencia"], "extras": []}
         evs = [by_id[e["id"]] for e in f["eventos"]]
+        causa = None
+        if not f.get("fijo"):
+            causa = _causa_foco(evs)
+            t = {**t, "herramienta": _herramienta_por_causa(t.get("herramienta"), causa)}
         nn = [e for e in evs if tipo_ef(e) != "HBP"]
         hb = [e for e in evs if tipo_ef(e) == "HBP"]
         nn.sort(key=lambda e: (e.get("fecha") or "", e["id"]), reverse=True)
@@ -831,6 +929,8 @@ def armar_plan(analisis, params, decisiones=None, calcular=None):
         foco = {"nivel": f["nivel"], "tema": t["tema"], "instruccion": instr, "criterio": t.get("criterio"),
                 "eventos": eventos_plan, "herramienta": t.get("herramienta"), "evidencia": t.get("evidencia"),
                 "tema_id": tid, "prioridad": f["prioridad"]}
+        if causa:
+            foco["causa"] = causa
         if f.get("fijo"):
             foco["fijo"] = True
             if not eventos_plan:
@@ -847,7 +947,10 @@ def armar_plan(analisis, params, decisiones=None, calcular=None):
         qa_focos.append({"prioridad": f["prioridad"], "tema": t["tema"], "nivel": f["nivel"],
                          "motivo_nivel": f.get("motivo_nivel"),
                          "n1n2": [e["id"] for e in nn], "hbp_listados": hbp_ids, "hbp_mas": max(hbp_mas, 0),
-                         "hbp_total": len(hb)})
+                         "hbp_total": len(hb), "causa": causa})
+    supuestos.append("Herramienta preventiva según la causa de los eventos del foco: si predominan actos del trabajador "
+                     "(falta o acción de riesgo) → solo ASP; si predominan condiciones del entorno o ausencia/mal estado "
+                     "de herramientas y elementos → el resto de las herramientas, sin ASP (empate → condición).")
     plan_tids = {f["tema_id"] for f in focos_plan}
     log.append(f"✔ Focos armados: {len(focos_plan)}")
 
@@ -936,7 +1039,7 @@ def armar_plan(analisis, params, decisiones=None, calcular=None):
         "supuestos": [
             "El tema se asigna solo con título y descripción (el campo riesgo no se usa).",
             "Sin decisión sobre una revalorización sugerida, el evento mantiene su tipo original.",
-            "Los eventos sin tema o con tema ambiguo quedan fuera hasta que el usuario decida (defecto: ignorar).",
+            "Los eventos del turno sin tema o con tema ambiguo quedan fuera hasta que el usuario decida (defecto: ignorar); los del turno anterior no piden decisión.",
         ] + supuestos,
     }
     if ya_anteriores:
