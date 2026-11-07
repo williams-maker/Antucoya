@@ -117,3 +117,11 @@ def cargar_conocimiento(json_texto):
                            "meta": T.BASE_CONOCIMIENTO_META}, ensure_ascii=False)
     except Exception as e:
         return _err(e)
+
+
+def leer_registro(pptx_bytes):
+    """Registro (turno, fechas, focos e IDs) que un Assurance generado por esta herramienta lleva dentro, o 'null'."""
+    try:
+        return json.dumps(A.leer_registro(bytes(pptx_bytes)), ensure_ascii=False)
+    except Exception:
+        return "null"

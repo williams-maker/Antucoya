@@ -590,6 +590,7 @@ $("bAna").onclick = async () => {
     f.errores.forEach(m => reg("✖ " + m, "bad"));
     return;
   }
+  const pDirTeams = TEAMS_OK ? carpetaTeams("assurance", true) : Promise.resolve(null);   // el permiso se pide con este clic
   const liberar = ocupar("ass");
   $("estAss").textContent = "Analizando…";
   try {
@@ -601,6 +602,7 @@ $("bAna").onclick = async () => {
 
     reg(`Assurance: analizando «${AS.archivo.name}»…`);
     const bytes = await leerBytes(AS.archivo);
+    f.params.anteriores = await leerAnterioresDeTeams(await pDirTeams, f.params.fecha_cierre);
     const r = await llamar("puente_web.analizar_assurance(bytes(_ENTRADA.to_py()), _PARAMS)",
                            { _ENTRADA: bytes, _PARAMS: JSON.stringify(f.params) });
     regPython(r.log, VISTOS);
@@ -1245,6 +1247,42 @@ async function respaldarEnTeams(dir, subcarpeta, nombre, u8) {
     console.error(e);
     reg("✖ No se pudo guardar en Teams: " + msgError(e) + " (usa el botón de descarga)", "bad");
     return null;
+  }
+}
+
+/** Lee los Assurance anteriores de la carpeta de Teams (carpeta elegida y sus subcarpetas del mes) y devuelve sus registros. */
+async function leerAnterioresDeTeams(dir, fechaCierre) {
+  if (!dir) {
+    reg(TEAMS_OK ? "Assurance anteriores: no hay carpeta de Teams elegida o sin permiso; no se compara con Assurance previos."
+                 : "Assurance anteriores: usa Chrome o Edge para leerlos desde Teams.", "warn");
+    return [];
+  }
+  try {
+    const archivos = [];
+    const recorrer = async (d, nivel) => {
+      for await (const [nombre, h] of d.entries()) {
+        if (h.kind === "directory" && nivel < 2) await recorrer(h, nivel + 1);
+        else if (h.kind === "file" && /\.pptx$/i.test(nombre) && !nombre.startsWith("~$") && /assurance/i.test(nombre)) archivos.push(h);
+      }
+    };
+    await recorrer(dir, 0);
+    const con = await Promise.all(archivos.map(async h => { const f = await h.getFile(); return { f, t: f.lastModified }; }));
+    con.sort((a, b) => b.t - a.t);
+    const regs = [];
+    for (const { f } of con.slice(0, 10)) {
+      try {
+        const u8 = new Uint8Array(await f.arrayBuffer());
+        const r = await llamar("puente_web.leer_registro(_B.to_py())", { _B: u8 });
+        if (r && r.focos && (!fechaCierre || !r.fecha_cierre || r.fecha_cierre < fechaCierre)) regs.push(r);
+      } catch (_) { /* archivo que no es un Assurance de esta herramienta */ }
+    }
+    reg(regs.length ? `✔ Assurance anteriores leídos de Teams: ${regs.length} (${regs.map(r => r.nombre).join(", ")})`
+                    : "Assurance anteriores: no se encontraron Assurance previos de esta herramienta en la carpeta de Teams.", regs.length ? "ok" : "warn");
+    return regs;
+  } catch (e) {
+    console.error(e);
+    reg("⚠ No se pudieron leer los Assurance anteriores de Teams: " + msgError(e), "warn");
+    return [];
   }
 }
 
