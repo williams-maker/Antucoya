@@ -713,7 +713,7 @@ function pintarContadorPendientes() {
 /** Estado del evento de una tarjeta (¿está en el Assurance?) y botón para agregarlo o quitarlo. */
 function estadoEvento(d, tema) {
   if (!tema || tema === "ignorar") return el("div", { class: "mut", text: "Elige un tema para poder agregarlo al Assurance." });
-  const id = String(d.id), tid = String(tema), res = AS.res || {}, qa = res.qa || {};
+  const id = String(d.id), tid = String(tema) === "nuevo" ? "nuevo_" + id : String(tema), res = AS.res || {}, qa = res.qa || {};
   const foco = ((res.plan && res.plan.focos) || []).find(f => (f.eventos || []).some(e => (e.ids || []).map(String).includes(id)));
   const fuera = [].concat(qa.n1n2_fuera || [], qa.temas_solo_hbp_excluidos || [])
     .find(x => x && Array.isArray(x.ids) && x.ids.map(String).includes(id));

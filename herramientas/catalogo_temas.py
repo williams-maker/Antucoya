@@ -276,6 +276,8 @@ def _decision_tema(ev, res, catalogo):
         clase = "sin_tema"
         pregunta = f"El evento {ev_id} no es posible relacionarlo con algún estándar o estrategia de control."
     opciones = [{"valor": i, "etiqueta": nombres[i]} for i in ids if i in nombres]
+    if clase == "sin_tema":
+        opciones.append({"valor": "nuevo", "etiqueta": "Crear un tema nuevo a partir de la descripción del evento"})
     opciones.append({"valor": "ignorar", "etiqueta": "Ignorar (no forma foco ni tendencia)"})
     return {"id": ev_id, "clase": clase, "tipo": ev.get("tipo"), "titulo": ev.get("titulo") or "",
             "pregunta": pregunta, "opciones": opciones, "evidencia": _evidencia(ev), "defecto": "ignorar"}
@@ -324,6 +326,25 @@ def aplicar_conocimiento(catalogo):
     if not BASE_CONOCIMIENTO:
         return catalogo
     return [dict(t, **BASE_CONOCIMIENTO[t["id"]]) if t["id"] in BASE_CONOCIMIENTO else t for t in catalogo]
+
+
+def _tema_nuevo(ev):
+    """Tema creado para un evento que no calza con ninguno del catálogo, a partir de su título y descripción."""
+    eid = str(ev.get("id"))
+    tit = titulo_evento(ev, 110).strip().rstrip(".")
+    tit = re.sub(r"^(?:CBP|HBP|HAP|ABP|ACC|CAAP|CA)\s+", "", tit).strip() or "condición observada en terreno"
+    nombre = (tit[:1].upper() + tit[1:])[:110]
+    desc = str(ev.get("descripcion") or "").strip().replace("\n", " ")
+    instr = (f"Verificar en terreno, antes de iniciar la tarea, que se haya corregido y no se repita la condición observada: "
+             f"{tit[:1].lower() + tit[1:]}; el supervisor lo valida.")
+    if len(instr) > MAX_INSTRUCCION:
+        instr = instr[:MAX_INSTRUCCION - 1].rstrip(" ,;:") + "…"
+    return {"id": "nuevo_" + eid, "tema": nombre, "nombre_corto": tit[:1].lower() + tit[1:][:80],
+            "palabras": [], "excluir": "", "bloque": "am", "cc_o_emergencia": False, "extras": [],
+            "instruccion": instr, "criterio": "no se inicia la tarea mientras persista la condición observada.",
+            "herramienta": "Desafío en Terreno + Inspección de Equipos + ASP: verificar la condición observada antes de cada tarea.",
+            "evidencia": "Registro fotográfico de la condición corregida / verificación del supervisor",
+            "creado_de_evento": eid, "descripcion_evento": desc[:300]}
 
 
 def asignar_todos(eventos, manual=None, catalogo=CATALOGO):
@@ -815,6 +836,20 @@ def armar_plan(analisis, params, decisiones=None, calcular=None):
         u = "CA" if u.upper() == "CAAP" else (u.upper() if u.upper() in ("CA", "CBP", "HAP") else u.lower())
         dec_rev[str(k)] = u
     sin_foco = {str(x) for x in (decisiones.get("sin_foco") or [])}
+    nuevos_temas = []
+    for k, v in list(dec_tema.items()):
+        if v == "nuevo" and k in by_id:
+            tn = _tema_nuevo(by_id[k])
+            nuevos_temas.append(tn)
+            dec_tema[k] = tn["id"]
+    if nuevos_temas:
+        catalogo = list(catalogo) + nuevos_temas
+        for tn in nuevos_temas:
+            cat[tn["id"]] = tn
+            orden_cat[tn["id"]] = len(orden_cat)
+        supuestos.append("Tema nuevo creado a partir del evento: " + "; ".join(
+            f"{t['creado_de_evento']} → «{t['tema']}»" for t in nuevos_temas)
+            + " (revisa y edita instrucción, criterio, herramienta y evidencia en la página).")
 
     # --- 1. tema para todos -----------------------------------------------
     asig = asignar_todos(validos, dec_tema, catalogo)
