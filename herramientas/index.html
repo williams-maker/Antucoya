@@ -23,9 +23,6 @@
   button:disabled{background:#AEBBC0;cursor:not-allowed}
   button.sec{background:#fff;color:var(--teal);border:1px solid var(--teal);padding:4px 10px;font-size:12px}
   button.sec:disabled{color:#AEBBC0;border-color:#AEBBC0;background:#fff}
-  .tabs{display:flex;gap:6px;margin-bottom:14px}
-  .tab{background:#fff;color:var(--teal);border:1px solid var(--line);border-radius:8px;padding:10px 22px;font-weight:600}
-  .tab.on{background:var(--teal);color:#fff;border-color:var(--teal)}
   .drop{display:block;border:2px dashed var(--line);border-radius:10px;padding:30px;text-align:center;color:var(--mut);cursor:pointer;transition:.15s}
   .drop.on{border-color:var(--teal);background:#EAF2F4;color:var(--teal)}
   .drop b{color:var(--ink)}
@@ -97,39 +94,36 @@
   <div class="motor" id="motorEstado">Preparando el motor (solo la primera vez, ~20–40 s)…</div>
   <div class="bar" id="bar-motor" style="display:block;margin:0 0 14px"><i></i></div>
 
-  <nav class="tabs" role="tablist">
-    <button class="tab on" id="tabRes" role="tab" data-tab="res">Resumen</button>
-    <button class="tab" id="tabAss" role="tab" data-tab="ass">Assurance</button>
-  </nav>
+  <!-- ===================== EXCEL ÚNICO ===================== -->
+  <div class="card bloqueable">
+    <h2><span class="paso">1</span>Selecciona el Excel de eventos</h2>
+    <div class="ayuda">Un solo Excel para todo: el Resumen y el Assurance se calculan con los mismos datos.</div>
+    <label class="drop" id="dropRes">
+      <input type="file" id="archRes" accept=".xlsx" hidden>
+      <b>Arrastra aquí el Excel de eventos (.xlsx)</b><br>o haz clic para elegirlo.
+    </label>
+    <div class="arch" id="aRes"><span>Archivo</span>— pendiente —</div>
+    <ul class="errores" id="errRes"></ul>
+  </div>
 
-  <!-- ===================== PESTAÑA RESUMEN ===================== -->
+  <!-- ===================== RESUMEN ===================== -->
   <section id="t-res">
-    <div class="card bloqueable">
-      <h2><span class="paso">1</span>Selecciona el Excel de eventos</h2>
-      <label class="drop" id="dropRes">
-        <input type="file" id="archRes" accept=".xlsx" hidden>
-        <b>Arrastra aquí el Excel de eventos (.xlsx)</b><br>o haz clic para elegirlo.
-      </label>
-      <div class="arch" id="aRes"><span>Archivo</span>— pendiente —</div>
-      <ul class="errores" id="errRes"></ul>
-    </div>
     <div class="card">
-      <h2><span class="paso">2</span>Generar resumen</h2>
+      <h2><span class="paso">2</span>Resumen de Gestión de Eventos</h2>
       <button id="bGenRes" disabled>Generar resumen</button>
       <div class="bar" id="bar-res"><i></i></div>
       <div class="estado" id="estRes"></div>
-    </div>
-    <div class="card" id="cResDesc" hidden>
-      <h2><span class="paso">3</span>Resultado</h2>
-      <button id="bDescRes">Descargar</button>
-      <div class="estado" id="nomRes"></div>
+      <div id="cResDesc" hidden>
+        <button id="bDescRes">Descargar resumen (.xlsx)</button>
+        <div class="estado" id="nomRes"></div>
+      </div>
     </div>
   </section>
 
-  <!-- ===================== PESTAÑA ASSURANCE ===================== -->
-  <section id="t-ass" hidden>
+  <!-- ===================== ASSURANCE ===================== -->
+  <section id="t-ass">
     <div class="card bloqueable" id="cForm">
-      <h2><span class="paso">1</span>Datos del turno</h2>
+      <h2><span class="paso">3</span>Assurance · datos del turno</h2>
       <div class="campo">
         <div class="et">Turno entrante *</div>
         <div class="opts">
@@ -142,22 +136,11 @@
         <div class="campo"><div class="et">Vigencia hasta *</div><input type="date" id="fHasta"></div>
         <div class="campo"><div class="et">Fecha de cierre de los datos *</div><input type="date" id="fCierre"></div>
       </div>
-      <div class="grid3">
-      </div>
-    </div>
-
-    <div class="card bloqueable">
-      <h2><span class="paso">2</span>Excel de eventos</h2>
-      <label class="drop" id="dropAss">
-        <input type="file" id="archAss" accept=".xlsx" hidden>
-        <b>Arrastra aquí el Excel de eventos (.xlsx)</b><br>o haz clic para elegirlo.
-      </label>
-      <div class="arch" id="aAss"><span>Archivo</span>— pendiente —</div>
-      <ul class="errores" id="errAss"></ul>
     </div>
 
     <div class="card">
-      <h2><span class="paso">3</span>Analizar</h2>
+      <h2><span class="paso">4</span>Analizar Assurance</h2>
+      <ul class="errores" id="errAss"></ul>
       <button id="bAna" disabled>Analizar</button>
       <div class="bar" id="bar-ass"><i></i></div>
       <div class="estado" id="estAss"></div>
@@ -188,7 +171,7 @@
       </div>
 
       <div class="card">
-        <h2><span class="paso">4</span>Generar presentación</h2>
+        <h2><span class="paso">5</span>Generar presentación</h2>
         <button id="bGen" disabled>Generar Assurance</button>
         <div class="bar" id="bar-gen"><i></i></div>
         <div class="estado" id="estGen"></div>
@@ -422,8 +405,8 @@ async function leerSalida() {
    BLOQUEO DE BOTONES Y BARRAS DE PROGRESO
    ===================================================================== */
 let enCurso = 0;
-const RS = { archivo: null, salida: null, nombre: "" };                 // estado pestaña Resumen
-const AS = { archivo: null, res: null, elec: {}, tocadas: new Set(),   // estado pestaña Assurance
+const RS = { archivo: null, salida: null, nombre: "" };                 // estado del Resumen
+const AS = { archivo: null, res: null, elec: {}, tocadas: new Set(),   // estado del Assurance
              plantilla: null, salida: null, nombre: "" };
 const EDIC = {};                      // ediciones del usuario: clave "tema_id|campo"
 const VISTOS = new Set();             // líneas de log ya registradas (evita repetir en recálculos)
@@ -450,20 +433,6 @@ function refrescar() {
   $("bDescAss").disabled = enCurso > 0;
   document.body.classList.toggle("ocupado", enCurso > 0);
 }
-
-/* =====================================================================
-   PESTAÑAS
-   ===================================================================== */
-document.querySelectorAll(".tab").forEach(b => {
-  b.onclick = () => {
-    const t = b.dataset.tab;
-    $("tabRes").classList.toggle("on", t === "res");
-    $("tabAss").classList.toggle("on", t === "ass");
-    $("t-res").hidden = t !== "res";
-    $("t-ass").hidden = t !== "ass";
-    ajustarAlturas();
-  };
-});
 
 /* =====================================================================
    ZONAS DE ARRASTRE Y ERRORES
@@ -503,17 +472,24 @@ function elegirExcel(files, idErr) {
 async function leerBytes(archivo) { return new Uint8Array(await archivo.arrayBuffer()); }
 
 /* =====================================================================
-   PESTAÑA RESUMEN
+   RESUMEN
    ===================================================================== */
 conectarDrop($("dropRes"), $("archRes"), files => {
   const f = elegirExcel(files, "errRes");
   if (!f) return;
+  // Un solo Excel para el Resumen y el Assurance; se descarta lo generado con el archivo anterior
   RS.archivo = f; RS.salida = null;
+  AS.archivo = f; AS.res = null; AS.salida = null; AS.elec = {}; AS.tocadas = new Set();
+  Object.keys(EDIC).forEach(k => delete EDIC[k]);
+  VISTOS.clear();
   $("aRes").innerHTML = ""; $("aRes").appendChild(el("span", { text: "Archivo" })); $("aRes").append("✔ " + f.name);
   $("aRes").classList.add("ok");
   $("cResDesc").hidden = true;
   $("estRes").textContent = "";
-  reg(`Resumen: archivo «${f.name}» seleccionado.`);
+  $("ass-res").hidden = true; $("genResultado").hidden = true;
+  $("estAss").textContent = ""; $("estGen").textContent = "";
+  mostrarErrores("errAss", []);
+  reg(`Excel «${f.name}» seleccionado (se usa para el Resumen y el Assurance).`);
   refrescar();
 });
 
@@ -556,7 +532,7 @@ $("bDescRes").onclick = () => {
 };
 
 /* =====================================================================
-   PESTAÑA ASSURANCE · formulario
+   ASSURANCE · formulario
    ===================================================================== */
 let cierreAuto = true;   // true mientras la fecha de cierre sea una sugerencia automática
 
@@ -576,16 +552,6 @@ $("fDesde").addEventListener("change", () => {
 });
 $("fCierre").addEventListener("input", () => { cierreAuto = false; });
 
-conectarDrop($("dropAss"), $("archAss"), files => {
-  const f = elegirExcel(files, "errAss");
-  if (!f) return;
-  AS.archivo = f;
-  $("aAss").innerHTML = ""; $("aAss").appendChild(el("span", { text: "Archivo" })); $("aAss").append("✔ " + f.name);
-  $("aAss").classList.add("ok");
-  reg(`Assurance: archivo «${f.name}» seleccionado.`);
-  refrescar();
-});
-
 /** Valida el formulario; devuelve {params} o {errores}. */
 function leerFormulario() {
   const errores = [];
@@ -604,7 +570,7 @@ function leerFormulario() {
 }
 
 /* =====================================================================
-   PESTAÑA ASSURANCE · análisis
+   ASSURANCE · análisis
    ===================================================================== */
 $("bAna").onclick = async () => {
   mostrarErrores("errAss", []);
