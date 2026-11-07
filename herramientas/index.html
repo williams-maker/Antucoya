@@ -111,6 +111,7 @@
   <section id="t-res">
     <div class="card">
       <h2><span class="paso">2</span>Resumen de Gestión de Eventos</h2>
+      <div class="ruta" id="teamsRes"></div>
       <button id="bGenRes" disabled>Generar resumen</button>
       <div class="bar" id="bar-res"><i></i></div>
       <div class="estado" id="estRes"></div>
@@ -173,6 +174,7 @@
 
       <div class="card">
         <h2><span class="paso">5</span>Generar presentación</h2>
+        <div class="ruta" id="teamsAss"></div>
         <button id="bGen" disabled>Generar Assurance</button>
         <div class="bar" id="bar-gen"><i></i></div>
         <div class="estado" id="estGen"></div>
@@ -498,6 +500,7 @@ $("bGenRes").onclick = async () => {
   mostrarErrores("errRes", []);
   $("cResDesc").hidden = true; RS.salida = null;
   $("estRes").textContent = "Generando resumen…";
+  const dirTeams = await carpetaTeams("resumen", true);   // el permiso se pide aquí, con el clic
   const liberar = ocupar("res");
   try {
     reg(`Resumen: procesando «${RS.archivo.name}»…`);
@@ -518,6 +521,8 @@ $("bGenRes").onclick = async () => {
     $("cResDesc").hidden = false;
     $("estRes").innerHTML = '<span class="ok">✔ Resumen generado</span>';
     reg(`✔ Resumen generado: ${RS.nombre}`, "ok");
+    const rutaT = await respaldarEnTeams(dirTeams, carpetaMes(), RS.nombre, RS.salida);
+    if (rutaT) $("nomRes").appendChild(el("div", { class: "ok", text: "✔ Guardado en Teams: " + rutaT }));
   } catch (e) {
     console.error(e);
     const m = msgError(e);
@@ -1058,6 +1063,7 @@ $("bGen").onclick = async () => {
   if (!AS.res) return;
   $("genResultado").hidden = true; AS.salida = null;
   $("estGen").textContent = "Generando presentación…";
+  const dirTeams = await carpetaTeams("assurance", true);   // el permiso se pide aquí, con el clic
   const liberar = ocupar("gen");
   try {
     // La plantilla viene en el sitio; se descarga una sola vez
@@ -1091,6 +1097,11 @@ $("bGen").onclick = async () => {
     $("genResultado").hidden = false;
     $("estGen").innerHTML = '<span class="ok">✔ Presentación generada</span>';
     reg(`✔ Presentación generada: ${AS.nombre}`, "ok");
+    const subMes = AS.res.ruta && AS.res.ruta.carpeta;
+    const rutaT = await respaldarEnTeams(dirTeams, subMes || carpetaMes(), AS.nombre, AS.salida);
+    if (rutaT) {
+      caja.innerHTML = ""; caja.appendChild(el("b", { class: "ok", text: "✔ Guardado en Teams: " })); caja.append(rutaT); caja.hidden = false;
+    }
   } catch (e) {
     console.error(e);
     const m = msgError(e);
@@ -1107,8 +1118,98 @@ $("bDescAss").onclick = () => {
 };
 
 /* =====================================================================
+   GUARDADO EN TEAMS (respaldo): se elige una vez la carpeta sincronizada y la página escribe ahí
+   (Chrome/Edge). La carpeta recordada vive solo en este navegador; no se sube nada a ningún servidor.
+   ===================================================================== */
+const MESES_ES = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+const carpetaMes = (d = new Date()) => `${String(d.getMonth() + 1).padStart(2, "0")}. ${MESES_ES[d.getMonth()]}`;
+
+const IDB = {
+  abrir() {
+    return new Promise((ok, mal) => {
+      const q = indexedDB.open("antucoya_teams", 1);
+      q.onupgradeneeded = () => q.result.createObjectStore("h");
+      q.onsuccess = () => ok(q.result); q.onerror = () => mal(q.error);
+    });
+  },
+  async leer(k) {
+    try {
+      const db = await this.abrir();
+      return await new Promise((ok, mal) => { const r = db.transaction("h").objectStore("h").get(k); r.onsuccess = () => ok(r.result || null); r.onerror = () => mal(r.error); });
+    } catch (_) { return null; }
+  },
+  async guardar(k, v) {
+    const db = await this.abrir();
+    return new Promise((ok, mal) => { const t = db.transaction("h", "readwrite"); t.objectStore("h").put(v, k); t.oncomplete = () => ok(); t.onerror = () => mal(t.error); });
+  }
+};
+const TEAMS_OK = typeof window.showDirectoryPicker === "function";
+
+/** Devuelve la carpeta recordada si hay permiso (pide permiso solo si `pedir`, y debe ser con un clic reciente). */
+async function carpetaTeams(clave, pedir) {
+  if (!TEAMS_OK) return null;
+  try {
+    const dir = await IDB.leer(clave);
+    if (!dir) return null;
+    let p = await dir.queryPermission({ mode: "readwrite" });
+    if (p !== "granted" && pedir) p = await dir.requestPermission({ mode: "readwrite" });
+    return p === "granted" ? dir : null;
+  } catch (_) { return null; }
+}
+
+/** Guarda `u8` en <carpeta>/<subcarpeta>/<nombre> y devuelve la ruta mostrada. */
+async function escribirEnTeams(dir, subcarpeta, nombre, u8) {
+  const sub = subcarpeta ? await dir.getDirectoryHandle(subcarpeta, { create: true }) : dir;
+  const fh = await sub.getFileHandle(nombre, { create: true });
+  const w = await fh.createWritable();
+  await w.write(u8); await w.close();
+  return `${dir.name}\\${subcarpeta ? subcarpeta + "\\" : ""}${nombre}`;
+}
+
+/** Dibuja el selector de carpeta de Teams de una herramienta. */
+async function pintarTeams(clave, idCaja, titulo) {
+  const caja = $(idCaja);
+  caja.innerHTML = "";
+  if (!TEAMS_OK) {
+    caja.appendChild(el("span", { class: "mut", text: "Guardado automático en Teams: usa Chrome o Edge. Aquí solo puedes descargar el archivo." }));
+    return;
+  }
+  const dir = await IDB.leer(clave);
+  caja.appendChild(el("b", { text: "Respaldo en Teams: " }));
+  caja.appendChild(el("span", { text: dir ? `carpeta «${dir.name}» (se crea la subcarpeta del mes) ` : `sin carpeta elegida (se pedirá solo una vez) ` }));
+  caja.appendChild(el("button", { class: "sec", type: "button", text: dir ? "Cambiar carpeta" : titulo,
+    onclick: async () => {
+      try {
+        const nueva = await window.showDirectoryPicker({ id: "antucoya-" + clave, mode: "readwrite" });
+        await IDB.guardar(clave, nueva);
+        reg(`Carpeta de Teams elegida: «${nueva.name}»`, "ok");
+      } catch (e) { if (e && e.name !== "AbortError") reg("✖ No se pudo elegir la carpeta: " + msgError(e), "bad"); }
+      pintarTeams(clave, idCaja, titulo);
+    } }));
+}
+
+/** Guarda el archivo recién generado en Teams (si hay carpeta); devuelve el texto del resultado o null. */
+async function respaldarEnTeams(dir, subcarpeta, nombre, u8) {
+  if (!dir) {
+    if (TEAMS_OK) reg("Respaldo en Teams: no hay carpeta elegida o sin permiso; usa el botón de descarga.", "warn");
+    return null;
+  }
+  try {
+    const ruta = await escribirEnTeams(dir, subcarpeta, nombre, u8);
+    reg(`✔ Guardado en Teams: ${ruta}`, "ok");
+    return ruta;
+  } catch (e) {
+    console.error(e);
+    reg("✖ No se pudo guardar en Teams: " + msgError(e) + " (usa el botón de descarga)", "bad");
+    return null;
+  }
+}
+
+/* =====================================================================
    INICIO
    ===================================================================== */
+pintarTeams("resumen", "teamsRes", "Elegir carpeta de Teams para el resumen");
+pintarTeams("assurance", "teamsAss", "Elegir carpeta Assurance de Teams");
 reg("Página lista. Cargando el motor…");
 refrescar();
 cargarMotor();
