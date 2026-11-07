@@ -1038,8 +1038,8 @@ def _validar_niveles(focos, log):
     try:
         pseudo = []
         for i, f in enumerate(focos):
-            if f.get("fijo"):
-                continue                      # el foco fijo no se valida con las reglas de selección
+            if f.get("fijo") or f.get("manual"):
+                continue                      # el foco fijo/manual no se valida con las reglas de selección
             evs = []
             for ev in f.get("eventos") or []:
                 t = str(ev.get("tipo") or "").upper()
@@ -1052,7 +1052,7 @@ def _validar_niveles(focos, log):
         r = calcular_nivel_y_prioridad(pseudo)
         calc = {x["tema"]: x for x in r["focos"]}
         for i, f in enumerate(focos):
-            if f.get("fijo"):
+            if f.get("fijo") or f.get("manual"):
                 continue
             c = calc.get(str(i))
             if c is None:

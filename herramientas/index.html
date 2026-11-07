@@ -406,7 +406,7 @@ async function leerSalida() {
    ===================================================================== */
 let enCurso = 0;
 const RS = { archivo: null, salida: null, nombre: "" };                 // estado del Resumen
-const AS = { archivo: null, res: null, elec: {}, tocadas: new Set(),   // estado del Assurance
+const AS = { archivo: null, res: null, elec: {}, tocadas: new Set(), incluir: new Set(),   // estado del Assurance
              plantilla: null, salida: null, nombre: "" };
 const EDIC = {};                      // ediciones del usuario: clave "tema_id|campo"
 const VISTOS = new Set();             // líneas de log ya registradas (evita repetir en recálculos)
@@ -479,7 +479,7 @@ conectarDrop($("dropRes"), $("archRes"), files => {
   if (!f) return;
   // Un solo Excel para el Resumen y el Assurance; se descarta lo generado con el archivo anterior
   RS.archivo = f; RS.salida = null;
-  AS.archivo = f; AS.res = null; AS.salida = null; AS.elec = {}; AS.tocadas = new Set();
+  AS.archivo = f; AS.res = null; AS.salida = null; AS.elec = {}; AS.tocadas = new Set(); AS.incluir = new Set();
   Object.keys(EDIC).forEach(k => delete EDIC[k]);
   VISTOS.clear();
   $("aRes").innerHTML = ""; $("aRes").appendChild(el("span", { text: "Archivo" })); $("aRes").append("✔ " + f.name);
@@ -584,7 +584,7 @@ $("bAna").onclick = async () => {
   $("estAss").textContent = "Analizando…";
   try {
     // Nuevo análisis: se descartan elecciones, ediciones y salida previas
-    AS.elec = {}; AS.tocadas = new Set(); AS.res = null; AS.salida = null;
+    AS.elec = {}; AS.tocadas = new Set(); AS.incluir = new Set(); AS.res = null; AS.salida = null;
     Object.keys(EDIC).forEach(k => delete EDIC[k]);
     VISTOS.clear();
     $("ass-res").hidden = true; $("genResultado").hidden = true; $("estGen").textContent = "";
@@ -623,7 +623,7 @@ const pendientes = () => listaDec().filter(d => !AS.tocadas.has(claveDec(d))).le
 
 /** Arma el objeto de decisiones que espera puente_web.rearmar (solo lo que el usuario tocó). */
 function construirDec() {
-  const dec = { tema: {}, revalorizar: {}, sin_foco: [] };
+  const dec = { tema: {}, revalorizar: {}, sin_foco: [], incluir: Array.from(AS.incluir) };
   listaDec().forEach(d => {
     const k = claveDec(d);
     if (!AS.tocadas.has(k)) return;
@@ -925,6 +925,32 @@ function valorATexto(v) {
   return String(v);
 }
 
+/** Alterna un tema entre «fuera del Assurance» y «agregado manualmente» y recalcula. */
+async function alternarIncluir(tid) {
+  const estaba = AS.incluir.has(tid);
+  if (estaba) AS.incluir.delete(tid); else AS.incluir.add(tid);
+  const ok = await recalcular();
+  if (!ok) {
+    if (estaba) AS.incluir.add(tid); else AS.incluir.delete(tid);
+    pintarTodo();
+  }
+}
+
+/** Lista de temas del QA con un botón por tema (agregar o quitar del Assurance). */
+function listaConBoton(v, quitar) {
+  const items = Array.isArray(v) ? v.filter(x => x && typeof x === "object" && x.tema_id) : [];
+  if (!items.length) return el("div", { class: "mut", text: "Ninguno" });
+  return el("ul", { class: "lista" }, items.map(x => {
+    const ids = (x.ids || []).join(", ");
+    const det = quitar ? (x.ids && x.ids.length ? " · eventos: " + ids : "")
+      : ` · eventos: ${ids || "—"} · N1/N2: ${x.n1n2 || 0} · HBP: ${x.hbp || 0} · motivo: ${x.motivo || "—"}`;
+    return el("li", {},
+      el("span", { text: x.tema + det + " " }),
+      el("button", { class: "sec", type: "button", text: quitar ? "Quitar del Assurance" : "Agregar al Assurance",
+                     onclick: () => alternarIncluir(x.tema_id) }));
+  }));
+}
+
 /** Dibuja un valor del QA (lista, objeto o texto). */
 function valorDOM(v) {
   const vacio = v === undefined || v === null || v === "" ||
@@ -960,10 +986,13 @@ function pintarQA() {
   const datoFaltanteLog = ((AS.res && AS.res.log) || []).map(String)
     .filter(l => l.includes("⚠") && l.includes("[DATO FALTANTE]"));
 
+  const incluidos = qa.incluidos_manual;
+  usadas.add("incluidos_manual");
   const secciones = [
     ["Eventos leídos por tipo (ACC / CAAP / HAP / CBP / HBP)", leidos],
-    ["N1/N2 que quedaron fuera de los 5 focos (con su motivo)", fuera],
-    ["Temas solo-HBP excluidos", soloHBP],
+    ["Agregados manualmente al Assurance", incluidos && incluidos.length ? listaConBoton(incluidos, true) : undefined],
+    ["N1/N2 que quedaron fuera de los 5 focos (con su motivo)", listaConBoton(fuera, false)],
+    ["Temas solo-HBP excluidos", listaConBoton(soloHBP, false)],
     ["Eventos sin resolver", sinResolver],
     ["Datos faltantes", faltantes],
     ["Supuestos", supuestos]
@@ -973,7 +1002,7 @@ function pintarQA() {
   const p = pendientes(), total = listaDec().length;
   cont.appendChild(el("span", { class: "pendbox" + (p === 0 ? " cero" : ""),
     text: total === 0 ? "Sin decisiones pendientes" : `Decisiones pendientes (en su valor por defecto): ${p} de ${total}` }));
-  secciones.forEach(([t, v]) => cont.appendChild(el("div", { class: "qa-sec" }, el("h3", { text: t }), valorDOM(v))));
+  secciones.forEach(([t, v]) => cont.appendChild(el("div", { class: "qa-sec" }, el("h3", { text: t }), (v instanceof Node) ? v : valorDOM(v))));
 
   cont.appendChild(el("div", { class: "qa-sec" }, el("h3", { text: "Avisos del registro con [DATO FALTANTE]" }),
     datoFaltanteLog.length

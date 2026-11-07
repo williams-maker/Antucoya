@@ -874,6 +874,40 @@ def armar_plan(analisis, params, decisiones=None, calcular=None):
         supuestos.append("El foco 1 es fijo hasta el 31-12-2026 (controles eléctricos); los demás se calculan como siempre, "
                          "con un máximo de 4.")
 
+    # --- 3b. temas excluidos que el usuario decide agregar al Assurance --------------------------------
+    incluidos_manual = []
+    incluir = [str(x) for x in (decisiones.get("incluir") or [])]
+    if incluir:
+        lista = list(res_calc.get("focos") or [])
+        fuera_l = list(res_calc.get("fuera") or [])
+        excl_l = list(res_calc.get("excluidos") or [])
+        for tid in incluir:
+            if tid not in cat or any(f["tema"] == tid for f in lista):
+                continue
+            src = next((x for x in fuera_l + excl_l if x.get("tema") == tid), None)
+            if src is None:
+                continue
+            fuera_l = [x for x in fuera_l if x is not src]
+            excl_l = [x for x in excl_l if x is not src]
+            alto = src.get("gravedad_max") in ("ACC", "ACC-DM", "CAAP")
+            nivel = "N1" if (alto or int(src.get("n1n2") or 0) >= 2) else "N2"
+            nuevo = {**src, "nivel": nivel, "motivo_nivel": "Incluido manualmente por el usuario", "manual": True}
+            nuevo.pop("motivo", None)
+            lista.append(nuevo)
+            incluidos_manual.append({"tema_id": tid, "tema": cat[tid]["tema"], "ids": [e["id"] for e in nuevo.get("eventos") or []],
+                                     "motivo_original": src.get("motivo")})
+        while len(lista) > 5:
+            idx = max((i for i, f in enumerate(lista) if not f.get("fijo") and not f.get("manual")), default=None)
+            if idx is None:
+                break
+            fuera_l.append({**lista.pop(idx), "motivo": "desplazado por un tema agregado manualmente (máximo 5 focos)"})
+        for i, f in enumerate(lista, 1):
+            f["prioridad"] = i
+        res_calc = {**res_calc, "focos": lista, "fuera": fuera_l, "excluidos": excl_l}
+        if incluidos_manual:
+            supuestos.append("Agregados manualmente al Assurance: " + ", ".join(x["tema"] for x in incluidos_manual)
+                             + " (con el máximo de 5 focos, el último foco calculado pasa a 'fuera').")
+
     # --- 4. construir los focos del plan ----------------------------------
     focos_plan, grupo_por_prioridad, qa_focos = [], {}, []
     ya_anteriores = []
@@ -939,6 +973,8 @@ def armar_plan(analisis, params, decisiones=None, calcular=None):
                 "tema_id": tid, "prioridad": f["prioridad"]}
         if causa:
             foco["causa"] = causa
+        if f.get("manual"):
+            foco["manual"] = True
         if f.get("fijo"):
             foco["fijo"] = True
             if not eventos_plan:
@@ -964,7 +1000,7 @@ def armar_plan(analisis, params, decisiones=None, calcular=None):
 
     # N1/N2 fuera con motivo
     def info_fuera(x):
-        return {"tema": cat[x["tema"]]["tema"] if x.get("tema") in cat else x.get("tema"),
+        return {"tema_id": x.get("tema"), "tema": cat[x["tema"]]["tema"] if x.get("tema") in cat else x.get("tema"),
                 "ids": [e["id"] for e in x.get("eventos") or []], "n1n2": x.get("n1n2", 0),
                 "hbp": x.get("hbp", 0), "motivo": x.get("motivo")}
     fuera_todos = [info_fuera(x) for x in (res_calc.get("fuera") or [])] + \
@@ -1036,6 +1072,7 @@ def armar_plan(analisis, params, decisiones=None, calcular=None):
         "turno_analizado": (analisis.get("turno") or {}).get("texto"),
         "focos": qa_focos,
         "n1n2_fuera": n1n2_fuera,
+        "incluidos_manual": incluidos_manual,
         "temas_solo_hbp_excluidos": solo_hbp_excl,
         "revalorizaciones_aplicadas": rev_info,
         "revalorizaciones_sin_decidir": rev_pend,
