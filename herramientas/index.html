@@ -1,0 +1,1121 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Gestión de Eventos · Resumen y Assurance</title>
+<style>
+  :root{--teal:#00778B;--ink:#1f2a30;--mut:#6B7780;--bg:#F4F6F7;--line:#D9E2E5;--ok:#3B6E22;--warn:#B07A00;--bad:#D22630;--nar:#E8830C}
+  *{box-sizing:border-box}
+  [hidden]{display:none!important}
+  body{margin:0;font-family:"Segoe UI",system-ui,-apple-system,sans-serif;color:var(--ink);background:var(--bg)}
+  header{background:var(--teal);color:#fff;padding:18px 28px;display:flex;align-items:center;gap:14px}
+  header .dots span{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:4px}
+  header h1{font-size:18px;margin:0;letter-spacing:.3px}
+  header small{opacity:.85;display:block;font-size:12px}
+  main{max-width:980px;margin:24px auto;padding:0 20px}
+  .card{background:#fff;border:1px solid var(--line);border-radius:10px;padding:22px 24px;margin-bottom:18px}
+  .card h2{font-size:14px;text-transform:uppercase;letter-spacing:.6px;color:var(--teal);margin:0 0 12px}
+  .card h3{font-size:13px;color:var(--ink);margin:16px 0 6px}
+  .paso{display:inline-flex;width:22px;height:22px;border-radius:50%;background:var(--teal);color:#fff;font-size:12px;align-items:center;justify-content:center;margin-right:8px}
+  button{background:var(--teal);color:#fff;border:0;border-radius:6px;padding:10px 18px;font-size:14px;cursor:pointer;font-family:inherit}
+  button:disabled{background:#AEBBC0;cursor:not-allowed}
+  button.sec{background:#fff;color:var(--teal);border:1px solid var(--teal);padding:4px 10px;font-size:12px}
+  button.sec:disabled{color:#AEBBC0;border-color:#AEBBC0;background:#fff}
+  .tabs{display:flex;gap:6px;margin-bottom:14px}
+  .tab{background:#fff;color:var(--teal);border:1px solid var(--line);border-radius:8px;padding:10px 22px;font-weight:600}
+  .tab.on{background:var(--teal);color:#fff;border-color:var(--teal)}
+  .drop{display:block;border:2px dashed var(--line);border-radius:10px;padding:30px;text-align:center;color:var(--mut);cursor:pointer;transition:.15s}
+  .drop.on{border-color:var(--teal);background:#EAF2F4;color:var(--teal)}
+  .drop b{color:var(--ink)}
+  .arch{border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-size:13px;margin-top:12px}
+  .arch span{display:block;color:var(--mut);font-size:11px;text-transform:uppercase;letter-spacing:.5px}
+  .arch.ok{border-color:#9CC58A;background:#F2F8EE}
+  .estado{font-size:13px;color:var(--mut);margin-top:10px;min-height:18px}
+  .ok{color:var(--ok)} .bad{color:var(--bad)} .warn{color:var(--warn)} .mut{color:var(--mut)}
+  .errores{margin:10px 0 0;padding:0;list-style:none;font-size:13px;color:var(--bad)}
+  .errores li{padding:3px 0}
+  .bar{height:6px;background:#EEF1F3;border-radius:4px;overflow:hidden;margin-top:10px;display:none}
+  .bar i{display:block;height:100%;width:30%;background:var(--teal);animation:mv 1.2s infinite ease-in-out}
+  @keyframes mv{0%{margin-left:-30%}100%{margin-left:100%}}
+  .motor{font-size:13px;margin-bottom:12px;color:var(--mut)}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-top:14px}
+  @media (max-width:700px){.grid2,.grid3{grid-template-columns:1fr}}
+  .campo{margin-bottom:6px}
+  .et{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:12px;color:var(--mut);margin:8px 0 4px;text-transform:uppercase;letter-spacing:.4px}
+  .et .cnt{text-transform:none;letter-spacing:0;font-variant-numeric:tabular-nums}
+  .et .cnt.over{color:var(--nar);font-weight:700}
+  input[type=text],input[type=date],input[type=number],textarea{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:6px;font-size:14px;font-family:inherit;color:var(--ink);background:#fff}
+  textarea{resize:none;overflow:hidden;font-size:13px;line-height:1.4;min-height:34px}
+  input:focus,textarea:focus{outline:2px solid #7FC4CF;border-color:var(--teal)}
+  .opts{display:flex;flex-wrap:wrap;gap:6px}
+  .opts label{cursor:pointer;position:relative}
+  .opts input{position:absolute;opacity:0;width:0;height:0}
+  .opts span{display:inline-block;padding:7px 14px;border:1px solid var(--line);border-radius:6px;background:#fff;font-size:13px}
+  .opts input:checked + span{background:var(--teal);color:#fff;border-color:var(--teal)}
+  .opts input:focus-visible + span{outline:2px solid #7FC4CF}
+  .dgrupo{margin-top:14px}
+  .dgrupo h3{border-bottom:1px solid var(--line);padding-bottom:4px}
+  .ayuda{font-size:12.5px;color:var(--mut);margin:4px 0 8px}
+  .dec{border:1px solid var(--line);border-radius:8px;padding:10px 14px;margin:8px 0}
+  .dec.pend{border-left:5px solid var(--warn)}
+  .dpreg{font-weight:600;font-size:13px}
+  .dtit{font-size:13px;margin:2px 0}
+  .devid{font-size:12.5px;font-style:italic;color:var(--mut);margin:4px 0 8px}
+  .pendbox{display:inline-block;background:#FFF6DD;border:1px solid #E7CF86;color:var(--warn);border-radius:12px;padding:3px 12px;font-size:12.5px;margin-bottom:6px}
+  .pendbox.cero{background:#F2F8EE;border-color:#9CC58A;color:var(--ok)}
+  .foco{border:1px solid var(--line);border-left:6px solid var(--bad);border-radius:8px;padding:14px 16px;margin-bottom:14px}
+  .foco.n2{border-left-color:var(--nar)}
+  .foco .cab{font-weight:700;font-size:14px}
+  .foco .cab small{font-weight:400;color:var(--mut);margin-left:6px}
+  .evrow{margin:6px 0}
+  .evrow .pref{font-size:12px;font-weight:600;color:var(--teal);margin-bottom:2px}
+  ul.lista{margin:4px 0 0;padding-left:20px;font-size:13px}
+  ul.lista li{padding:2px 0}
+  .qa-sec{margin-bottom:8px;font-size:13px}
+  ul.log{list-style:none;padding:0;margin:8px 0 0;font-size:12.5px;max-height:230px;overflow:auto;border:1px solid var(--line);border-radius:6px;background:#FBFCFC}
+  ul.log li{padding:4px 8px;border-bottom:1px solid #EEF1F3}
+  ul.log .hr{color:var(--mut);margin-right:6px;font-variant-numeric:tabular-nums}
+  ul.log li.warn{color:var(--warn)} ul.log li.bad{color:var(--bad)} ul.log li.ok{color:var(--ok)}
+  .logcab{display:flex;justify-content:space-between;align-items:center}
+  .logcab h2{margin:0}
+  .ruta{margin-top:12px;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:#F7FAFB;font-size:13px;word-break:break-all}
+  body.ocupado .bloqueable{pointer-events:none;opacity:.65}
+  footer{text-align:center;color:var(--mut);font-size:12px;margin:30px 0}
+</style>
+</head>
+<body>
+<header>
+  <div class="dots"><span style="background:#F2A900"></span><span style="background:#D22630"></span><span style="background:#7FC4CF"></span><span style="background:#fff"></span></div>
+  <div><h1>Gestión de Eventos · Resumen y Assurance</h1><small>Procesamiento de Excel de eventos directamente en tu navegador</small></div>
+</header>
+
+<main>
+  <!-- Estado de carga del motor Python -->
+  <div class="motor" id="motorEstado">Preparando el motor (solo la primera vez, ~20–40 s)…</div>
+  <div class="bar" id="bar-motor" style="display:block;margin:0 0 14px"><i></i></div>
+
+  <nav class="tabs" role="tablist">
+    <button class="tab on" id="tabRes" role="tab" data-tab="res">Resumen</button>
+    <button class="tab" id="tabAss" role="tab" data-tab="ass">Assurance</button>
+  </nav>
+
+  <!-- ===================== PESTAÑA RESUMEN ===================== -->
+  <section id="t-res">
+    <div class="card bloqueable">
+      <h2><span class="paso">1</span>Selecciona el Excel de eventos</h2>
+      <label class="drop" id="dropRes">
+        <input type="file" id="archRes" accept=".xlsx" hidden>
+        <b>Arrastra aquí el Excel de eventos (.xlsx)</b><br>o haz clic para elegirlo.
+      </label>
+      <div class="arch" id="aRes"><span>Archivo</span>— pendiente —</div>
+      <ul class="errores" id="errRes"></ul>
+    </div>
+    <div class="card">
+      <h2><span class="paso">2</span>Generar resumen</h2>
+      <button id="bGenRes" disabled>Generar resumen</button>
+      <div class="bar" id="bar-res"><i></i></div>
+      <div class="estado" id="estRes"></div>
+    </div>
+    <div class="card" id="cResDesc" hidden>
+      <h2><span class="paso">3</span>Resultado</h2>
+      <button id="bDescRes">Descargar</button>
+      <div class="estado" id="nomRes"></div>
+    </div>
+  </section>
+
+  <!-- ===================== PESTAÑA ASSURANCE ===================== -->
+  <section id="t-ass" hidden>
+    <div class="card bloqueable" id="cForm">
+      <h2><span class="paso">1</span>Datos del turno</h2>
+      <div class="campo">
+        <div class="et">Turno entrante *</div>
+        <div class="opts">
+          <label><input type="radio" name="turno" value="1-3"><span>1-3</span></label>
+          <label><input type="radio" name="turno" value="2-4"><span>2-4</span></label>
+        </div>
+      </div>
+      <div class="grid3">
+        <div class="campo"><div class="et">Vigencia desde *</div><input type="date" id="fDesde"></div>
+        <div class="campo"><div class="et">Vigencia hasta *</div><input type="date" id="fHasta"></div>
+        <div class="campo"><div class="et">Fecha de cierre de los datos *</div><input type="date" id="fCierre"></div>
+      </div>
+      <div class="grid3">
+        <div class="campo"><div class="et">Inspector ITO</div><input type="text" id="fInsp" autocomplete="off"></div>
+        <div class="campo"><div class="et">Proyecto / EECC</div><input type="text" id="fProy" autocomplete="off"></div>
+        <div class="campo"><div class="et">Área / Sector</div><input type="text" id="fArea" autocomplete="off"></div>
+      </div>
+    </div>
+
+    <div class="card bloqueable">
+      <h2><span class="paso">2</span>Excel de eventos</h2>
+      <label class="drop" id="dropAss">
+        <input type="file" id="archAss" accept=".xlsx" hidden>
+        <b>Arrastra aquí el Excel de eventos (.xlsx)</b><br>o haz clic para elegirlo.
+      </label>
+      <div class="arch" id="aAss"><span>Archivo</span>— pendiente —</div>
+      <ul class="errores" id="errAss"></ul>
+    </div>
+
+    <div class="card">
+      <h2><span class="paso">3</span>Analizar</h2>
+      <button id="bAna" disabled>Analizar</button>
+      <div class="bar" id="bar-ass"><i></i></div>
+      <div class="estado" id="estAss"></div>
+    </div>
+
+    <!-- Resultados del análisis (se muestran tras analizar) -->
+    <div id="ass-res" class="bloqueable" hidden>
+      <div class="card" id="cDec">
+        <h2>Decisiones tuyas</h2>
+        <div id="contPend"></div>
+        <div id="decCuerpo"></div>
+      </div>
+
+      <div class="card" id="cFocos">
+        <h2>Focos (editables)</h2>
+        <div class="ayuda">Los campos se pueden editar; «Restaurar texto automático» vuelve al texto generado. El contador se pone naranja si se pasa del largo sugerido.</div>
+        <div id="focosCuerpo"></div>
+      </div>
+
+      <div class="card" id="cOtros">
+        <h2>Otros apartados (editables)</h2>
+        <div id="otrosCuerpo"></div>
+      </div>
+
+      <div class="card" id="cQA">
+        <h2>Control de calidad</h2>
+        <div id="qaCuerpo"></div>
+      </div>
+
+      <div class="card">
+        <h2><span class="paso">4</span>Generar presentación</h2>
+        <button id="bGen" disabled>Generar Assurance</button>
+        <div class="bar" id="bar-gen"><i></i></div>
+        <div class="estado" id="estGen"></div>
+        <div id="genResultado" hidden>
+          <button id="bDescAss">Descargar .pptx</button>
+          <div class="estado" id="nomAss"></div>
+          <div class="ruta" id="rutaTeams" hidden></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== REGISTRO (visible en ambas pestañas) ===================== -->
+  <div class="card">
+    <div class="logcab">
+      <h2>Registro</h2>
+      <button class="sec" id="bCopiar">Copiar registro</button>
+    </div>
+    <ul class="log" id="log"></ul>
+  </div>
+
+  <footer>Los archivos se procesan solo en tu navegador: no se suben a ningún servidor.<br>Esta página no contiene datos de la operación.</footer>
+</main>
+
+<script src="https://cdn.jsdelivr.net/pyodide/v0.27.2/full/pyodide.js"></script>
+<script>
+"use strict";
+
+/* =====================================================================
+   UTILIDADES GENERALES
+   ===================================================================== */
+const $ = id => document.getElementById(id);
+
+/** Crea un elemento DOM. Todo texto se inserta como texto (nunca como HTML). */
+function el(tag, attrs, ...hijos) {
+  const e = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs || {})) {
+    if (v === null || v === undefined || v === false) continue;
+    if (k === "class") e.className = v;
+    else if (k === "text") e.textContent = v;
+    else if (k.startsWith("on") && typeof v === "function") e.addEventListener(k.slice(2), v);
+    else if (k === "value" || k === "checked" || k === "disabled") e[k] = v;
+    else e.setAttribute(k, v === true ? "" : v);
+  }
+  const agregar = h => {
+    if (h === null || h === undefined || h === false) return;
+    if (Array.isArray(h)) h.forEach(agregar);
+    else e.appendChild(h instanceof Node ? h : document.createTextNode(String(h)));
+  };
+  hijos.forEach(agregar);
+  return e;
+}
+
+const pad = n => String(n).padStart(2, "0");
+const hora = () => { const d = new Date(); return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`; };
+const horaHHMM = () => { const d = new Date(); return `${pad(d.getHours())}${pad(d.getMinutes())}`; };
+
+/** Quita caracteres no válidos para nombre de archivo. */
+const limpiarNombre = s => String(s).replace(/[\\/:*?"<>|]/g, "_").trim();
+
+/** Inserta _HHMM antes de la extensión: «Nombre.xlsx» → «Nombre_1345.xlsx». */
+function conHora(nombre, ext, porDefecto) {
+  let base = limpiarNombre(nombre || porDefecto || "archivo").replace(/\.(xlsx|pptx)$/i, "");
+  if (!base) base = porDefecto || "archivo";
+  return `${base}_${horaHHMM()}${ext}`;
+}
+
+/** Deja solo el último renglón útil de un error (sin trazas de Python). */
+function msgError(e) {
+  const m = (e && e.message) ? e.message : String(e);
+  const lineas = m.split("\n").map(s => s.trim()).filter(Boolean);
+  let ult = lineas.length ? lineas[lineas.length - 1] : "Error desconocido";
+  ult = ult.replace(/^(\w+\.)*\w*(Error|Exception):\s*/, "");
+  return ult.slice(0, 400);
+}
+
+/** Descarga un Uint8Array como archivo (Blob + enlace temporal). */
+function guardarBytes(u8, nombre, tipo) {
+  const blob = new Blob([u8], { type: tipo });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = nombre;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 10000);
+}
+const TIPO_XLSX = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+const TIPO_PPTX = "application/vnd.openxmlformats-officedocument.presentationml.presentation";
+
+/* =====================================================================
+   REGISTRO (log visible en ambas pestañas)
+   ===================================================================== */
+const REG = [];                 // líneas de texto para «Copiar registro»
+
+/** Agrega una línea al registro. tipo: "", "ok", "warn", "bad". */
+function reg(texto, tipo) {
+  const t = String(texto);
+  const h = hora();
+  REG.push(`[${h}] ${t}`);
+  const ul = $("log");
+  ul.appendChild(el("li", { class: tipo || "" }, el("span", { class: "hr", text: h }), t));
+  ul.scrollTop = ul.scrollHeight;
+}
+
+/** Agrega al registro las líneas ✔/⚠ de un log de Python. `vistos` evita repetidos en recálculos. */
+function regPython(lineas, vistos) {
+  (Array.isArray(lineas) ? lineas : []).forEach(l => {
+    const t = String(l);
+    if (!t.includes("✔") && !t.includes("⚠")) return;
+    if (vistos) { if (vistos.has(t)) return; vistos.add(t); }
+    reg(t, t.includes("⚠") ? "warn" : "ok");
+  });
+}
+
+$("bCopiar").onclick = async () => {
+  const txt = REG.join("\n");
+  try {
+    await navigator.clipboard.writeText(txt);
+  } catch (_) {
+    // Alternativa si el portapapeles no está disponible
+    const ta = el("textarea", { style: "position:fixed;left:-9999px" });
+    ta.value = txt; document.body.appendChild(ta); ta.select();
+    try { document.execCommand("copy"); } catch (e2) { console.error(e2); }
+    ta.remove();
+  }
+  reg("Registro copiado al portapapeles.");
+};
+
+/* =====================================================================
+   CARGA DEL MOTOR (Pyodide + ruedas + módulos)
+   ===================================================================== */
+const RUEDAS = [   // orden importante; todas con deps=False
+  "typing_extensions-4.16.0-py3-none-any.whl",
+  "xlsxwriter-3.3.1-py3-none-any.whl",
+  "et_xmlfile-2.0.0-py3-none-any.whl",
+  "openpyxl-3.1.5-py2.py3-none-any.whl",
+  "python_pptx-1.0.2-py3-none-any.whl"
+];
+const MODULOS = ["resumen_engine.py", "assurance_engine.py", "resumen_texto.py", "catalogo_data.py",
+                 "catalogo_extra.py", "catalogo_ajustes.py", "catalogo_temas.py", "puente_web.py"];
+const PLANTILLA = "FORMATO_ASSURANCE_base.pptx";
+
+let PY = null, pyOk = false, faseCarga = "";
+
+/** Descarga un archivo del sitio; en caso de fallo lanza un error que nombra el archivo. */
+async function bajar(url, tipo) {
+  const nombre = url.split("?")[0];
+  faseCarga = nombre;
+  let r;
+  try { r = await fetch(url); }
+  catch (e) { throw new Error(`no se pudo descargar «${nombre}»`); }
+  if (!r.ok) throw new Error(`no se pudo descargar «${nombre}» (HTTP ${r.status})`);
+  return tipo === "texto" ? await r.text() : new Uint8Array(await r.arrayBuffer());
+}
+
+async function cargarMotor() {
+  try {
+    faseCarga = "pyodide.js (CDN de Pyodide)";
+    if (typeof loadPyodide === "undefined") throw new Error("no se descargó el script de Pyodide");
+    PY = await loadPyodide();
+
+    faseCarga = "paquetes base de Pyodide (lxml, pillow, micropip)";
+    await PY.loadPackage(["lxml", "pillow", "micropip"]);
+
+    // Ruedas locales: se escriben en /tmp y se instalan sin dependencias
+    for (const w of RUEDAS) {
+      const buf = await bajar("py/" + w, "bin");
+      PY.FS.writeFile("/tmp/" + w, buf);
+    }
+    faseCarga = "instalación de las ruedas de py/";
+    await PY.runPythonAsync(`
+import micropip
+await micropip.install([${RUEDAS.map(w => `"emfs:/tmp/${w}"`).join(",")}], deps=False)
+`);
+
+    // Módulos Python del motor (con ?v= para evitar caché)
+    for (const m of MODULOS) {
+      const src = await bajar(m + "?v=" + Date.now(), "texto");
+      PY.FS.writeFile(m, src);
+    }
+    faseCarga = "puente_web.py (importación)";
+    await PY.runPythonAsync("import puente_web");
+
+    faseCarga = "versiones del motor";
+    const v = JSON.parse(await PY.runPythonAsync("import puente_web\npuente_web.versiones()"));
+    reg(`Motor Resumen ${v.resumen} · Motor Assurance ${v.assurance} · Reglas v${v.reglas} · Puente ${v.puente}`);
+
+    pyOk = true;
+    $("motorEstado").innerHTML = '<span class="ok">✔ Motor listo</span>';
+    reg("✔ Motor listo", "ok");
+  } catch (e) {
+    console.error(e);
+    const m = `No se pudo cargar «${faseCarga}»: ${msgError(e)}. Prueba recargando la página con Ctrl+F5.`;
+    $("motorEstado").innerHTML = "";
+    $("motorEstado").appendChild(el("span", { class: "bad", text: m }));
+    reg("✖ " + m, "bad");
+  } finally {
+    $("bar-motor").style.display = "none";
+    refrescar();
+  }
+}
+
+/**
+ * Ejecuta código Python que devuelve JSON (texto) y lo convierte en objeto.
+ * `vars` se publican como globales temporales (bytes como Uint8Array → .to_py()).
+ */
+async function llamar(codigo, vars) {
+  if (!pyOk) throw new Error("El motor aún no está listo. Espera unos segundos.");
+  await new Promise(r => setTimeout(r, 40));    // deja que se pinte la barra animada
+  const nombres = Object.keys(vars || {});
+  try {
+    nombres.forEach(n => PY.globals.set(n, vars[n]));
+    const txt = await PY.runPythonAsync("import puente_web\n" + codigo);
+    return JSON.parse(txt);
+  } finally {
+    nombres.forEach(n => { try { PY.globals.delete(n); } catch (_) { /* ignorar */ } });
+  }
+}
+
+/** Lee los bytes del último archivo generado (hay que leerlos de inmediato: el buffer es compartido). */
+async function leerSalida() {
+  const p = await PY.runPythonAsync("import puente_web\npuente_web.obtener_salida()");
+  try {
+    if (p && typeof p.toJs === "function") return p.toJs().slice();
+    return new Uint8Array(p);
+  } finally {
+    if (p && typeof p.destroy === "function") p.destroy();
+  }
+}
+
+/* =====================================================================
+   BLOQUEO DE BOTONES Y BARRAS DE PROGRESO
+   ===================================================================== */
+let enCurso = 0;
+const RS = { archivo: null, salida: null, nombre: "" };                 // estado pestaña Resumen
+const AS = { archivo: null, res: null, elec: {}, tocadas: new Set(),   // estado pestaña Assurance
+             plantilla: null, salida: null, nombre: "" };
+const EDIC = {};                      // ediciones del usuario: clave "tema_id|campo"
+const VISTOS = new Set();             // líneas de log ya registradas (evita repetir en recálculos)
+
+/** Marca una operación en curso; devuelve la función que la libera. */
+function ocupar(zona) {
+  enCurso++;
+  $("bar-" + zona).style.display = "block";
+  refrescar();
+  return () => {
+    enCurso--;
+    $("bar-" + zona).style.display = "none";
+    refrescar();
+  };
+}
+
+/** Recalcula el estado habilitado/deshabilitado de todos los botones. */
+function refrescar() {
+  const libre = pyOk && enCurso === 0;
+  $("bGenRes").disabled = !(libre && RS.archivo);
+  $("bAna").disabled = !(libre && AS.archivo);
+  $("bGen").disabled = !(libre && AS.res);
+  $("bDescRes").disabled = enCurso > 0;
+  $("bDescAss").disabled = enCurso > 0;
+  document.body.classList.toggle("ocupado", enCurso > 0);
+}
+
+/* =====================================================================
+   PESTAÑAS
+   ===================================================================== */
+document.querySelectorAll(".tab").forEach(b => {
+  b.onclick = () => {
+    const t = b.dataset.tab;
+    $("tabRes").classList.toggle("on", t === "res");
+    $("tabAss").classList.toggle("on", t === "ass");
+    $("t-res").hidden = t !== "res";
+    $("t-ass").hidden = t !== "ass";
+    ajustarAlturas();
+  };
+});
+
+/* =====================================================================
+   ZONAS DE ARRASTRE Y ERRORES
+   ===================================================================== */
+/** Conecta una zona de arrastre/selección de archivos. */
+function conectarDrop(dropEl, inputEl, alElegir) {
+  ["dragover", "dragenter"].forEach(t => dropEl.addEventListener(t, e => { e.preventDefault(); dropEl.classList.add("on"); }));
+  ["dragleave", "drop"].forEach(t => dropEl.addEventListener(t, e => { e.preventDefault(); dropEl.classList.remove("on"); }));
+  dropEl.addEventListener("drop", e => alElegir([...e.dataTransfer.files]));
+  inputEl.addEventListener("change", e => { alElegir([...e.target.files]); e.target.value = ""; });
+}
+
+/** Muestra una lista de errores en rojo bajo la zona de arrastre. */
+function mostrarErrores(idLista, errores) {
+  const ul = $(idLista);
+  ul.innerHTML = "";
+  (errores || []).forEach(m => ul.appendChild(el("li", { text: "✖ " + m })));
+}
+
+/** Valida y guarda el archivo elegido (un solo .xlsx). Devuelve el archivo o null. */
+function elegirExcel(files, idErr) {
+  mostrarErrores(idErr, []);
+  const f = files.find(x => /\.xlsx$/i.test(x.name));
+  if (!f) {
+    const m = "Selecciona un archivo Excel con extensión .xlsx.";
+    mostrarErrores(idErr, [m]); reg("✖ " + m, "bad");
+    return null;
+  }
+  if (f.size === 0) {
+    const m = `El archivo «${f.name}» está vacío.`;
+    mostrarErrores(idErr, [m]); reg("✖ " + m, "bad");
+    return null;
+  }
+  return f;
+}
+
+async function leerBytes(archivo) { return new Uint8Array(await archivo.arrayBuffer()); }
+
+/* =====================================================================
+   PESTAÑA RESUMEN
+   ===================================================================== */
+conectarDrop($("dropRes"), $("archRes"), files => {
+  const f = elegirExcel(files, "errRes");
+  if (!f) return;
+  RS.archivo = f; RS.salida = null;
+  $("aRes").innerHTML = ""; $("aRes").appendChild(el("span", { text: "Archivo" })); $("aRes").append("✔ " + f.name);
+  $("aRes").classList.add("ok");
+  $("cResDesc").hidden = true;
+  $("estRes").textContent = "";
+  reg(`Resumen: archivo «${f.name}» seleccionado.`);
+  refrescar();
+});
+
+$("bGenRes").onclick = async () => {
+  mostrarErrores("errRes", []);
+  $("cResDesc").hidden = true; RS.salida = null;
+  $("estRes").textContent = "Generando resumen…";
+  const liberar = ocupar("res");
+  try {
+    reg(`Resumen: procesando «${RS.archivo.name}»…`);
+    const bytes = await leerBytes(RS.archivo);
+    const r = await llamar("puente_web.resumen(bytes(_ENTRADA.to_py()))", { _ENTRADA: bytes });
+    regPython(r.log);
+    if (!r.ok) {
+      const errs = (r.errores && r.errores.length) ? r.errores : ["No se pudo generar el resumen."];
+      mostrarErrores("errRes", errs);
+      errs.forEach(m => reg("✖ " + m, "bad"));
+      $("estRes").textContent = "";
+      return;
+    }
+    // Se leen los bytes de inmediato (el buffer de salida es compartido con Assurance)
+    RS.salida = await leerSalida();
+    RS.nombre = conHora(r.nombre, ".xlsx", "Resumen_Gestion_de_Eventos");
+    $("nomRes").innerHTML = ""; $("nomRes").appendChild(el("span", { class: "ok", text: `✔ Listo · se descargará como «${RS.nombre}»` }));
+    $("cResDesc").hidden = false;
+    $("estRes").innerHTML = '<span class="ok">✔ Resumen generado</span>';
+    reg(`✔ Resumen generado: ${RS.nombre}`, "ok");
+  } catch (e) {
+    console.error(e);
+    const m = msgError(e);
+    mostrarErrores("errRes", [m]); reg("✖ " + m, "bad");
+    $("estRes").textContent = "";
+  } finally { liberar(); }
+};
+
+$("bDescRes").onclick = () => {
+  if (!RS.salida) return;
+  try { guardarBytes(RS.salida, RS.nombre, TIPO_XLSX); reg(`Descarga: ${RS.nombre}`); }
+  catch (e) { console.error(e); reg("✖ No se pudo guardar el archivo: " + msgError(e), "bad"); }
+};
+
+/* =====================================================================
+   PESTAÑA ASSURANCE · formulario
+   ===================================================================== */
+let cierreAuto = true;   // true mientras la fecha de cierre sea una sugerencia automática
+
+/** Día anterior a una fecha ISO (AAAA-MM-DD). */
+function diaAnterior(iso) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || "");
+  if (!m) return "";
+  return new Date(Date.UTC(+m[1], +m[2] - 1, +m[3] - 1)).toISOString().slice(0, 10);
+}
+
+$("fDesde").addEventListener("change", () => {
+  const d = $("fDesde").value;
+  if (d && ($("fCierre").value === "" || cierreAuto)) {
+    $("fCierre").value = diaAnterior(d);
+    cierreAuto = true;
+  }
+});
+$("fCierre").addEventListener("input", () => { cierreAuto = false; });
+
+conectarDrop($("dropAss"), $("archAss"), files => {
+  const f = elegirExcel(files, "errAss");
+  if (!f) return;
+  AS.archivo = f;
+  $("aAss").innerHTML = ""; $("aAss").appendChild(el("span", { text: "Archivo" })); $("aAss").append("✔ " + f.name);
+  $("aAss").classList.add("ok");
+  reg(`Assurance: archivo «${f.name}» seleccionado.`);
+  refrescar();
+});
+
+/** Valida el formulario; devuelve {params} o {errores}. */
+function leerFormulario() {
+  const errores = [];
+  const turnoEl = document.querySelector('input[name="turno"]:checked');
+  const turno = turnoEl ? turnoEl.value : "";
+  const desde = $("fDesde").value, hasta = $("fHasta").value, cierre = $("fCierre").value;
+  if (!turno) errores.push("Elige el turno entrante (1-3 o 2-4).");
+  if (!desde) errores.push("Indica la vigencia «desde».");
+  if (!hasta) errores.push("Indica la vigencia «hasta».");
+  if (desde && hasta && hasta < desde) errores.push("La vigencia «hasta» no puede ser anterior a «desde».");
+  if (!cierre) errores.push("Indica la fecha de cierre de los datos.");
+  if (!AS.archivo) errores.push("Selecciona el Excel de eventos.");
+  if (errores.length) return { errores };
+  const params = { turno, vigencia: { desde, hasta }, fecha_cierre: cierre };
+  const ins = $("fInsp").value.trim(), pro = $("fProy").value.trim(), are = $("fArea").value.trim();
+  if (ins) params.inspector = ins;     // los opcionales vacíos se omiten
+  if (pro) params.proyecto = pro;
+  if (are) params.area = are;
+  return { params };
+}
+
+/* =====================================================================
+   PESTAÑA ASSURANCE · análisis
+   ===================================================================== */
+$("bAna").onclick = async () => {
+  mostrarErrores("errAss", []);
+  const f = leerFormulario();
+  if (f.errores) {
+    mostrarErrores("errAss", f.errores);
+    f.errores.forEach(m => reg("✖ " + m, "bad"));
+    return;
+  }
+  const liberar = ocupar("ass");
+  $("estAss").textContent = "Analizando…";
+  try {
+    // Nuevo análisis: se descartan elecciones, ediciones y salida previas
+    AS.elec = {}; AS.tocadas = new Set(); AS.res = null; AS.salida = null;
+    Object.keys(EDIC).forEach(k => delete EDIC[k]);
+    VISTOS.clear();
+    $("ass-res").hidden = true; $("genResultado").hidden = true; $("estGen").textContent = "";
+
+    reg(`Assurance: analizando «${AS.archivo.name}»…`);
+    const bytes = await leerBytes(AS.archivo);
+    const r = await llamar("puente_web.analizar_assurance(bytes(_ENTRADA.to_py()), _PARAMS)",
+                           { _ENTRADA: bytes, _PARAMS: JSON.stringify(f.params) });
+    regPython(r.log, VISTOS);
+    if (!r.ok) {
+      const errs = (r.errores && r.errores.length) ? r.errores : ["No se pudo analizar el Excel."];
+      mostrarErrores("errAss", errs);
+      errs.forEach(m => reg("✖ " + m, "bad"));
+      $("estAss").textContent = "";
+      return;
+    }
+    AS.res = r;
+    pintarTodo();
+    $("estAss").innerHTML = '<span class="ok">✔ Análisis listo. Revisa las decisiones y los focos.</span>';
+    reg("✔ Análisis de Assurance listo", "ok");
+  } catch (e) {
+    console.error(e);
+    const m = msgError(e);
+    mostrarErrores("errAss", [m]); reg("✖ " + m, "bad");
+    $("estAss").textContent = "";
+  } finally { liberar(); }
+};
+
+/* =====================================================================
+   DECISIONES
+   ===================================================================== */
+const claveDec = d => (d.clase || "") + "|" + d.id;
+const valorDec = d => { const k = claveDec(d); return (k in AS.elec) ? AS.elec[k] : d.defecto; };
+const listaDec = () => (AS.res && Array.isArray(AS.res.decisiones)) ? AS.res.decisiones : [];
+const pendientes = () => listaDec().filter(d => !AS.tocadas.has(claveDec(d))).length;
+
+/** Arma el objeto de decisiones que espera puente_web.rearmar (solo lo que el usuario tocó). */
+function construirDec() {
+  const dec = { tema: {}, revalorizar: {}, sin_foco: [] };
+  listaDec().forEach(d => {
+    const k = claveDec(d);
+    if (!AS.tocadas.has(k)) return;
+    const v = AS.elec[k];
+    if (v === undefined || v === null) return;
+    if (d.clase === "revalorizacion") dec.revalorizar[d.id] = v;
+    else if (v === "ignorar") dec.sin_foco.push(d.id);
+    else dec.tema[d.id] = v;
+  });
+  return dec;
+}
+
+const TITULOS_CLASE = {
+  revalorizacion: "Revalorizaciones posibles",
+  tema_ambiguo: "Eventos con tema ambiguo",
+  sin_tema: "Eventos sin tema"
+};
+
+function pintarDecisiones() {
+  const decs = listaDec();
+  const cuerpo = $("decCuerpo");
+  cuerpo.innerHTML = "";
+  pintarContadorPendientes();
+  if (!decs.length) {
+    cuerpo.appendChild(el("div", { class: "estado", text: "No hay decisiones por tomar: el análisis no encontró casos dudosos." }));
+    return;
+  }
+  // Agrupar por clase respetando el orden de los títulos conocidos
+  const grupos = {};
+  decs.forEach(d => { (grupos[d.clase || "otros"] = grupos[d.clase || "otros"] || []).push(d); });
+  const orden = Object.keys(TITULOS_CLASE).filter(c => grupos[c]).concat(Object.keys(grupos).filter(c => !TITULOS_CLASE[c]));
+  let n = 0;
+  orden.forEach(clase => {
+    const g = el("div", { class: "dgrupo" }, el("h3", { text: TITULOS_CLASE[clase] || clase }));
+    if (clase === "revalorizacion") {
+      g.appendChild(el("div", { class: "ayuda", text: "Es una excepción: solo con hechos escritos en la descripción. Ante la duda, mantener." }));
+    }
+    grupos[clase].forEach(d => {
+      const k = claveDec(d);
+      const nombreGrupo = "dec_" + (n++);
+      const actual = valorDec(d);
+      const opciones = (d.opciones || []).map(op => (typeof op === "object" && op !== null) ? op : { valor: op, etiqueta: op });
+      const ev = Array.isArray(d.evidencia) ? d.evidencia.join(" / ") : d.evidencia;
+      g.appendChild(el("div", { class: "dec" + (AS.tocadas.has(k) ? "" : " pend") },
+        d.pregunta ? el("div", { class: "dpreg", text: d.pregunta }) : null,
+        d.titulo ? el("div", { class: "dtit", text: d.titulo }) : null,
+        ev ? el("div", { class: "devid", text: "«" + ev + "»" }) : null,
+        el("div", { class: "opts" }, opciones.map(op =>
+          el("label", {},
+            el("input", {
+              type: "radio", name: nombreGrupo, value: op.valor,
+              checked: String(op.valor) === String(actual),
+              onchange: () => cambiarDecision(d, op.valor)
+            }),
+            el("span", { text: op.etiqueta !== undefined ? op.etiqueta : String(op.valor) })
+          )))
+      ));
+    });
+    cuerpo.appendChild(g);
+  });
+}
+
+function pintarContadorPendientes() {
+  const total = listaDec().length, p = pendientes();
+  const txt = total === 0 ? "Sin decisiones pendientes"
+            : `Decisiones pendientes (en su valor por defecto): ${p} de ${total}`;
+  const caja = el("span", { class: "pendbox" + (p === 0 ? " cero" : ""), text: txt });
+  $("contPend").innerHTML = ""; $("contPend").appendChild(caja);
+}
+
+/** Al cambiar una opción: se guarda la elección y se recalcula el plan. */
+async function cambiarDecision(d, valor) {
+  const k = claveDec(d);
+  const habia = (k in AS.elec), previo = AS.elec[k], eraTocada = AS.tocadas.has(k);
+  AS.elec[k] = valor; AS.tocadas.add(k);
+  const ok = await recalcular();
+  if (!ok) {   // si falla, se revierte la elección para no dejar la pantalla inconsistente
+    if (habia) AS.elec[k] = previo; else delete AS.elec[k];
+    if (!eraTocada) AS.tocadas.delete(k);
+    pintarTodo();
+  }
+}
+
+/** Llama a puente_web.rearmar y vuelve a pintar. Devuelve true si salió bien. */
+async function recalcular() {
+  const y = window.scrollY;
+  const liberar = ocupar("ass");
+  try {
+    const dec = construirDec();
+    const r = await llamar("puente_web.rearmar(_DEC)", { _DEC: JSON.stringify(dec) });
+    regPython(r.log, VISTOS);
+    if (!r.ok) {
+      const errs = (r.errores && r.errores.length) ? r.errores : ["No se pudo recalcular."];
+      mostrarErrores("errAss", errs);
+      errs.forEach(m => reg("✖ " + m, "bad"));
+      return false;
+    }
+    mostrarErrores("errAss", []);
+    AS.res = r;
+    invalidarSalida();
+    pintarTodo();
+    window.scrollTo(0, y);
+    return true;
+  } catch (e) {
+    console.error(e);
+    const m = msgError(e);
+    mostrarErrores("errAss", [m]); reg("✖ " + m, "bad");
+    return false;
+  } finally { liberar(); }
+}
+
+/** Oculta el .pptx ya generado cuando el contenido cambió. */
+function invalidarSalida() {
+  AS.salida = null;
+  $("genResultado").hidden = true;
+  $("estGen").textContent = "";
+}
+
+/* =====================================================================
+   CAMPOS EDITABLES (focos, recurrente, bloques, tendencias)
+   ===================================================================== */
+const tiene = (o, k) => Object.prototype.hasOwnProperty.call(o, k);
+
+/** Ajusta el alto de un textarea a su contenido. */
+function autoAlto(t) { t.style.height = "auto"; t.style.height = (t.scrollHeight + 2) + "px"; }
+function ajustarAlturas() {
+  requestAnimationFrame(() => document.querySelectorAll("#t-ass textarea").forEach(autoAlto));
+}
+
+/**
+ * Crea un campo editable. Las ediciones se guardan en EDIC[clave]; si el valor
+ * vuelve a ser igual al automático, la edición se elimina.
+ */
+function campo(o) {
+  const numerico = !!o.numerico;
+  const auto = (o.auto === undefined || o.auto === null) ? (numerico ? 0 : "") : o.auto;
+  const actual = tiene(EDIC, o.clave) ? EDIC[o.clave] : auto;
+  const entrada = numerico
+    ? el("input", { type: "number", step: "any", value: String(actual) })
+    : el("textarea", { rows: "1", value: String(actual) });
+  const cnt = o.max ? el("span", { class: "cnt" }) : null;
+
+  const actualizar = () => {
+    if (cnt) {
+      const n = entrada.value.length;
+      cnt.textContent = `${n}/${o.max}`;
+      cnt.classList.toggle("over", n > o.max);
+    }
+    if (!numerico) autoAlto(entrada);
+  };
+  entrada.addEventListener("input", () => {
+    if (numerico) {
+      if (entrada.value === "" || Number(entrada.value) === Number(auto)) delete EDIC[o.clave];
+      else EDIC[o.clave] = Number(entrada.value);
+    } else {
+      if (entrada.value === String(auto)) delete EDIC[o.clave];
+      else EDIC[o.clave] = entrada.value;
+    }
+    invalidarSalida();
+    actualizar();
+  });
+  const restaurar = el("button", {
+    class: "sec", type: "button", text: "Restaurar texto automático",
+    onclick: () => { delete EDIC[o.clave]; entrada.value = String(auto); invalidarSalida(); actualizar(); }
+  });
+  const caja = el("div", { class: "campo" },
+    el("div", { class: "et" }, el("span", { text: o.etiqueta }), cnt, restaurar),
+    o.prefijo ? el("div", { class: "pref", text: o.prefijo }) : null,
+    entrada);
+  if (o.prefijo) caja.querySelector(".pref").style.cssText = "font-size:12px;font-weight:600;color:var(--teal);margin-bottom:2px";
+  setTimeout(actualizar, 0);
+  return caja;
+}
+
+/* ---------- Focos ---------- */
+const idFoco = (f, i) => String(f.tema_id ?? f.id ?? f.tema ?? ("foco" + i));
+const claveEv = (ev, j) => {
+  if (Array.isArray(ev.ids)) return ev.ids.join("/");
+  if (ev.ids !== undefined && ev.ids !== null) return String(ev.ids);
+  return String(ev.id ?? j);
+};
+/** Etiqueta fija «TIPO ID ids – EMPRESA:» que precede al texto del evento. */
+function etiquetaEv(ev, j) {
+  const idsTxt = Array.isArray(ev.ids) ? ev.ids.join("/") : (ev.ids ?? "");
+  const partes = [ev.tipo, ev.id, (String(idsTxt) !== String(ev.id ?? "") ? idsTxt : "")]
+    .filter(x => x !== undefined && x !== null && x !== "");
+  return `${partes.join(" ")} – ${ev.empresa ?? ""}:`;
+}
+
+function pintarFocos() {
+  const cont = $("focosCuerpo");
+  cont.innerHTML = "";
+  const focos = (AS.res.plan && AS.res.plan.focos) || [];
+  if (!focos.length) {
+    cont.appendChild(el("div", { class: "estado", text: "El plan no tiene focos." }));
+    return;
+  }
+  focos.forEach((f, i) => {
+    const fid = idFoco(f, i);
+    const esN1 = String(f.nivel ?? "").toUpperCase().includes("1");
+    const tarjeta = el("div", { class: "foco " + (esN1 ? "n1" : "n2") },
+      el("div", { class: "cab" }, `Prioridad ${f.prioridad ?? "—"} · ${f.nivel ?? ""} · ${f.tema ?? ""}`));
+    tarjeta.appendChild(campo({ clave: fid + "|instruccion", etiqueta: "Instrucción", auto: f.instruccion, max: 350 }));
+    tarjeta.appendChild(campo({ clave: fid + "|criterio", etiqueta: "Criterio", auto: f.criterio, max: 150 }));
+    tarjeta.appendChild(campo({ clave: fid + "|herramienta", etiqueta: "Herramienta", auto: f.herramienta }));
+    tarjeta.appendChild(campo({ clave: fid + "|evidencia", etiqueta: "Evidencia", auto: f.evidencia }));
+    (f.eventos || []).forEach((ev, j) => {
+      tarjeta.appendChild(campo({
+        clave: fid + "|ev:" + claveEv(ev, j), etiqueta: `Evento ${j + 1}`,
+        prefijo: etiquetaEv(ev, j), auto: ev.texto, max: 120
+      }));
+    });
+    cont.appendChild(tarjeta);
+  });
+}
+
+/* ---------- Recurrente, bloques y tendencias (edición genérica por ruta) ---------- */
+/** Recorre un valor y lista sus hojas (texto/número) que cumplan el filtro. */
+function hojas(valor, ruta, filtro) {
+  const out = [];
+  (function rec(x, r) {
+    if (typeof x === "string" || typeof x === "number") { if (filtro(r, x)) out.push({ ruta: r, val: x }); }
+    else if (Array.isArray(x)) x.forEach((y, i) => rec(y, r.concat(String(i))));
+    else if (x && typeof x === "object") Object.keys(x).forEach(k => rec(x[k], r.concat(k)));
+  })(valor, ruta);
+  return out;
+}
+const filtroGeneral = r => !/^(id|ids|tipo|nivel|prioridad|tema_id)$/.test(r[r.length - 1]);
+const soloTexto = (r, x) => typeof x === "string";
+const soloTextoControl = (r, x) => typeof x === "string" && r[r.length - 1] === "texto";
+
+function seccionHojas(titulo, lista) {
+  const s = el("div", {}, el("h3", { text: titulo }));
+  if (!lista.length) s.appendChild(el("div", { class: "mut", text: "(sin datos editables)" }));
+  lista.forEach(h => s.appendChild(campo({
+    clave: "@|" + h.ruta.join("."), etiqueta: h.ruta.join(" › "),
+    auto: h.val, numerico: typeof h.val === "number"
+  })));
+  return s;
+}
+
+function pintarOtros() {
+  const plan = AS.res.plan || {};
+  const b = plan.bloques || {};
+  const cont = $("otrosCuerpo");
+  cont.innerHTML = "";
+  cont.appendChild(seccionHojas("Recurrente (texto formado y temas con su n)",
+    hojas(plan.recurrente, ["recurrente"], (r, x) => filtroGeneral(r))));
+  cont.appendChild(seccionHojas("Bloque AM · controles",
+    hojas(b.am && b.am.controles, ["bloques", "am", "controles"], soloTextoControl)));
+  cont.appendChild(seccionHojas("Bloque mediodía",
+    hojas(b.mediodia, ["bloques", "mediodia"], soloTexto)));
+  cont.appendChild(seccionHojas("Bloque PM · brechas CDP",
+    hojas(b.pm && b.pm.brechas_cdp, ["bloques", "pm", "brechas_cdp"], soloTexto)));
+  cont.appendChild(seccionHojas("Tendencias (tema y n)",
+    hojas(plan.tendencias, ["tendencias"], (r, x) => filtroGeneral(r))));
+}
+
+/** Asigna un valor siguiendo una ruta dentro del plan (si la ruta ya no existe, se ignora). */
+function asignarRuta(obj, ruta, valor) {
+  let cur = obj;
+  for (let i = 0; i < ruta.length - 1; i++) {
+    if (cur === null || typeof cur !== "object" || !(ruta[i] in cur)) return;
+    cur = cur[ruta[i]];
+  }
+  const ult = ruta[ruta.length - 1];
+  if (cur === null || typeof cur !== "object" || !(ult in cur)) return;
+  cur[ult] = (typeof cur[ult] === "number") ? Number(valor) : valor;
+}
+
+/** Devuelve una copia del plan con todas las ediciones del usuario aplicadas. */
+function aplicarEdiciones(plan) {
+  const p = JSON.parse(JSON.stringify(plan));
+  (p.focos || []).forEach((f, i) => {
+    const fid = idFoco(f, i);
+    ["instruccion", "criterio", "herramienta", "evidencia"].forEach(c => {
+      const k = fid + "|" + c;
+      if (tiene(EDIC, k)) f[c] = EDIC[k];
+    });
+    (f.eventos || []).forEach((ev, j) => {
+      const k = fid + "|ev:" + claveEv(ev, j);
+      if (tiene(EDIC, k)) ev.texto = EDIC[k];
+    });
+  });
+  Object.keys(EDIC).forEach(k => {
+    if (k.startsWith("@|")) asignarRuta(p, k.slice(2).split("."), EDIC[k]);
+  });
+  return p;
+}
+
+/* =====================================================================
+   CONTROL DE CALIDAD
+   ===================================================================== */
+/** Convierte cualquier valor en una línea de texto legible. */
+function valorATexto(v) {
+  if (v === null || v === undefined) return "";
+  if (Array.isArray(v)) return v.map(valorATexto).join("; ");
+  if (typeof v === "object") {
+    const de = v.de ?? v.desde ?? v.original, a = v.a ?? v.hacia ?? v.nuevo ?? v.tipo;
+    if (v.id !== undefined && (de !== undefined || a !== undefined)) {
+      const frase = v.frase ?? v.evidencia;
+      return `${v.id}: ${de ?? "?"} → ${a ?? "?"}` + (frase ? ` — «${valorATexto(frase)}»` : "");
+    }
+    return Object.entries(v).map(([k, x]) => `${k}: ${valorATexto(x)}`).join(" · ");
+  }
+  return String(v);
+}
+
+/** Dibuja un valor del QA (lista, objeto o texto). */
+function valorDOM(v) {
+  const vacio = v === undefined || v === null || v === "" ||
+    (Array.isArray(v) && !v.length) ||
+    (typeof v === "object" && !Array.isArray(v) && !Object.keys(v).length);
+  if (vacio) return el("div", { class: "mut", text: "Ninguno" });
+  if (Array.isArray(v)) return el("ul", { class: "lista" }, v.map(x => el("li", { text: valorATexto(x) })));
+  if (typeof v === "object") {
+    if (Object.values(v).every(x => x === null || typeof x !== "object")) return el("div", { text: valorATexto(v) });
+    return el("ul", { class: "lista" }, Object.entries(v).map(([k, x]) => el("li", { text: `${k}: ${valorATexto(x)}` })));
+  }
+  return el("div", { text: String(v) });
+}
+
+function pintarQA() {
+  const qa = (AS.res && AS.res.qa) || {};
+  const usadas = new Set();
+  // Busca la primera clave del QA que cumpla el patrón (los nombres exactos pueden variar)
+  const tomar = re => {
+    const k = Object.keys(qa).find(x => !usadas.has(x) && re.test(x));
+    if (k === undefined) return undefined;
+    usadas.add(k); return qa[k];
+  };
+  const aplicadas = tomar(/aplicad/i);
+  const sinDecidir = tomar(/sin_decidir/i);
+  const fuera = tomar(/n1n2_fuera|fuera/i);
+  const sinResolver = tomar(/sin_resolver/i);
+  const faltantes = tomar(/faltant/i);
+  const supuestos = tomar(/supuesto/i);
+  const soloHBP = tomar(/hbp/i);
+  const leidos = tomar(/le[ií]do|por_tipo|tipos/i);
+
+  const datoFaltanteLog = ((AS.res && AS.res.log) || []).map(String)
+    .filter(l => l.includes("⚠") && l.includes("[DATO FALTANTE]"));
+
+  const secciones = [
+    ["Eventos leídos por tipo (ACC / CAAP / HAP / CBP / HBP)", leidos],
+    ["N1/N2 que quedaron fuera de los 5 focos (con su motivo)", fuera],
+    ["Temas solo-HBP excluidos", soloHBP],
+    ["Revalorizaciones aplicadas (id, de → a, frase)", aplicadas],
+    ["Posibles revalorizaciones sin decidir", sinDecidir],
+    ["Eventos sin resolver", sinResolver],
+    ["Datos faltantes", faltantes],
+    ["Supuestos", supuestos]
+  ];
+  const cont = $("qaCuerpo");
+  cont.innerHTML = "";
+  const p = pendientes(), total = listaDec().length;
+  cont.appendChild(el("span", { class: "pendbox" + (p === 0 ? " cero" : ""),
+    text: total === 0 ? "Sin decisiones pendientes" : `Decisiones pendientes (en su valor por defecto): ${p} de ${total}` }));
+  secciones.forEach(([t, v]) => cont.appendChild(el("div", { class: "qa-sec" }, el("h3", { text: t }), valorDOM(v))));
+
+  cont.appendChild(el("div", { class: "qa-sec" }, el("h3", { text: "Avisos del registro con [DATO FALTANTE]" }),
+    datoFaltanteLog.length
+      ? el("ul", { class: "lista" }, datoFaltanteLog.map(l => el("li", { class: "warn", text: l })))
+      : el("div", { class: "mut", text: "Ninguno" })));
+
+  // Cualquier otro dato del QA que no encaje en las secciones anteriores
+  Object.keys(qa).filter(k => !usadas.has(k)).forEach(k =>
+    cont.appendChild(el("div", { class: "qa-sec" }, el("h3", { text: k }), valorDOM(qa[k]))));
+}
+
+/* =====================================================================
+   PINTADO GENERAL
+   ===================================================================== */
+function pintarTodo() {
+  if (!AS.res) { $("ass-res").hidden = true; return; }
+  try {
+    pintarDecisiones();
+    pintarFocos();
+    pintarOtros();
+    pintarQA();
+    $("ass-res").hidden = false;
+  } catch (e) {
+    console.error(e);
+    const m = "No se pudo mostrar el resultado del análisis: " + msgError(e);
+    mostrarErrores("errAss", [m]); reg("✖ " + m, "bad");
+  }
+  refrescar();
+  ajustarAlturas();
+}
+
+/* =====================================================================
+   GENERAR Y DESCARGAR EL .PPTX
+   ===================================================================== */
+$("bGen").onclick = async () => {
+  if (!AS.res) return;
+  $("genResultado").hidden = true; AS.salida = null;
+  $("estGen").textContent = "Generando presentación…";
+  const liberar = ocupar("gen");
+  try {
+    // La plantilla viene en el sitio; se descarga una sola vez
+    if (!AS.plantilla) {
+      reg(`Cargando plantilla «${PLANTILLA}»…`);
+      AS.plantilla = await bajar(PLANTILLA, "bin");
+    }
+    const plan = aplicarEdiciones(AS.res.plan);
+    const r = await llamar("puente_web.generar_pptx(_PLAN, bytes(_PLANTILLA.to_py()))",
+                           { _PLAN: JSON.stringify(plan), _PLANTILLA: AS.plantilla });
+    regPython(r.log);
+    if (!r.ok) {
+      const errs = (r.errores && r.errores.length) ? r.errores : ["No se pudo generar la presentación."];
+      errs.forEach(m => reg("✖ " + m, "bad"));
+      $("estGen").innerHTML = "";
+      $("estGen").appendChild(el("span", { class: "bad", text: errs.map(m => "✖ " + m).join(" ") }));
+      return;
+    }
+    AS.salida = await leerSalida();   // se lee de inmediato (buffer compartido)
+    AS.nombre = conHora(r.nombre || AS.res.nombre, ".pptx", "ASSURANCE");
+    $("nomAss").innerHTML = "";
+    $("nomAss").appendChild(el("span", { class: "ok", text: `✔ Listo · se descargará como «${AS.nombre}»` }));
+    const ruta = AS.res.ruta && (AS.res.ruta.ruta ?? null);
+    const caja = $("rutaTeams");
+    if (ruta) {
+      caja.innerHTML = "";
+      caja.appendChild(el("b", { text: "Guarda el archivo en esta carpeta de Teams: " }));
+      caja.append(String(ruta));
+      caja.hidden = false;
+    } else { caja.hidden = true; }
+    $("genResultado").hidden = false;
+    $("estGen").innerHTML = '<span class="ok">✔ Presentación generada</span>';
+    reg(`✔ Presentación generada: ${AS.nombre}`, "ok");
+  } catch (e) {
+    console.error(e);
+    const m = msgError(e);
+    reg("✖ " + m, "bad");
+    $("estGen").innerHTML = "";
+    $("estGen").appendChild(el("span", { class: "bad", text: "✖ " + m }));
+  } finally { liberar(); }
+};
+
+$("bDescAss").onclick = () => {
+  if (!AS.salida) return;
+  try { guardarBytes(AS.salida, AS.nombre, TIPO_PPTX); reg(`Descarga: ${AS.nombre}`); }
+  catch (e) { console.error(e); reg("✖ No se pudo guardar el archivo: " + msgError(e), "bad"); }
+};
+
+/* =====================================================================
+   INICIO
+   ===================================================================== */
+reg("Página lista. Cargando el motor…");
+refrescar();
+cargarMotor();
+</script>
+</body>
+</html>
