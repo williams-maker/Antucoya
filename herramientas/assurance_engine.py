@@ -1077,6 +1077,46 @@ def _textos_forma(sh, excluir_ultima_fila=False):
     return []
 
 
+def _segunda_lamina(prs, s, extra, turno, n_antes, log):
+    """Lámina 2 con los focos 6 en adelante (los agregados a mano que no caben en la lámina 1)."""
+    import copy as _copy
+    R_NS = "http://schemas.openxmlformats.org/officeDocument/2006/relationships"
+    nueva = prs.slides.add_slide(s.slide_layout)
+    for sh in list(nueva.shapes):
+        sh._element.getparent().remove(sh._element)
+    mapa = {}
+    for rid, rel in s.part.rels.items():
+        if rel.reltype.endswith("/image"):
+            mapa[rid] = nueva.part.relate_to(rel.target_part, rel.reltype)
+    quitar = {"Instrucciones IA", "Shape 12", "Text 13", "Text 14", "Text 18", "Shape 19", "Text 20", "Shape 21",
+              "Text 22", "Shape 34", "Text 35", "Text 36", "Shape 37", "Text 38", "Text 39"}
+    for sh in s.shapes:
+        if sh.name in quitar:
+            continue
+        el = _copy.deepcopy(sh._element)
+        for e in el.iter():
+            for att in ("embed", "link"):
+                v = e.get(f"{{{R_NS}}}{att}")
+                if v in mapa:
+                    e.set(f"{{{R_NS}}}{att}", mapa[v])
+        nueva.shapes._spTree.append(el)
+    F2 = {sh.name: sh for sh in nueva.shapes}
+    _escribir(F2["Text 0"].text_frame.paragraphs[0], [(f"ASSURANCE TURNO {turno} (continuación)", None, None)])
+    tsh = F2["Table 0"]
+    tbl = tsh.table
+    trs = list(tbl._tbl.tr_lst)
+    tbl._tbl.remove(trs[-1])                              # sin fila SI PRO en la lámina 2
+    trs = list(tbl._tbl.tr_lst)
+    while len(trs) - 1 < len(extra):                      # clona filas si hacen falta
+        tbl._tbl.append(_copy.deepcopy(trs[-1])); trs = list(tbl._tbl.tr_lst)
+    for tr in trs[len(extra) + 1:]:
+        tbl._tbl.remove(tr)
+    for k, f in enumerate(extra, 1):
+        _llenar_fila(tbl, k, n_antes + k, f, log)
+    tsh.height = sum(int(tr.h) for tr in tbl._tbl.tr_lst)
+    log.append(f"✔ Lámina 2: {len(extra)} foco(s) adicional(es) agregados a mano (focos {n_antes + 1} a {n_antes + len(extra)})")
+
+
 def generar(plantilla_bytes, plan):
     """Rellena la lámina 1 con `plan` (esquema en ASSURANCE_ESQUEMA.md). Devuelve (bytes, log)."""
     log = []
@@ -1142,21 +1182,17 @@ def generar(plantilla_bytes, plan):
     log.append("✔ Indicadores del turno (sin comparación con los 14 días anteriores)")
 
     # 3. Focos (puntos 3, 4, 5, 7, 8, 9)
-    _validar_niveles(focos, log)
-    for f in focos:
+    focos_extra = focos[5:]                 # más de 5 focos (agregados a mano): van en una 2.ª lámina
+    focos = focos[:5]
+    _validar_niveles(focos + focos_extra, log)
+    for f in focos + focos_extra:
         if f["nivel"] not in NIVELES:
             raise ValueError("nivel inválido")
     tsh = F["Table 0"]
     tbl = tsh.table
     if len(tbl.rows) != 7:
         raise ValueError(f"la tabla de focos tiene {len(tbl.rows)} filas (se esperaban 7)")
-    import copy as _copy
-    sipro_tr = tbl._tbl.tr_lst[6]
-    for _ in range(len(focos) - 5):          # más de 5 focos (agregados a mano): se clona la última fila de foco
-        sipro_tr.addprevious(_copy.deepcopy(tbl._tbl.tr_lst[5]))
-    if len(focos) > 5:
-        log.append(f"⚠ El plan trae {len(focos)} focos (más de 5 por agregados manuales): la tabla crece y con más de 5-6 puede solaparse con Recurrente y Tendencias; revisa la lámina")
-    sp_row = max(len(focos), 5) + 1             # índice de la fila SI PRO
+    sp_row = 6
     for i, f in enumerate(focos, 1):
         _llenar_fila(tbl, i, i, f, log)
     # Foco SI PRO (fila 6): si el usuario escribió texto en la página, se llena; si no, la fila queda intacta
@@ -1252,6 +1288,9 @@ def generar(plantilla_bytes, plan):
     else:
         log.append("⚠ La plantilla no tiene lámina 2")
 
+    if focos_extra:
+        _segunda_lamina(prs, s, focos_extra, turno, len(focos), log)
+
     # 8. Controles finales (punto 13)
     if instr is not None:
         igual = etree.tostring(instr._element) == instr_xml
@@ -1286,7 +1325,7 @@ def generar(plantilla_bytes, plan):
                 "vigencia": {"desde": d1.isoformat(), "hasta": d2.isoformat()},
                 "focos": [{"prioridad": i, "nivel": f["nivel"], "tema": f.get("tema"),
                            "ids": [str(x) for ev in f.get("eventos") or [] for x in (ev.get("ids") or [ev.get("id")]) if x]}
-                          for i, f in enumerate(focos, 1)],
+                          for i, f in enumerate(focos + focos_extra, 1)],
                 "generado": datetime.now().isoformat(timespec="seconds"), "motor": VERSION}
     _escribir_registro(prs, registro)
     log.insert(1, f"✔ Guardar en Teams: {rg['ruta']}")
