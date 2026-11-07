@@ -778,19 +778,29 @@ def _causa_foco(evs):
 _ASP = ("ASP", "Acompañamiento ASP")
 
 
+def _partir_herr(herr):
+    """Separa «A + B: detalle» (o «A + B.» sin detalle) en (herramientas, resto)."""
+    if ":" in herr:
+        izq, der = herr.split(":", 1)
+        resto = ":" + der
+    else:
+        izq = herr.rstrip(". ")
+        resto = "." if herr.rstrip().endswith(".") else ""
+    return [p.strip() for p in izq.split(" + ") if p.strip()], resto
+
+
 def _herramienta_por_causa(herr, causa):
     """Acto/entorno → solo ASP; ausencia de herramientas → demás sin ASP; ambas → ASP + demás.
-    Texto sin ':' o causa None: sin cambios."""
-    if not herr or causa not in ("acto", "condicion", "ambas") or ":" not in herr:
+    Causa None: sin cambios."""
+    if not herr or causa not in ("acto", "condicion", "ambas"):
         return herr
-    izq, der = herr.split(":", 1)
-    partes = [p.strip() for p in izq.split(" + ") if p.strip()]
+    partes, resto = _partir_herr(herr)
     if causa == "acto":
-        return "ASP:" + der
-    resto = [p for p in partes if p not in _ASP]
+        return "ASP" + resto
+    sin_asp = [p for p in partes if p not in _ASP]
     if causa == "ambas":
-        return " + ".join(["ASP"] + resto) + ":" + der
-    return (" + ".join(resto) + ":" + der) if resto else herr
+        return " + ".join(["ASP"] + sin_asp) + resto
+    return (" + ".join(sin_asp) + resto) if sin_asp else herr
 
 
 _RX_SIG_TURNO = re.compile(r"\b(?:siguiente|proximo|proxima) (?:turno|confirmacion)\b|\bturno (?:siguiente|entrante)\b")
@@ -811,10 +821,9 @@ def _cdp_evento(ev):
 
 def _herramienta_cdp(herr, usar):
     """Con criterio de CdP cumplido, la herramienta incluye CdP; si no, se retira cualquier CdP del texto."""
-    if not herr or ":" not in herr:
+    if not herr:
         return herr
-    izq, der = herr.split(":", 1)
-    partes = [p.strip() for p in izq.split(" + ") if p.strip()]
+    partes, resto = _partir_herr(herr)
     es_cdp = lambda p: p.lower().startswith("cdp")
     if usar:
         if not any(es_cdp(p) for p in partes):
@@ -822,19 +831,19 @@ def _herramienta_cdp(herr, usar):
             partes.insert(i, "CdP")
     else:
         partes = [p for p in partes if not es_cdp(p)] or ["Inspección de Equipos"]
-    return " + ".join(partes) + ":" + der
+    return " + ".join(partes) + resto
 
 
 def _herramienta_desafio(herr, usar):
     """«Desafío en Terreno» solo aplica a accidentes (ACC) o CAAP: si el foco no los tiene, se retira del texto."""
-    if usar or not herr or ":" not in herr:
+    if usar or not herr:
         return herr
-    izq, der = herr.split(":", 1)
-    partes = [p.strip() for p in izq.split(" + ") if p.strip()]
-    sin = [p for p in partes if not p.lower().startswith("desafío en terreno") and not p.lower().startswith("desafio en terreno")]
+    partes, resto = _partir_herr(herr)
+    es_d = lambda p: p.lower().replace("í", "i").startswith("desafio en terreno")
+    sin = [p for p in partes if not es_d(p)]
     if len(sin) == len(partes):
         return herr
-    return " + ".join(sin or ["Inspección de Equipos"]) + ":" + der
+    return " + ".join(sin or ["Inspección de Equipos"]) + resto
 
 
 # La clasificación del Excel ya está cerrada: no se sugiere ni se aplica ninguna revalorización (HBP→CBP, etc.).

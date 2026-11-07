@@ -13,7 +13,7 @@
   "izaje_segregacion": {
    "instruccion": "Delimitar el área de izaje, con al menos dos vientos y señalero/rigger designado; con más de un equipo, definir un Rigger Líder. Nadie bajo la carga ni dentro del radio de maniobra.",
    "criterio": "se detiene el izaje si hay personas bajo la carga o no hay vientos ni señalero.",
-   "herramienta": "Verificación de Interacción Personas-Equipos + CdP Izaje + Desafío en Terreno.",
+   "herramienta": "Verificación de Interacción Personas-Equipos + CdP Izaje + Desafío en Terreno: revisar el área delimitada, los vientos y el rigger antes de cada maniobra de izaje.",
    "evidencia": "Área delimitada / vientos instalados / rigger identificado / registro fotográfico"
   },
   "izaje_certificacion": {
@@ -73,13 +73,13 @@
   "segregacion_acceso": {
    "instruccion": "Segregar con barreras duras (no con cintas ni conos) las áreas con riesgo, con acceso controlado; el plan de tránsito define circulación, señalización y segregación de vehículos, equipos y peatones.",
    "criterio": "área de riesgo sin barrera dura ni acceso controlado se detiene hasta segregarla.",
-   "herramienta": "Verificación de Interacción Personas-Equipos + Desafío en Terreno.",
+   "herramienta": "Verificación de Interacción Personas-Equipos + Desafío en Terreno: recorrer perímetros y accesos de las áreas de riesgo, verificando barreras duras y acceso controlado.",
    "evidencia": "Barrera dura instalada / señalización / acceso controlado / registro fotográfico"
   },
   "transito_peaton_equipo": {
    "instruccion": "Mantener segregados peatones y equipos: pasos peatonales demarcados, comunicación radial con el operador y verificación de interacción personas-equipos completada antes de trabajar cerca de equipos en movimiento.",
    "criterio": "no se ingresa al radio de un equipo sin contacto radial ni verificación de interacción.",
-   "herramienta": "Verificación de Interacción Personas-Equipos + Desafío en Terreno.",
+   "herramienta": "Verificación de Interacción Personas-Equipos + Desafío en Terreno: verificar pasos peatonales, radio y verificación de interacción antes de trabajar cerca de equipos en movimiento.",
    "evidencia": "Verificación de interacción completada / paso peatonal demarcado / radio operativo"
   },
   "espacios_confinados": {
