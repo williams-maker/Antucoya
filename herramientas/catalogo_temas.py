@@ -610,6 +610,33 @@ def _nota_abiertos(ids, tipos):
     tipo_txt = f" {next(iter(tipos))}" if len(tipos) == 1 else ""
     return f"({lead}{tipo_txt} {_unir(ids)}, {'abierto' if len(ids) == 1 else 'abiertos'} a la fecha de cierre.)"
 
+# ---------------------------------------------------------------------------
+# FOCO FIJO (prioridad 1, N1) hasta el cierre del año. Para cambiarlo o apagarlo basta editar este bloque.
+# Los eventos de los temas indicados se listan como evidencia cuando existen; si no hay, la fila igual sale.
+# ---------------------------------------------------------------------------
+FOCO_FIJO = {
+    "vigente_hasta": "2026-12-31",           # se aplica si la vigencia del turno empieza hasta esta fecha
+    "tema_id": "tableros_electricos",         # tema del catálogo al que se asocia
+    "temas_asociados": ("generadores_equipos_menores",),   # sus eventos también se listan en este foco
+    "tema": "Controles eléctricos en tableros, generadores y torres.",
+    "instruccion": ("Verificar antes de energizar o usar equipos eléctricos que el tablero tenga diferencial operativo "
+                    "(sin puentes), que generadores y torres de iluminación tengan puesta a tierra y segregación, "
+                    "que la alimentación pase por tablero de distribución y que la soldadora tenga inspección vigente; "
+                    "el supervisor lo valida."),
+    "criterio": "no se energiza ni se usa equipo con diferencial puenteado, sin tierra o sin tablero intermedio.",
+    "herramienta": ("ASP + Inspección de Equipos + Acompañamiento ASP: revisión de tableros, generadores y torres "
+                    "al inicio del turno; ASP antes de cada tarea eléctrica."),
+    "evidencia": "Diferencial operativo / generador y torre con tierra / tablero intermedio / registro fotográfico",
+    "sin_eventos": "Foco fijo del año: verificación permanente (sin eventos N1/N2 de este tema en el período).",
+}
+
+
+def _foco_fijo_activo(params):
+    vig = (params or {}).get("vigencia") or {}
+    desde = str(vig.get("desde") or "")[:10]
+    return bool(desde) and desde <= FOCO_FIJO["vigente_hasta"]
+
+
 def armar_plan(analisis, params, decisiones=None, calcular=None):
     """Arma el `plan` para `generar` a partir de la salida de `analizar`. Devuelve plan, qa, decisiones y log."""
     if not isinstance(analisis, dict) or not analisis.get("ok"):
@@ -716,12 +743,34 @@ def armar_plan(analisis, params, decisiones=None, calcular=None):
     def _tiene_n1n2(tid):
         return any(tipo_ef(e) != "HBP" for e in grupos[tid])
 
+    fijo_activo = _foco_fijo_activo(params) and FOCO_FIJO["tema_id"] in cat
+    FIJO = FOCO_FIJO["tema_id"]
+    if fijo_activo:
+        for otro in FOCO_FIJO["temas_asociados"]:
+            if otro in grupos:
+                grupos.setdefault(FIJO, []).extend(grupos.pop(otro))
     focos_in = [{"tema": tid, "eventos": [ev_calc(e) for e in grupos[tid]],
                  "cc_o_emergencia": bool(cat[tid].get("cc_o_emergencia"))}
                 for tid in sorted(grupos, key=lambda x: orden_cat.get(x, 999))
                 if _tiene_n1n2(tid) or not cat[tid].get("no_foco_solo_hbp")]
     res_calc = calcular(focos_in)
     log.extend(res_calc.get("log") or [])
+    if fijo_activo:
+        lista = list(res_calc.get("focos") or [])
+        fx = next((f for f in lista if f["tema"] == FIJO), None)
+        otros = [f for f in lista if f["tema"] != FIJO]
+        if fx is None:
+            fx = {"tema": FIJO, "eventos": [ev_calc(e) for e in grupos.get(FIJO, [])]}
+        fx = {**fx, "nivel": "N1", "motivo_nivel": "Foco fijo hasta el 31-12-2026", "fijo": True}
+        fuera = list(res_calc.get("fuera") or [])
+        for f in otros[4:]:
+            fuera.append({**f, "motivo": "supera el máximo de 5 focos (el foco 1 es el fijo)"})
+        nuevos = [fx] + otros[:4]
+        for i, f in enumerate(nuevos, 1):
+            f["prioridad"] = i
+        res_calc = {**res_calc, "focos": nuevos, "fuera": fuera}
+        supuestos.append("El foco 1 es fijo hasta el 31-12-2026 (controles eléctricos); los demás se calculan como siempre, "
+                         "con un máximo de 4.")
 
     # --- 4. construir los focos del plan ----------------------------------
     focos_plan, grupo_por_prioridad, qa_focos = [], {}, []
@@ -729,6 +778,10 @@ def armar_plan(analisis, params, decisiones=None, calcular=None):
     for f in res_calc.get("focos") or []:
         tid = f["tema"]
         t = cat[tid]
+        if f.get("fijo"):
+            t = {**t, "tema": FOCO_FIJO["tema"].rstrip("."), "instruccion": FOCO_FIJO["instruccion"],
+                 "criterio": FOCO_FIJO["criterio"], "herramienta": FOCO_FIJO["herramienta"],
+                 "evidencia": FOCO_FIJO["evidencia"], "extras": []}
         evs = [by_id[e["id"]] for e in f["eventos"]]
         nn = [e for e in evs if tipo_ef(e) != "HBP"]
         hb = [e for e in evs if tipo_ef(e) == "HBP"]
@@ -778,6 +831,10 @@ def armar_plan(analisis, params, decisiones=None, calcular=None):
         foco = {"nivel": f["nivel"], "tema": t["tema"], "instruccion": instr, "criterio": t.get("criterio"),
                 "eventos": eventos_plan, "herramienta": t.get("herramienta"), "evidencia": t.get("evidencia"),
                 "tema_id": tid, "prioridad": f["prioridad"]}
+        if f.get("fijo"):
+            foco["fijo"] = True
+            if not eventos_plan:
+                foco["sin_eventos_texto"] = FOCO_FIJO["sin_eventos"]
         if hbp_mas > 0:
             foco["hbp_mas"] = hbp_mas
         if len(evs) == 1 and tipo_ef(evs[0]) in ("ACC", "CAAP"):
@@ -817,75 +874,6 @@ def armar_plan(analisis, params, decisiones=None, calcular=None):
     recurrente = {"temas": [{"tema": cat[tid].get("nombre_corto") or cat[tid]["tema"].lower(),
                              "n": len(cont_hbp[tid])} for tid in rec_tids]}
 
-    # --- 6. bloques --------------------------------------------------------
-    def controles(items):
-        out, vistos = [], {}
-        for texto, nfoco in items:
-            if not texto:
-                continue
-            if texto in vistos:
-                if nfoco is not None and nfoco not in vistos[texto]["focos"]:
-                    vistos[texto]["focos"].append(nfoco)
-                continue
-            d = {"texto": texto, "focos": [nfoco] if nfoco is not None else []}
-            vistos[texto] = d
-            out.append(d)
-        if len(out) > 3:
-            supuestos.append(f"Se recortaron {len(out) - 3} control(es) de un bloque por el máximo de 3.")
-            out = out[:3]
-        return out
-
-    am_focos = [f for f in focos_plan if cat[f["tema_id"]].get("bloque") == "am"]
-    md_focos = [f for f in focos_plan if cat[f["tema_id"]].get("bloque") != "am"]
-    ev_am = [e for f in am_focos for e in grupo_por_prioridad[f["prioridad"]]]
-    ev_md = [e for f in md_focos for e in grupo_por_prioridad[f["prioridad"]]]
-    ev_md += [e for tid in rec_tids for e in cont_hbp[tid]]
-    ctrl_am = controles([(cat[f["tema_id"]].get("control_corto"), f["prioridad"]) for f in am_focos])
-    ctrl_md = controles([(cat[f["tema_id"]].get("control_corto"), f["prioridad"]) for f in md_focos] +
-                        [(cat[tid].get("control_corto"), None) for tid in rec_tids])
-    areas_am, areas_md = _top_areas(ev_am), _top_areas(ev_md)
-    for nombre, areas, ctrls in (("AM", areas_am, ctrl_am), ("Mediodía", areas_md, ctrl_md)):
-        if not areas:
-            faltantes.append(f"Bloque {nombre}: sin áreas (no hay focos o los eventos no traen AREA_GEO)")
-        if not ctrls:
-            faltantes.append(f"Bloque {nombre}: sin controles (no hay focos ni temas recurrentes para ese bloque)")
-    supuestos.append("El bloque Mediodía incluye los focos de Mediodía y los temas recurrentes, tal como indica la especificación.")
-
-    # PM: pendientes y brechas de CdP
-    pendientes = []
-    for g in (analisis.get("abiertos") or {}).get("grupos") or []:
-        ids = [str(i) for i in g.get("ids") or []]
-        temas = []
-        for i in ids:
-            tid = por_ev.get(i, {}).get("tema_id")
-            frase = cat[tid].get("pendiente") if tid else _titulo_limpio((by_id.get(i) or {}).get("titulo"))
-            frase = frase or "evento sin tema asignado"
-            if frase not in temas:
-                temas.append(frase)
-        tipos = {by_id[i]["tipo"] for i in ids if i in by_id}
-        area = g.get("area_geo")
-        if not area or normalizar(area) == "sin area":
-            area = None
-            faltantes.append(f"Pendientes de {g.get('empresa')}: eventos {', '.join(ids)} sin AREA_GEO")
-        pendientes.append({"empresa": g.get("empresa"), "temas": _unir(temas), "area": area,
-                           "nota": _nota_abiertos(ids, tipos)})
-    if len(pendientes) > 4:
-        supuestos.append(f"Hay {len(pendientes)} líneas de pendientes en PM: revisar que quepan en la lámina.")
-    brechas = []
-    for ev in validos:
-        if ev.get("cdp"):
-            tid = por_ev.get(ev["id"], {}).get("tema_id")
-            b = (cat[tid].get("brecha_cdp") if tid else None) or _titulo_limpio(ev.get("titulo"))
-            if b and b not in brechas:
-                brechas.append(b)
-    if len(brechas) > 3:
-        supuestos.append(f"Se listaron 3 de {len(brechas)} brechas de CdP en PM.")
-    brechas_txt = _unir(brechas[:3]) if brechas else None
-
-    bloques = {"am": {"areas": areas_am, "controles": ctrl_am},
-               "mediodia": {"areas": areas_md, "controles": ctrl_md},
-               "pm": {"titulo": None, "cerrar_pendientes": pendientes, "brechas_cdp": brechas_txt}}
-
     # --- 7. tendencias -----------------------------------------------------
     cnt_no, cnt_cc, sin_tema_n = {}, {}, 0
     for ev in validos:
@@ -916,22 +904,15 @@ def armar_plan(analisis, params, decisiones=None, calcular=None):
     vig = base.get("vigencia") or params.get("vigencia")
     if isinstance(vig, dict):
         vig = {"desde": vig.get("desde"), "hasta": vig.get("hasta")}
-    inspector = params.get("inspector") or base.get("inspector")
-    proyecto = params.get("proyecto") or base.get("proyecto")
-    area = params.get("area") or base.get("area")
-    for nombre, val in (("inspector", inspector), ("proyecto", proyecto), ("área", area)):
-        if not val:
-            faltantes.append(f"{nombre.capitalize()} no informado: queda la línea en blanco de la plantilla")
     areas_validas = []
     for u in (analisis.get("areas") or {}).get("unicas") or []:
         areas_validas.append(u.get("area_geo") if isinstance(u, dict) else str(u))
 
     plan = {"turno": base.get("turno") or params.get("turno"), "vigencia": vig,
             "fecha_cierre": base.get("fecha_cierre") or params.get("fecha_cierre"),
-            "inspector": inspector, "proyecto": proyecto, "area": area,
             "areas_validas": [a for a in areas_validas if a],
             "indicadores": indicadores, "focos": focos_plan, "recurrente": recurrente,
-            "bloques": bloques, "tendencias": tendencias}
+            "tendencias": tendencias}
 
     # --- 9. decisiones y QA -------------------------------------------------
     n1n2_sin_tema = [e["id"] for e in validos

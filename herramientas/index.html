@@ -143,9 +143,6 @@
         <div class="campo"><div class="et">Fecha de cierre de los datos *</div><input type="date" id="fCierre"></div>
       </div>
       <div class="grid3">
-        <div class="campo"><div class="et">Inspector ITO</div><input type="text" id="fInsp" autocomplete="off"></div>
-        <div class="campo"><div class="et">Proyecto / EECC</div><input type="text" id="fProy" autocomplete="off"></div>
-        <div class="campo"><div class="et">Área / Sector</div><input type="text" id="fArea" autocomplete="off"></div>
       </div>
     </div>
 
@@ -603,10 +600,6 @@ function leerFormulario() {
   if (!AS.archivo) errores.push("Selecciona el Excel de eventos.");
   if (errores.length) return { errores };
   const params = { turno, vigencia: { desde, hasta }, fecha_cierre: cierre };
-  const ins = $("fInsp").value.trim(), pro = $("fProy").value.trim(), are = $("fArea").value.trim();
-  if (ins) params.inspector = ins;     // los opcionales vacíos se omiten
-  if (pro) params.proyecto = pro;
-  if (are) params.area = are;
   return { params };
 }
 
@@ -784,7 +777,7 @@ function invalidarSalida() {
 }
 
 /* =====================================================================
-   CAMPOS EDITABLES (focos, recurrente, bloques, tendencias)
+   CAMPOS EDITABLES (focos, recurrente, tendencias)
    ===================================================================== */
 const tiene = (o, k) => Object.prototype.hasOwnProperty.call(o, k);
 
@@ -881,7 +874,7 @@ function pintarFocos() {
   });
 }
 
-/* ---------- Recurrente, bloques y tendencias (edición genérica por ruta) ---------- */
+/* ---------- Recurrente y tendencias (edición genérica por ruta) ---------- */
 /** Recorre un valor y lista sus hojas (texto/número) que cumplan el filtro. */
 function hojas(valor, ruta, filtro) {
   const out = [];
@@ -908,17 +901,10 @@ function seccionHojas(titulo, lista) {
 
 function pintarOtros() {
   const plan = AS.res.plan || {};
-  const b = plan.bloques || {};
   const cont = $("otrosCuerpo");
   cont.innerHTML = "";
   cont.appendChild(seccionHojas("Recurrente (texto formado y temas con su n)",
     hojas(plan.recurrente, ["recurrente"], (r, x) => filtroGeneral(r))));
-  cont.appendChild(seccionHojas("Bloque AM · controles",
-    hojas(b.am && b.am.controles, ["bloques", "am", "controles"], soloTextoControl)));
-  cont.appendChild(seccionHojas("Bloque mediodía",
-    hojas(b.mediodia, ["bloques", "mediodia"], soloTexto)));
-  cont.appendChild(seccionHojas("Bloque PM · brechas CDP",
-    hojas(b.pm && b.pm.brechas_cdp, ["bloques", "pm", "brechas_cdp"], soloTexto)));
   cont.appendChild(seccionHojas("Tendencias (tema y n)",
     hojas(plan.tendencias, ["tendencias"], (r, x) => filtroGeneral(r))));
 }

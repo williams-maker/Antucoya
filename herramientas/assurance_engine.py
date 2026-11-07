@@ -548,9 +548,6 @@ def analizar(excel_bytes, params):
         "titulo": f"ASSURANCE TURNO {params['turno']}",
         "periodo": params["vigencia"]["texto"],
         "turno": "☒ 1-3 ☐ 2-4" if params["turno"] == "1-3" else "☐ 1-3 ☒ 2-4",
-        "inspector": params.get("inspector"),
-        "proyecto": params.get("proyecto"),
-        "area": params.get("area"),
     }
 
     log.append("✔ Análisis de Excel completado exitosamente.")
@@ -562,9 +559,6 @@ def analizar(excel_bytes, params):
             "turno": params["turno"],
             "vigencia": params["vigencia"],
             "fecha_cierre": params["fecha_cierre"],
-            "inspector": params.get("inspector"),
-            "proyecto": params.get("proyecto"),
-            "area": params.get("area"),
         },
         "encabezado": encabezado,
         "nombre_archivo": nombre_archivo,
@@ -1026,6 +1020,8 @@ def _llenar_fila(tbl, fila, prioridad, f, log):
         log.append(f"⚠ Foco {prioridad}: {n_hbp} HBP complementarios listados (máx. 3; usar 'hbp_mas')")
     if f.get("hbp_mas"):
         lineas.append(("", f"+ {int(f['hbp_mas'])} HBP más"))
+    if not lineas and f.get("sin_eventos_texto"):
+        lineas = [("", str(f["sin_eventos_texto"]))]
     if not lineas:
         lineas = [("", DATO_FALTANTE)]
         log.append(f"⚠ Foco {prioridad}: sin eventos")
@@ -1042,6 +1038,8 @@ def _validar_niveles(focos, log):
     try:
         pseudo = []
         for i, f in enumerate(focos):
+            if f.get("fijo"):
+                continue                      # el foco fijo no se valida con las reglas de selección
             evs = []
             for ev in f.get("eventos") or []:
                 t = str(ev.get("tipo") or "").upper()
@@ -1054,6 +1052,8 @@ def _validar_niveles(focos, log):
         r = calcular_nivel_y_prioridad(pseudo)
         calc = {x["tema"]: x for x in r["focos"]}
         for i, f in enumerate(focos):
+            if f.get("fijo"):
+                continue
             c = calc.get(str(i))
             if c is None:
                 log.append(f"⚠ Foco {i + 1}: según el punto 3/4 no califica como foco (revisar)")
@@ -1101,8 +1101,7 @@ def generar(plantilla_bytes, plan):
     prs = Presentation(io.BytesIO(plantilla_bytes))
     s = prs.slides[0]
     F = {sh.name: sh for sh in s.shapes}
-    faltan = [n for n in ("Text 0", "Text 3", "Text 5", "Text 14", "Table 0", "Text 20", "Text 24", "Text 25",
-                          "Text 28", "Text 29", "Text 32", "Text 33", "Text 36", "Text 39") if n not in F]
+    faltan = [n for n in ("Text 0", "Text 3", "Text 5", "Text 14", "Table 0", "Text 20", "Text 36", "Text 39") if n not in F]
     if faltan:
         raise ValueError(f"la plantilla no tiene las formas {faltan} (¿es FORMATO_ASSURANCE v1.3?)")
     instr = F.get("Instrucciones IA")
@@ -1120,9 +1119,6 @@ def generar(plantilla_bytes, plan):
     _escribir(F["Text 3"].text_frame.paragraphs[0], [(_rango_texto(d1, d2, ""), NEGRO, False)])
     r5 = F["Text 5"].text_frame.paragraphs[0].runs[0]
     r5.text = r5.text.replace("☒", "☐").replace(f"☐ {turno}", f"☒ {turno}", 1)
-    for clave, nombre_forma in (("inspector", "Text 7"), ("proyecto", "Text 9"), ("area", "Text 11")):
-        if plan.get(clave) and nombre_forma in F:
-            _escribir(F[nombre_forma].text_frame.paragraphs[0], [(str(plan[clave]), NEGRO, False)])
     log.append(f"✔ Encabezado: ASSURANCE TURNO {turno} · {_rango_texto(d1, d2, '')}")
 
     # 2. Indicadores 14 días (punto 2)
@@ -1192,57 +1188,6 @@ def generar(plantilla_bytes, plan):
             partes = ["", "", "", "Sin temas HBP recurrentes en el período."]
     _escribir(F["Text 20"].text_frame.paragraphs[0], [(t, BLANCO, False) for t in partes])
     log.append("✔ Recurrente")
-
-    # 5. Bloques AM / Mediodía / PM (punto 11)
-    bloques = plan.get("bloques") or {}
-    validas = set(plan.get("areas_validas") or [])
-    for clave, (fa, fc) in (("am", ("Text 24", "Text 25")), ("mediodia", ("Text 28", "Text 29"))):
-        b = bloques.get(clave) or {}
-        areas = [str(a) for a in (b.get("areas") or [])]
-        if validas:
-            for a in areas:
-                if a not in validas:
-                    log.append(f"⚠ Bloque {clave}: área {a!r} no es un AREA_GEO exacto del Excel")
-        if not areas:
-            log.append(f"⚠ Bloque {clave}: sin áreas → [DATO FALTANTE]")
-        _escribir(F[fa].text_frame.paragraphs[0], [(" · ".join(areas) or DATO_FALTANTE, NEGRO, False)])
-        ctrls = list(b.get("controles") or [])
-        if len(ctrls) > 3:
-            log.append(f"⚠ Bloque {clave}: {len(ctrls)} controles; se usan 3")
-            ctrls = ctrls[:3]
-        lineas = []
-        for c in ctrls:
-            if isinstance(c, str):
-                lineas.append(f"✔ {c}")
-            else:
-                fs = c.get("focos") or []
-                lineas.append(f"✔ {c.get('texto', DATO_FALTANTE)}" + (f" ({', '.join(str(x) for x in fs)})" if fs else ""))
-        if not lineas:
-            lineas = [f"✔ {DATO_FALTANTE}"]
-            log.append(f"⚠ Bloque {clave}: sin controles")
-        for p, t in zip(_parrafos(F[fc].text_frame, len(lineas)), lineas):
-            _escribir(p, [(t, NEGRO, False)])
-    pm = bloques.get("pm") or {}
-    if pm.get("titulo"):
-        _escribir(F["Text 32"].text_frame.paragraphs[0], [(str(pm["titulo"]), None, None)])
-    nuevas = []
-    for x in pm.get("cerrar_pendientes") or []:
-        t = f"✔ Cerrar eventos pendientes de {x.get('empresa', DATO_FALTANTE)}: {x.get('temas', DATO_FALTANTE)}"
-        t += f" ({x['area']})." if x.get("area") else "."
-        if x.get("nota"):
-            t += f" {x['nota']}"
-        nuevas.append(t)
-    if pm.get("brechas_cdp"):
-        nuevas.append(f"✔ Actualizar PTS con brechas de CdP: {pm['brechas_cdp']}")
-    tf33 = F["Text 33"].text_frame
-    modelo = tf33.paragraphs[0]._p
-    for _ in nuevas:
-        modelo.addprevious(copy.deepcopy(modelo))
-    ps = list(tf33.paragraphs)
-    for p, t in zip(ps, nuevas):
-        _escribir(p, [(t, NEGRO, False)])
-    modelo.getparent().remove(modelo)          # la línea guía "Actualizar PTS … [cuáles]"
-    log.append(f"✔ Bloques AM / Mediodía / PM ({len(nuevas)} línea(s) PM variables)")
 
     # 6. Tendencias (punto 11)
     tend = plan.get("tendencias") or {}
