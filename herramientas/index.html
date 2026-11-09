@@ -174,6 +174,12 @@
         <div id="qaCuerpo"></div>
       </div>
 
+      <div class="card" id="cPulso">
+        <h2>Lámina final · «Seguridad | ¿Qué hicimos para sostener el resultado?» (se llena a mano)</h2>
+        <div class="ayuda">Esta lámina va al final del PPT y no se calcula: todo lo que escribas aquí aparece tal cual. Lo que dejes vacío queda como cuadro vacío para completarlo en PowerPoint. En las listas, un punto por línea.</div>
+        <div id="pulsoCuerpo"></div>
+      </div>
+
       <div class="card">
         <h2><span class="paso">5</span>Generar presentación</h2>
         <div class="ruta" id="teamsAss"></div>
@@ -315,7 +321,7 @@ const RUEDAS = [   // orden importante; todas con deps=False
   "python_pptx-1.0.2-py3-none-any.whl"
 ];
 const MODULOS = ["resumen_engine.py", "assurance_engine.py", "resumen_texto.py", "catalogo_data.py",
-                 "catalogo_extra.py", "catalogo_ajustes.py", "catalogo_temas.py", "laminas_gestion.py", "puente_web.py"];
+                 "catalogo_extra.py", "catalogo_ajustes.py", "catalogo_temas.py", "laminas_gestion.py", "lamina_pulso.py", "puente_web.py"];
 const PLANTILLA = "FORMATO_ASSURANCE_base.pptx";
 
 let PY = null, pyOk = false, faseCarga = "";
@@ -616,6 +622,8 @@ $("bAna").onclick = async () => {
       return;
     }
     AS.res = r; AS.decs0 = Array.isArray(r.decisiones) ? r.decisiones.slice() : [];
+    AS.anteriores = (f.params.anteriores || []).slice().sort((x, y) => String(y.fecha_cierre).localeCompare(String(x.fecha_cierre)));
+    if (!PULSO_TOCADO.has("p0i") && AS.anteriores.length) PULSO.p0i = focosDeRegistro(AS.anteriores[0]);
     pintarTodo();
     $("estAss").innerHTML = '<span class="ok">✔ Análisis listo. Revisa las decisiones y los focos.</span>';
     reg("✔ Análisis de Assurance listo", "ok");
@@ -961,6 +969,7 @@ function aplicarEdiciones(plan) {
   Object.keys(EDIC).forEach(k => {
     if (k.startsWith("@|")) asignarRuta(p, k.slice(2).split("."), EDIC[k]);
   });
+  p.pulso = construirPulso();
   return p;
 }
 
@@ -1084,6 +1093,7 @@ function pintarTodo() {
     pintarFocos();
     pintarOtros();
     pintarQA();
+    pintarPulso();
     $("ass-res").hidden = false;
   } catch (e) {
     console.error(e);
@@ -1092,6 +1102,93 @@ function pintarTodo() {
   }
   refrescar();
   ajustarAlturas();
+}
+
+/* =====================================================================
+   LÁMINA MANUAL «Seguridad | ¿Qué hicimos para sostener el resultado?»
+   (todo editable; RECIBIMOS se ofrece con los focos del Assurance anterior)
+   ===================================================================== */
+const PULSO_DEF = {
+  lema: "GESTIONAMOS · DETECTAMOS · TRANSFERIMOS",
+  titulo: "Seguridad | ¿Qué hicimos para sostener el resultado?",
+  subtitulo: "Lectura objetiva de las señales del turno: qué ocurrió, dónde se concentró el riesgo y cuán oportunamente cerramos.",
+  k0e: "EDC REVISADAS – Gestión del NO", k0v: "", k0n: "Durante el turno",
+  k1e: "ARTP REVISADAS", k1v: "", k1n: "Durante el turno",
+  k2e: "OTRA HERRAMIENTA DE GESTIÓN (CdP/CdR, etc.)", k2v: "", k2n: "Durante el turno",
+  p0r: "RECIBIMOS", p0t: "Focos del turno", p0i: "",
+  p1r: "GESTIONAMOS", p1t: "Qué hicimos frente al foco", p1i: "",
+  p2r: "TRANSFERIMOS", p2t: "Qué debe continuar", p2i: "",
+  cr: "PREGUNTA DE CIERRE",
+  ct: "¿Qué hicimos que debemos repetir para seguir evitando accidentes y sostener los buenos resultados? (Buenas Prácticas)",
+  pie: "Antucoya · Seguridad y Salud Ocupacional · Pulso de Seguridad"
+};
+const PULSO = { ...PULSO_DEF };       // se mantiene entre análisis
+const PULSO_TOCADO = new Set();
+
+/** Focos de un Assurance guardado (registro leído de Teams), uno por línea. */
+function focosDeRegistro(r) {
+  return ((r && r.focos) || []).map(f => String(f.tema || "").trim()).filter(Boolean)
+    .map(t => t.charAt(0).toUpperCase() + t.slice(1)).join("\n");
+}
+
+function pulsoCampo(clave, etiqueta, opc) {
+  opc = opc || {};
+  const entrada = el(opc.linea ? "input" : "textarea", opc.linea ? { type: "text", value: PULSO[clave] } : { rows: String(opc.filas || 1), value: PULSO[clave] });
+  if (opc.ph) entrada.placeholder = opc.ph;
+  entrada.addEventListener("input", () => {
+    PULSO[clave] = entrada.value; PULSO_TOCADO.add(clave); invalidarSalida();
+    if (!opc.linea) autoAlto(entrada);
+  });
+  const restaurar = el("button", { class: "sec", type: "button", text: PULSO_DEF[clave] ? "Restaurar" : "Vaciar",
+    onclick: () => { PULSO[clave] = PULSO_DEF[clave]; PULSO_TOCADO.delete(clave); entrada.value = PULSO[clave]; invalidarSalida(); if (!opc.linea) autoAlto(entrada); } });
+  if (!opc.linea) setTimeout(() => autoAlto(entrada), 0);
+  return el("div", { class: "campo" }, el("div", { class: "et" }, el("span", { text: etiqueta }), restaurar), entrada);
+}
+
+function pintarPulso() {
+  const cont = $("pulsoCuerpo");
+  cont.innerHTML = "";
+  cont.appendChild(el("div", { class: "grid2" },
+    pulsoCampo("lema", "Lema (arriba)", { linea: true }), pulsoCampo("titulo", "Título", { linea: true })));
+  cont.appendChild(pulsoCampo("subtitulo", "Subtítulo"));
+  cont.appendChild(el("h3", { text: "Indicadores" }));
+  cont.appendChild(el("div", { class: "grid3" }, [0, 1, 2].map(i => el("div", {},
+    pulsoCampo(`k${i}e`, `Indicador ${i + 1} · nombre`), pulsoCampo(`k${i}v`, "Valor", { linea: true, ph: "Ej.: 12" }),
+    pulsoCampo(`k${i}n`, "Nota", { linea: true })))));
+  cont.appendChild(el("h3", { text: "Paneles (un punto por línea)" }));
+  // Selector de Assurance anterior para RECIBIMOS
+  const ants = AS.anteriores || [];
+  let selector = null;
+  if (ants.length) {
+    const sel = el("select", { style: "padding:6px;border:1px solid var(--line);border-radius:6px;width:100%;margin:4px 0" },
+      ants.map((r, i) => el("option", { value: String(i), text: `${r.nombre || "Assurance"} (cierre ${r.fecha_cierre || "—"})` })));
+    selector = el("div", { class: "ayuda" }, "Focos del Assurance anterior: ", sel, " ",
+      el("button", { class: "sec", type: "button", text: "Usar sus focos en RECIBIMOS",
+        onclick: () => { PULSO.p0i = focosDeRegistro(ants[Number(sel.value)]); PULSO_TOCADO.delete("p0i"); invalidarSalida(); pintarPulso(); } }));
+  } else {
+    selector = el("div", { class: "ayuda", text: "No se encontraron Assurance anteriores en la carpeta de Teams: escribe los focos que recibiste." });
+  }
+  const ph = ["Ej.: Controles eléctricos en tableros, generadores y torres", "Ej.: Se verificaron 8 tableros con diferencial y tierra", "Ej.: Mantener la revisión de tierras en torres de iluminación"];
+  cont.appendChild(el("div", { class: "grid3" }, [0, 1, 2].map(i => el("div", { style: "min-width:0" },
+    pulsoCampo(`p${i}r`, "Rótulo", { linea: true }), pulsoCampo(`p${i}t`, "Título", { linea: true }),
+    i === 0 ? selector : null,
+    pulsoCampo(`p${i}i`, "Contenido", { filas: 5, ph: ph[i] })))));
+  cont.appendChild(el("h3", { text: "Cierre y pie" }));
+  cont.appendChild(pulsoCampo("cr", "Rótulo de la pregunta", { linea: true }));
+  cont.appendChild(pulsoCampo("ct", "Pregunta de cierre"));
+  cont.appendChild(pulsoCampo("pie", "Pie de página", { linea: true }));
+}
+
+/** Objeto que recibe el motor (laminas_gestion.agregar_pulso). */
+function construirPulso() {
+  const lineas = t => String(t || "").split(/\r?\n/).map(x => x.trim()).filter(Boolean);
+  const P = PULSO;
+  return {
+    lema: P.lema, titulo: P.titulo, subtitulo: P.subtitulo, cierre_rotulo: P.cr, cierre: P.ct, pie: P.pie,
+    kpis: [0, 1, 2].map(i => ({ etiqueta: P[`k${i}e`], valor: P[`k${i}v`], nota: P[`k${i}n`] })),
+    paneles: [0, 1, 2].map(i => ({ rotulo: P[`p${i}r`], titulo: P[`p${i}t`], items: lineas(P[`p${i}i`]),
+                                    estilo: i === 2 ? "vinetas" : "numeros" }))
+  };
 }
 
 /* =====================================================================

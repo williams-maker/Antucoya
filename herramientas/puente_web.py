@@ -103,6 +103,9 @@ def generar_pptx(plan_json, plantilla_bytes):
             datos = LG.calcular(_AN, _P or {}, json.loads(plan_json))
             pptx, log_lg = LG.agregar(pptx, datos)
             log = list(log) + list(datos.get("log") or []) + list(log_lg)
+        import lamina_pulso as LP                  # lámina manual "Seguridad | ¿Qué hicimos…?" (siempre al final)
+        pptx, log_p = LP.agregar_pulso(pptx, json.loads(plan_json).get("pulso") or {})
+        log = list(log) + list(log_p)
     except Exception as e:
         return _err(e)
     _SALIDA = pptx
