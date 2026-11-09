@@ -1054,6 +1054,15 @@ def armar_plan(analisis, params, decisiones=None, calcular=None):
             supuestos.append("Agregados manualmente al Assurance: " + ", ".join(x["tema"] for x in incluidos_manual)
                              + " (sin tope: los agregados a mano se suman a los focos calculados).")
 
+    # --- 3c. orden final (decisión de Williams, 08-11): el foco fijo siempre 1º; luego todos los N1 y después los N2.
+    # Los agregados a mano quedan al final de su nivel; dentro de cada nivel se respeta el orden calculado.
+    orden_final = sorted(res_calc.get("focos") or [],
+                         key=lambda f: (0 if f.get("fijo") or (fijo_activo and f.get("tema") == FIJO) else 1,
+                                        0 if str(f.get("nivel") or "").upper() == "N1" else 1))
+    for i, f in enumerate(orden_final, 1):
+        f["prioridad"] = i
+    res_calc = {**res_calc, "focos": orden_final}
+
     # --- 4. construir los focos del plan ----------------------------------
     focos_plan, grupo_por_prioridad, qa_focos = [], {}, []
     ya_anteriores = []
