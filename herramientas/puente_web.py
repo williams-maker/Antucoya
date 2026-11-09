@@ -98,6 +98,11 @@ def generar_pptx(plan_json, plantilla_bytes):
     global _SALIDA
     try:
         pptx, log = A.generar(bytes(plantilla_bytes), json.loads(plan_json))
+        if _AN is not None:                      # láminas "Gestión SSO GPRO" y "Reportabilidad y focos de turno"
+            import laminas_gestion as LG
+            datos = LG.calcular(_AN, _P or {}, json.loads(plan_json))
+            pptx, log_lg = LG.agregar(pptx, datos)
+            log = list(log) + list(datos.get("log") or []) + list(log_lg)
     except Exception as e:
         return _err(e)
     _SALIDA = pptx

@@ -247,6 +247,7 @@ def analizar(excel_bytes, params):
     c_fcierre = find_col(["FECHA CIERRE EVENTO", "FECHA CIERRE DEL EVENTO", "FECHA DE CIERRE EVENTO", "FECHA DE CIERRE", "FECHA CIERRE"])
     c_cierre = find_col(["CIERRE EVENTO", "CIERRE DEL EVENTO", "EVENTO CERRADO", "ESTADO CIERRE", "CIERRE"])
     c_ger = find_col(["GERENCIA"])
+    c_rep = find_col(["REPORTADOR", "REPORTADO POR", "EMPRESA REPORTADOR", "QUIEN REPORTA"])
     if c_ger is not None:
         log.append("✔ Filtro Gerencia: solo filas cuya Gerencia contiene 'Proyectos'")
 
@@ -366,6 +367,7 @@ def analizar(excel_bytes, params):
             "control_critico": str(control_critico),
             "cc": cc_flag,
             "area_geo": area_geo,
+            "reportador": str(row[c_rep]).strip() if c_rep is not None and c_rep < len(row) and row[c_rep] is not None else "",
             "fecha_cierre": fcierre_obj.strftime("%Y-%m-%d") if fcierre_obj else None,
             "cierre_evento": str(cierre_evento_val) if cierre_evento_val is not None else None,
             "abierto": False,
