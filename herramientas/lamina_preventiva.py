@@ -79,8 +79,14 @@ def _limpiar(items):
     return out
 
 
-def _tam_letra(total):
-    return 12 if total <= 350 else 11 if total <= 550 else 10 if total <= 800 else 9
+def _tam_letra(textos, ancho, alto):
+    """Mayor tamaño (12 a 8 pt) con que el texto estimado cabe en el recuadro (ancho y alto en pulgadas)."""
+    for tam in (12, 11, 10, 9, 8):
+        por_linea = max(8, int(ancho * 72 / (tam * 0.52)))
+        lineas = sum(-(-max(len(t), 1) // por_linea) for t in textos)
+        if lineas * tam * 1.22 / 72 + len(textos) * 3 / 72 <= alto:
+            return tam
+    return 8
 
 
 def _foto(slide, b64, x, y, w, h):
@@ -127,7 +133,7 @@ def _bloque(slide, b, x, y, w, h, log):
     _texto(slide, _s(b.get("titulo")).upper(), x + 0.25, y + 0.15, ancho_txt, 0.35, 12, TEAL, True)
     items = _limpiar(b.get("items"))
     intro = _s(b.get("intro"))
-    tam = _tam_letra(len(intro) + sum(len(i) + 2 for i in items))
+    tam = _tam_letra(([intro] if intro else []) + [i + "    " for i in items], ancho_txt - 0.1, h - 0.8)
     _, tf = _caja(slide, x + 0.25, y + 0.55, ancho_txt, h - 0.7)
     primero = True
     if intro:

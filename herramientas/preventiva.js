@@ -272,7 +272,7 @@ function pintarPreventiva() {
       invalidarSalida(); pintarPreventiva();
     });
     gal.appendChild(el("div", {}, el("img", { src: f.src, style: "width:100%;aspect-ratio:4/3;object-fit:cover;border:1px solid var(--line);border-radius:4px" }),
-      el("div", { class: "ayuda", text: `pág. ${f.pag}` }), sel));
+      el("div", { class: "ayuda", text: (f.pag === "propia" ? "propia" : `pág. ${f.pag}`) + (f.leyenda ? " · " + f.leyenda : "") }), sel));
   });
   cont.appendChild(gal);
 }
@@ -294,7 +294,8 @@ function construirPreventiva() {
 $("bPrevExtraer").onclick = async () => {
   const f = $("filePrev").files[0];
   const est = $("estPrev");
-  if (!f) { est.innerHTML = ""; est.appendChild(el("span", { class: "bad", text: "✖ Primero elige el PDF del informe." })); return; }
+  if (f && /\.pptx$/i.test(f.name)) { await extraerPptxJej(f, est); return; }
+  if (!f) { est.innerHTML = ""; est.appendChild(el("span", { class: "bad", text: "✖ Primero elige el informe (PPTX de JEJ o PDF)." })); return; }
   est.textContent = "Leyendo el informe…";
   $("bPrevExtraer").disabled = true;
   try {
@@ -319,4 +320,46 @@ $("bPrevExtraer").onclick = async () => {
 $("bPrevVacio").onclick = () => {
   PREV.bloques = PREV_REGLAS.map(r => ({ titulo: r.titulo, intro: "", items: "", pags: [], fotos: [], re: r.re }));
   PREV.fotos = []; PREV.incluir = true; invalidarSalida(); pintarPreventiva();
+};
+
+/** Informe «Cumplimiento de Focos» de JEJ (PPTX): se lee con el motor Python del navegador. */
+async function extraerPptxJej(archivo, est) {
+  est.textContent = "Leyendo el informe de JEJ…";
+  $("bPrevExtraer").disabled = true;
+  try {
+    const u8 = new Uint8Array(await archivo.arrayBuffer());
+    const r = await llamar("puente_web.leer_informe_pptx(_B.to_py())", { _B: u8 });
+    if (!r.ok) throw new Error(r.error || "No se pudo leer el informe.");
+    const fotos = r.fotos.map(f => ({ id: f.id, src: f.src, w: f.w, h: f.h, pag: f.pag, leyenda: f.leyenda || "" }));
+    PREV.fotos = fotos;
+    PREV.bloques = PREV_REGLAS.map(x => ({ titulo: x.titulo, intro: "", items: "", pags: [], fotos: [], re: x.re }));
+    const ej = PREV.bloques.find(b => b.titulo === "Ejecución");
+    ej.intro = r.intro; ej.items = r.items.join("\n"); ej.fotos = (r.sugeridas || []).slice(0, 4);
+    if (r.lema) PREV.lema = r.lema;
+    PREV.incluir = true;
+    est.innerHTML = "";
+    est.appendChild(el("span", { class: "ok", text: `✔ Informe JEJ · turno ${r.turno || "?"}: ${r.focos.length} focos, ${fotos.length} fotos. El bloque Ejecución quedó armado; completa los otros tres (Coordinación, Procesos y rol, Visita gerencial) y agrega tus fotos si las tienes.` }));
+    reg(`Informe JEJ leído: ${r.focos.length} focos, ${fotos.length} fotos.`, "ok");
+    invalidarSalida(); pintarPreventiva();
+  } catch (e) {
+    console.error(e);
+    est.innerHTML = ""; est.appendChild(el("span", { class: "bad", text: "✖ " + (e && e.message ? e.message : e) }));
+    reg("✖ Informe JEJ: " + (e && e.message ? e.message : e), "bad");
+  } finally { $("bPrevExtraer").disabled = false; }
+}
+
+/** Fotos propias (reunión de coordinación, visita gerencial, etc.). */
+$("filePrevFotos").onchange = async ev => {
+  for (const f of ev.target.files) {
+    try {
+      const bm = await createImageBitmap(f);
+      const esc = Math.min(1, 1000 / bm.width);
+      const cv = document.createElement("canvas"); cv.width = Math.round(bm.width * esc); cv.height = Math.round(bm.height * esc);
+      cv.getContext("2d").drawImage(bm, 0, 0, cv.width, cv.height);
+      const id = PREV.fotos.reduce((m, x) => Math.max(m, x.id), -1) + 1;
+      PREV.fotos.push({ id, src: cv.toDataURL("image/jpeg", 0.85), w: cv.width, h: cv.height, pag: "propia", leyenda: f.name });
+    } catch (e) { reg("✖ No se pudo leer la foto " + f.name, "bad"); }
+  }
+  ev.target.value = "";
+  if (!PREV.bloques.length) $("bPrevVacio").click(); else { invalidarSalida(); pintarPreventiva(); }
 };

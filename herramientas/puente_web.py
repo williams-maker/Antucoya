@@ -138,3 +138,12 @@ def leer_registro(pptx_bytes):
         return json.dumps(A.leer_registro(bytes(pptx_bytes)), ensure_ascii=False)
     except Exception:
         return "null"
+
+
+def leer_informe_pptx(pptx_bytes):
+    """Informe «Cumplimiento de Focos» de JEJ (PPTX) -> focos, resumen por foco y fotos con leyenda."""
+    try:
+        import informe_jej as IJ
+        return json.dumps(IJ.leer_informe(bytes(pptx_bytes)), ensure_ascii=False)
+    except Exception as e:
+        return json.dumps({"ok": False, "error": f"No se pudo leer el informe: {e}"}, ensure_ascii=False)
