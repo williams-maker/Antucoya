@@ -337,6 +337,9 @@ async function extraerPptxJej(archivo, est) {
     ej.intro = r.intro; ej.items = r.items.join("\n"); ej.fotos = (r.sugeridas || []).slice(0, 4);
     if (r.lema) PREV.lema = r.lema;
     PREV.incluir = true;
+    RESEJ.datos = (r.resumen && r.resumen.filas && r.resumen.filas.length) ? r.resumen : null;
+    RESEJ.incluir = !!RESEJ.datos;
+    pintarResEj();
     est.innerHTML = "";
     est.appendChild(el("span", { class: "ok", text: `✔ Informe JEJ · turno ${r.turno || "?"}: ${r.focos.length} focos, ${fotos.length} fotos. El bloque Ejecución quedó armado; completa los otros tres (Coordinación, Procesos y rol, Visita gerencial) y agrega tus fotos si las tienes.` }));
     reg(`Informe JEJ leído: ${r.focos.length} focos, ${fotos.length} fotos.`, "ok");
@@ -363,3 +366,86 @@ $("filePrevFotos").onchange = async ev => {
   ev.target.value = "";
   if (!PREV.bloques.length) $("bPrevVacio").click(); else { invalidarSalida(); pintarPreventiva(); }
 };
+
+
+/* ============ RESUMEN EJECUTIVO ASSURANCE (indicadores + tabla por foco) ============ */
+const RESEJ = { incluir: false, datos: null };
+const COLORES_KPI = [["verde", "Verde"], ["azul", "Azul"], ["ambar", "Ámbar"], ["negro", "Negro"]];
+const COLORES_EST = [["verde", "Verde (conforme)"], ["ambar", "Ámbar (hallazgo / mejora)"], ["rojo", "Rojo"], ["gris", "Gris"]];
+
+function selColor(opciones, valor, alCambiar) {
+  const s = el("select", { style: "padding:5px;border:1px solid var(--line);border-radius:6px" },
+    opciones.map(([v, t]) => el("option", { value: v, text: t })));
+  s.value = valor; s.addEventListener("change", () => { alCambiar(s.value); invalidarSalida(); });
+  return s;
+}
+
+function pintarResEj() {
+  const cont = $("resEjCuerpo"); cont.innerHTML = "";
+  const d = RESEJ.datos;
+  if (!d || !d.filas) { cont.appendChild(el("div", { class: "mut", text: "Este informe no trae la tabla «Resumen de Verificaciones»: no se pudo armar la lámina." })); return; }
+  cont.appendChild(el("label", { style: "display:flex;gap:8px;align-items:center;margin:8px 0;font-weight:600" },
+    el("input", { type: "checkbox", checked: RESEJ.incluir, onchange: ev => { RESEJ.incluir = ev.target.checked; invalidarSalida(); } }),
+    "Incluir esta lámina en el PPT del Assurance"));
+  cont.appendChild(el("div", { class: "grid2" },
+    campoPrev("Título", d.titulo, v => { d.titulo = v; }, { linea: true }),
+    campoPrev("Subtítulo", d.subtitulo, v => { d.subtitulo = v; }, { linea: true })));
+  cont.appendChild(el("h3", { text: "Indicadores (tarjetas de arriba)" }));
+  d.kpis.forEach((k, i) => cont.appendChild(el("div", { class: "grid3", style: "align-items:end" },
+    campoPrev(`Indicador ${i + 1} · título`, k.titulo, v => { k.titulo = v; }, { linea: true }),
+    campoPrev("Valor", k.valor, v => { k.valor = v; }, { linea: true }),
+    el("div", { class: "campo" }, el("div", { class: "et" }, el("span", { text: "Color" })), selColor(COLORES_KPI, k.color, v => { k.color = v; })))));
+  cont.appendChild(el("h3", { text: `Tabla por foco (${d.filas.length} filas)` }));
+  d.filas.forEach((f, i) => {
+    const caja = el("div", { class: "foco", style: "border-left-color:var(--teal);margin-bottom:14px;padding-top:6px" });
+    caja.appendChild(el("div", { class: "grid2" },
+      campoPrev(`Fila ${i + 1} · foco`, f.foco, v => { f.foco = v; }, { linea: true }),
+      campoPrev("Ámbito", f.ambito, v => { f.ambito = v; }, { linea: true })));
+    caja.appendChild(el("div", { class: "grid2" },
+      campoPrev("Frente / empresa", f.frente, v => { f.frente = v; }, { filas: 2 }),
+      campoPrev("ITO", f.ito, v => { f.ito = v; }, { filas: 2 })));
+    caja.appendChild(el("div", { class: "grid2" },
+      campoPrev("Herramienta SGE (una por línea)", f.herramienta, v => { f.herramienta = v; }, { filas: 2 }),
+      campoPrev("Estado (admite 2 líneas)", f.estado, v => { f.estado = v; }, { filas: 2 })));
+    caja.appendChild(campoPrev("Evidencia de cumplimiento / acción en terreno", f.evidencia, v => { f.evidencia = v; }, { filas: 3 }));
+    caja.appendChild(el("div", { style: "display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:6px" },
+      el("span", { class: "mut", text: "Color del estado:" }), selColor(COLORES_EST, f.estado_color, v => { f.estado_color = v; }),
+      el("button", { class: "sec", type: "button", text: "↑", disabled: i === 0, onclick: () => { [d.filas[i - 1], d.filas[i]] = [d.filas[i], d.filas[i - 1]]; invalidarSalida(); pintarResEj(); } }),
+      el("button", { class: "sec", type: "button", text: "↓", disabled: i === d.filas.length - 1, onclick: () => { [d.filas[i + 1], d.filas[i]] = [d.filas[i], d.filas[i + 1]]; invalidarSalida(); pintarResEj(); } }),
+      el("button", { class: "sec", type: "button", text: "Quitar fila", onclick: () => { d.filas.splice(i, 1); invalidarSalida(); pintarResEj(); } })));
+    cont.appendChild(caja);
+  });
+  cont.appendChild(el("div", { style: "display:flex;gap:8px;flex-wrap:wrap;margin-top:8px" },
+    el("button", { class: "sec", type: "button", text: "+ Agregar fila", onclick: () => { d.filas.push({ foco: "Foco", ambito: "", frente: "", ito: "", herramienta: "", evidencia: "", estado: "Conforme", estado_color: "verde" }); invalidarSalida(); pintarResEj(); } }),
+    el("button", { id: "bResSuelto", type: "button", text: "Descargar solo esta lámina (PPTX)", onclick: descargarResumenSuelto })));
+  cont.appendChild(el("div", { class: "estado", id: "estResSuelto" }));
+}
+
+function construirResumenEj() {
+  const d = RESEJ.datos;
+  if (!RESEJ.incluir || !d || !d.filas || !d.filas.length) return null;
+  return JSON.parse(JSON.stringify(d));
+}
+
+async function descargarResumenSuelto() {
+  const est = $("estResSuelto"); est.textContent = "Generando…";
+  const d = RESEJ.datos;
+  if (!d || !d.filas || !d.filas.length) { est.textContent = "✖ No hay filas."; return; }
+  const liberar = ocupar("gen");
+  try {
+    if (!AS.plantilla) AS.plantilla = await bajar(PLANTILLA, "bin");
+    const r = await llamar("puente_web.resumen_suelto(_D, bytes(_PL.to_py()))", { _D: JSON.stringify(d), _PL: AS.plantilla });
+    regPython(r.log);
+    if (!r.ok) throw new Error((r.errores || ["No se pudo generar la lámina."]).join(" "));
+    const p = await PY.runPythonAsync("import puente_web\npuente_web.obtener_suelto()");
+    const u8 = (p && typeof p.toJs === "function") ? p.toJs().slice() : new Uint8Array(p);
+    if (p && typeof p.destroy === "function") p.destroy();
+    const nombre = conHora("Resumen_ejecutivo_Assurance", ".pptx", "RESUMEN_EJECUTIVO");
+    guardarBytes(u8, nombre, TIPO_PPTX);
+    est.innerHTML = ""; est.appendChild(el("span", { class: "ok", text: `✔ Descargada: ${nombre}` }));
+    reg(`Descarga: ${nombre}`);
+  } catch (e) {
+    console.error(e);
+    est.innerHTML = ""; est.appendChild(el("span", { class: "bad", text: "✖ " + (e && e.message ? e.message : e) }));
+  } finally { liberar(); }
+}

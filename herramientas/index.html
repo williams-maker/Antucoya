@@ -187,6 +187,12 @@
         <div id="prevCuerpo"></div>
       </div>
 
+      <div class="card" id="cResEj">
+        <h2>Lámina · «Resumen ejecutivo Assurance» (desde el informe de JEJ)</h2>
+        <div class="ayuda">Se arma sola al leer el informe de JEJ (tarjeta de arriba): 4 indicadores y una fila por foco con frente, ITO, herramienta, evidencia y estado. Todo se puede corregir. Va dentro del PPT del Assurance y también puedes descargarla sola.</div>
+        <div id="resEjCuerpo"><div class="mut">Aún no hay informe leído: sube el PPTX de JEJ en la tarjeta de arriba y pulsa «Extraer resumen y fotos».</div></div>
+      </div>
+
       <div class="card" id="cPulso">
         <h2>Lámina final · «Seguridad | ¿Qué hicimos para sostener el resultado?» (se llena a mano)</h2>
         <div class="ayuda">Esta lámina va al final del PPT y no se calcula: todo lo que escribas aquí aparece tal cual. Lo que dejes vacío queda como cuadro vacío para completarlo en PowerPoint. En las listas, un punto por línea.</div>
@@ -334,7 +340,7 @@ const RUEDAS = [   // orden importante; todas con deps=False
   "python_pptx-1.0.2-py3-none-any.whl"
 ];
 const MODULOS = ["resumen_engine.py", "assurance_engine.py", "resumen_texto.py", "catalogo_data.py",
-                 "catalogo_extra.py", "catalogo_ajustes.py", "catalogo_temas.py", "laminas_gestion.py", "lamina_pulso.py", "lamina_preventiva.py", "informe_jej.py", "puente_web.py"];
+                 "catalogo_extra.py", "catalogo_ajustes.py", "catalogo_temas.py", "laminas_gestion.py", "lamina_pulso.py", "lamina_preventiva.py", "informe_jej.py", "lamina_resumen.py", "puente_web.py"];
 const PLANTILLA = "FORMATO_ASSURANCE_base.pptx";
 
 let PY = null, pyOk = false, faseCarga = "";
@@ -984,6 +990,7 @@ function aplicarEdiciones(plan) {
   });
   p.pulso = construirPulso();
   p.preventiva = construirPreventiva();
+  p.resumen = construirResumenEj();
   return p;
 }
 

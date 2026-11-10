@@ -87,6 +87,141 @@ def _resumen(verifs, ids, textos_pie):
     return " · ".join(partes)
 
 
+NUM_PALABRA = {"un": 1, "uno": 1, "dos": 2, "tres": 3, "cuatro": 4, "cinco": 5, "seis": 6, "siete": 7, "ocho": 8}
+RE_NOMBRE_ITO = re.compile(r"\s*(?:\+|/| y )\s*")
+
+
+def _rango(texto):
+    m = re.search(r"(\d{1,2})\s*al\s*(\d{1,2})\s*de\s*([A-Za-záéíóú]+)(?:\s*de\s*(\d{4}))?", texto, re.I)
+    if not m:
+        return ""
+    mes = MESES.get(m.group(3).lower())
+    if not mes:
+        return ""
+    anio = m.group(4) or str(datetime.date.today().year)
+    return f"{int(m.group(1)):02d}–{int(m.group(2)):02d} {MES3[mes - 1].lower()} {anio}"
+
+
+def _tabla_resumen(slide):
+    """Filas de la tabla «Resumen de Verificaciones» (lámina 2): [{verif, ito, frente, herramienta, resultado}]."""
+    tx = [t for t in _textos(slide) if t["y"] >= 2.0]
+    columnas = [(0.3, "verif"), (4.0, "ito"), (6.3, "frente"), (8.4, "herramienta"), (10.6, "resultado")]
+    def col(x):
+        c = None
+        for lim, nombre in columnas:
+            if x >= lim - 0.05:
+                c = nombre
+        return c
+    anclas = sorted((t for t in tx if col(t["x"]) == "verif" and re.match(r"(Foco\s*\d+|Rutinaria)", t["t"])), key=lambda t: t["y"])
+    filas = []
+    for a in anclas:
+        f = {"verif": a["t"], "ito": "", "frente": "", "herramienta": "", "resultado": ""}
+        for t in tx:
+            c = col(t["x"])
+            if c and c != "verif" and abs(t["y"] - a["y"]) <= 0.14 and not f[c]:
+                f[c] = t["t"]
+        filas.append(f)
+    return filas
+
+
+def _persona(n):
+    p = re.sub(r"\(.*?\)", "", n).strip().lower().split()
+    return (p[0] + " " + p[-1]) if len(p) > 1 else ""
+
+
+def resumen_ejecutivo(slides, portada, turno, focos):
+    """Datos de la lámina «Resumen ejecutivo Assurance» (indicadores + una fila por foco)."""
+    filas_t = _tabla_resumen(slides[1]) if len(slides) > 1 else []
+    if not filas_t:
+        return {}
+    cierre = " ".join(t["t"] for t in _textos(slides[1]))
+    grupos = {}
+    for f in filas_t:
+        m = re.match(r"Foco\s*(\d+)", f["verif"])
+        clave = int(m.group(1)) if m else 99
+        grupos.setdefault(clave, []).append(f)
+
+    filas, ids_h, personas, n_verif = [], [], {}, len(filas_t)
+    for clave in sorted(grupos):
+        g = grupos[clave]
+        evid, frentes, itos, herr, estados = [], [], [], [], []
+        for f in g:
+            nombre = re.sub(r"^(Foco\s*\d+|Rutinaria)\s*·\s*", "", f["verif"])
+            nombre = re.sub(r"\s*\(L[aá]m\.?\s*\d+\)\s*$", "", nombre).strip()
+            res = f["resultado"].strip()
+            evid.append(f"{nombre}: {res}" if res else nombre)
+            estados.append(res)
+            fr = f["frente"].replace(" — ", " · ").strip()
+            if fr and fr not in frentes:
+                frentes.append(fr)
+            for n in RE_NOMBRE_ITO.split(f["ito"]):
+                n = n.strip()
+                if n and n not in itos:
+                    itos.append(n)
+                if n and not n.upper().startswith("ITO") and _persona(n):
+                    personas[_persona(n)] = n
+            for h in re.split(r"\s*\+\s*", f["herramienta"]):
+                h = h.strip()
+                if h and h not in herr:
+                    herr.append(h)
+            for tipo, num in RE_ID.findall(res):
+                if f"{tipo} {num}" not in ids_h:
+                    ids_h.append(f"{tipo} {num}")
+        pie = " ".join(estados).lower()
+        hall = [i for e in estados for i in [" ".join(x) for x in RE_ID.findall(e)] if i]
+        if hall:
+            estado, color = "Hallazgo reportado\n" + ", ".join(hall), "ambar"
+        elif "mejora" in pie and "regularizada" not in pie:
+            estado, color = "Conforme con mejoras\nen ejecución", "ambar"
+        elif "regularizada" in pie:
+            estado, color = "Conforme con\noportunidad de mejora", "ambar"
+        else:
+            estado, color = "Conforme", "verde"
+        if clave == 99:
+            titulo_foco, ambito = "Rutinaria", re.sub(r"^Rutinaria\s*·\s*", "", g[0]["verif"]).replace(" (Lám. 13)", "")
+            ambito = re.sub(r"\s*\(L[aá]m\.?\s*\d+\)\s*$", "", ambito)
+        else:
+            info = next((x for x in focos if x["n"] == clave), None)
+            tema = (info or {}).get("tema", "")
+            titulo_foco = f"Foco {clave}" + (f" · {info['nivel']}" if info else "")
+            ambito = tema if len(tema) <= 58 else tema[:58].rsplit(" ", 1)[0]
+        filas.append({
+            "foco": titulo_foco, "ambito": ambito,
+            "frente": " / ".join(frentes), "ito": ", ".join(itos),
+            "herramienta": "\n".join(herr),
+            "evidencia": "; ".join(evid) + ".",
+            "estado": estado, "estado_color": color,
+        })
+
+    n_cubiertos = len([c for c in grupos if c != 99])
+    total = n_cubiertos
+    m = re.search(r"Los\s+(\w+)\s+focos", cierre)
+    if m and m.group(1).lower() in NUM_PALABRA:
+        total = max(total, NUM_PALABRA[m.group(1).lower()])
+    pct = round(100 * n_cubiertos / total) if total else 0
+    haps = [i for i in ids_h if i.startswith(("HAP", "ACC", "CAAP"))]
+    hbps = [i for i in ids_h if i.startswith(("HBP", "CBP"))]
+    partes = []
+    for etq, lista in (("HAP", [i for i in ids_h if i.startswith("HAP")]), ("HBP", [i for i in ids_h if i.startswith("HBP")]),
+                       ("CBP", [i for i in ids_h if i.startswith("CBP")])):
+        if lista:
+            partes.append(f"{len(lista)} {etq}")
+    hall_txt = " + ".join(partes) if partes else "Sin hallazgos"
+    rango = _rango(portada)
+    return {
+        "titulo": "RESUMEN EJECUTIVO ASSURANCE",
+        "subtitulo": "Minera Antucoya · GPRO" + (f" · Turno {turno}" if turno else "") + (f" | Verificación: {rango}" if rango else ""),
+        "kpis": [
+            {"titulo": "COBERTURA DE FOCOS", "valor": f"{n_cubiertos} de {total} cubiertos · {pct}%", "color": "verde" if pct == 100 else "ambar"},
+            {"titulo": "VERIFICACIONES EN TERRENO", "valor": f"{n_verif} verificaciones realizadas", "color": "azul"},
+            {"titulo": "HALLAZGOS REPORTADOS", "valor": hall_txt, "color": "ambar" if ids_h else "negro"},
+            {"titulo": "DESPLIEGUE ITO", "valor": f"{len(personas)} responsables en terreno", "color": "negro"},
+        ],
+        "filas": filas,
+        "pie": "JEJ Ingeniería · Inspección Técnica de Obras — Minera Antucoya",
+    }
+
+
 DOC = re.compile(r"check ?list|lista de|artp|\bart\b|registro|certificado|\btnc\b|procedimiento|plan de operaciones|alerta de seguridad|tarjeta|firmad", re.I)
 TERRENO = re.compile(r"tablero|generador|jaula|maniobra|andamio|detector|torre|acceso|roseta|eslinga|grillete|extensiones|equipo|camión|segregaci", re.I)
 
@@ -165,4 +300,5 @@ def leer_informe(pptx_bytes):
         "focos": [{"n": f["n"], "nivel": f["nivel"], "tema": f["tema"], "fotos": f["fotos"]} for f in orden],
         "fotos": fotos, "paginas": paginas,
         "sugeridas": _sugeridas([focos[k] for k in sorted(focos)], fotos),
+        "resumen": resumen_ejecutivo(slides, portada, turno, [{"n": f["n"], "nivel": f["nivel"], "tema": f["tema"]} for f in orden]),
     }

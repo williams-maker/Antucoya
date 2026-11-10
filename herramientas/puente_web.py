@@ -103,6 +103,11 @@ def generar_pptx(plan_json, plantilla_bytes):
             datos = LG.calcular(_AN, _P or {}, json.loads(plan_json))
             pptx, log_lg = LG.agregar(pptx, datos)
             log = list(log) + list(datos.get("log") or []) + list(log_lg)
+        resu = json.loads(plan_json).get("resumen")
+        if resu:                                    # lámina "Resumen ejecutivo Assurance" (desde el informe JEJ)
+            import lamina_resumen as LR
+            pptx, log_r = LR.agregar_resumen(pptx, resu)
+            log = list(log) + list(log_r)
         prev = json.loads(plan_json).get("preventiva")
         if prev:                                    # láminas "Gestión preventiva ejecutada en terreno" (desde el informe JEJ)
             import lamina_preventiva as LV
@@ -147,3 +152,36 @@ def leer_informe_pptx(pptx_bytes):
         return json.dumps(IJ.leer_informe(bytes(pptx_bytes)), ensure_ascii=False)
     except Exception as e:
         return json.dumps({"ok": False, "error": f"No se pudo leer el informe: {e}"}, ensure_ascii=False)
+
+
+_SUELTO = None
+
+
+def _sin_laminas(pptx_bytes):
+    """Plantilla sin láminas (conserva el formato y el tamaño)."""
+    import io
+    from pptx import Presentation
+    prs = Presentation(io.BytesIO(pptx_bytes))
+    lista = prs.slides._sldIdLst
+    for sid in list(lista):
+        prs.part.drop_rel(sid.rId)
+        lista.remove(sid)
+    out = io.BytesIO(); prs.save(out)
+    return out.getvalue()
+
+
+def resumen_suelto(plan_json, plantilla_bytes):
+    """PPTX con solo la lámina «Resumen ejecutivo Assurance» (descarga aparte)."""
+    global _SUELTO
+    try:
+        import lamina_resumen as LR
+        base = _sin_laminas(bytes(plantilla_bytes))
+        pptx, log = LR.agregar_resumen(base, json.loads(plan_json))
+    except Exception as e:
+        return _err(e)
+    _SUELTO = pptx
+    return json.dumps({"ok": True, "log": list(log)}, ensure_ascii=False)
+
+
+def obtener_suelto():
+    return _SUELTO
