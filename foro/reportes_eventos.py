@@ -635,14 +635,18 @@ def _lamina16(prs, d, T, log):
 # ------------------------------------------------------------------ lámina «TEMAS MÁS REPORTADOS POR EMPRESA»
 OTRO_SEG = "OTRO RIESGO DE SEGURIDAD"
 CORTO_RIESGO = {"INTERACCION CON ENERGIA ELECTRICA": "Energía eléctrica", "OPERACION DE VEHICULOS LIVIANOS": "Vehículos livianos",
-                "CONSTRUCCION DE ZANJAS Y EXCAVACIONES": "Zanjas y excavaciones", "OTRO RIESGO MEDIOAMBIENTAL": "Medio ambiente"}
+                "CONSTRUCCION DE ZANJAS Y EXCAVACIONES": "Zanjas y excavaciones", "OTRO RIESGO MEDIOAMBIENTAL": "Medio ambiente",
+                "OPERACIONES DE ALMACENAJE Y/O TRASLADO DE MATERIALES U OBJETOS": "Almacenaje y traslado",
+                "OPERACION DE EQUIPOS PESADOS": "Equipos pesados",
+                "MANEJO DE SOLUCIONES ACIDAS, ACIDULADAS Y SUSTANCIAS PELIGROSAS": "Sustancias peligrosas"}
 MINUS_RIESGO = {"Trabajos en altura": "altura", "Operaciones de izaje": "izaje", "Zanjas y excavaciones": "zanjas",
                 "Energía eléctrica": "energía eléctrica", "Vehículos livianos": "vehículos livianos", "Medio ambiente": "medio ambiente"}
 SERIES16 = ["HAP", "CAP", "HBP", "CBP", "ACC"]
 
 
 def _etq_riesgo(r):
-    return CORTO_RIESGO.get(_norm(r), r.strip())
+    e = CORTO_RIESGO.get(_norm(r), r.strip())
+    return e if len(e) <= 30 else e[:28].rstrip() + "…"
 
 
 def _top_riesgos(rg, maxfilas=6):

@@ -51,14 +51,14 @@
     <h2><span class="paso">1</span>Arrastra los archivos</h2>
     <label class="drop" id="drop">
       <input type="file" id="archivo" accept=".pptx,.json,.xlsx" multiple hidden>
-      <b>Arrastra aquí tu foro (.pptx) , el archivo de datos de la semana (.json) y el Excel de eventos (.xlsx, hoja Export; el nombre debe llevar la fecha, ej. «data al 07-11»)</b><br>
+      <b>Arrastra aquí tu foro (.pptx)  y el archivo de datos de la semana (.json)</b><br>
       o haz clic para elegirlos.<br>
-      <small>El archivo de datos lo deja el agente cada miércoles en Teams › GPRO › 1. General › Foro Seguridad › Datos semanales.</small>
+      <small>Solo si el json no trae los datos de reportes por empresa, suma también el Excel de eventos (.xlsx).<br>El archivo de datos lo deja el agente cada miércoles en Teams › GPRO › 1. General › Foro Seguridad › Datos semanales.</small>
     </label>
     <div class="archivos">
       <div class="arch" id="aPptx"><span>Foro</span>— pendiente —</div>
       <div class="arch" id="aDatos"><span>Datos de la semana</span>— pendiente —</div>
-      <div class="arch" id="aXlsx"><span>Excel de eventos</span>— opcional (láminas de reportes por empresa) —</div>
+      <div class="arch" id="aXlsx"><span>Excel de eventos</span>— opcional: solo si el json no trae los datos de reportes —</div>
     </div>
     <div id="clavebox">
       <input type="password" id="clave" placeholder="Clave del foro" autocomplete="current-password">
@@ -120,7 +120,7 @@ async function descifrar(env, clave) {
 }
 
 const SEC = {portada:"Portada", como_vamos:"¿Cómo vamos? Antucoya y GPRO", como_nos_fue:"¿Cómo nos fue en el mes?",
-             passo_eecc:"PASSO EECC", passo_ant:"PASSO Antucoya", passo_persona:"PASSO por persona", gcc:"Gestión EDC mediante GCC"};
+             passo_eecc:"PASSO EECC", passo_ant:"PASSO Antucoya", passo_persona:"PASSO por persona", gcc:"Gestión EDC mediante GCC", reportes:"Reportes y temas por empresa"};
 
 function mostrarDatos() {
   const m = DATOS.meta || {};
