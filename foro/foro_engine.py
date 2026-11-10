@@ -17,7 +17,7 @@ from pptx.chart.data import CategoryChartData
 from pptx.dml.color import RGBColor
 from lxml import etree
 
-VERSION = "9 (07-11 RECSS: Sin registro)"
+VERSION = "10 (12-11 láminas Reportes por empresa y gravedad)"
 A = "{http://schemas.openxmlformats.org/drawingml/2006/main}"
 C = "{http://schemas.openxmlformats.org/drawingml/2006/chart}"
 
@@ -778,6 +778,7 @@ def aplicar_recss(prs, d, log):
 
 
 APLICADORES = [
+    ("reportes", lambda prs, d, log: aplicar_reportes(prs, d, log)),
     ("portada", aplicar_portada),
     ("roles", aplicar_roles),
     # ("radar", aplicar_radar),  # lámina enviada por SSO: no se modifica
@@ -791,6 +792,11 @@ APLICADORES = [
     ("calendario", aplicar_calendario),
     ("gcc_imagen", aplicar_gcc_imagen),
 ]
+
+
+def aplicar_reportes(prs, d, log):
+    import reportes_eventos
+    reportes_eventos.aplicar(prs, d, log)
 
 
 def actualizar(pptx_bytes, datos):
@@ -807,6 +813,11 @@ def actualizar(pptx_bytes, datos):
             log.append(f"⚠ {clave}: {type(e).__name__}: {e}")
         if _FALTAN:  # el ✔ no basta: avisar qué elementos no se encontraron y quedaron sin actualizar
             log.append(f"⚠ {clave}: no encontré {', '.join(dict.fromkeys(_FALTAN))}; esos elementos quedaron como estaban")
+    if "reportes" not in datos:
+        for t in ("REPORTES POR EMPRESA", "REPORTES Y GRAVEDAD POR EMPRESA"):
+            for sl in prs.slides:
+                if any(sh.name == "Titulo" and sh.has_text_frame and sh.text_frame.text.strip().upper() == t for sh in sl.shapes):
+                    log.append(f"⚠ Lámina «{t}» sin actualizar: falta el Excel de eventos (hoja Export)")
     out = io.BytesIO()
     prs.save(out)
     return out.getvalue(), log

@@ -48,16 +48,17 @@
 </header>
 <main>
   <div class="card">
-    <h2><span class="paso">1</span>Arrastra los dos archivos</h2>
+    <h2><span class="paso">1</span>Arrastra los archivos</h2>
     <label class="drop" id="drop">
-      <input type="file" id="archivo" accept=".pptx,.json" multiple hidden>
-      <b>Arrastra aquí tu foro (.pptx) y el archivo de datos de la semana (.json)</b><br>
+      <input type="file" id="archivo" accept=".pptx,.json,.xlsx" multiple hidden>
+      <b>Arrastra aquí tu foro (.pptx) , el archivo de datos de la semana (.json) y el Excel de eventos (.xlsx, hoja Export; el nombre debe llevar la fecha, ej. «data al 07-11»)</b><br>
       o haz clic para elegirlos.<br>
       <small>El archivo de datos lo deja el agente cada miércoles en Teams › GPRO › 1. General › Foro Seguridad › Datos semanales.</small>
     </label>
     <div class="archivos">
       <div class="arch" id="aPptx"><span>Foro</span>— pendiente —</div>
       <div class="arch" id="aDatos"><span>Datos de la semana</span>— pendiente —</div>
+      <div class="arch" id="aXlsx"><span>Excel de eventos</span>— opcional (láminas de reportes por empresa) —</div>
     </div>
     <div id="clavebox">
       <input type="password" id="clave" placeholder="Clave del foro" autocomplete="current-password">
@@ -86,7 +87,7 @@
 <script src="https://cdn.jsdelivr.net/pyodide/v0.27.2/full/pyodide.js"></script>
 <script>
 const $ = id => document.getElementById(id);
-let DATOS = null, ENV = null, PPTX = null, PY = null, SALIDA = null, NOMBRE = "Foro SSO GPRO (actualizado).pptx";
+let XLSX = null, DATOS = null, ENV = null, PPTX = null, PY = null, SALIDA = null, NOMBRE = "Foro SSO GPRO (actualizado).pptx";
 const b64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
 
 // --- precarga del motor (Python en el navegador)
@@ -94,7 +95,7 @@ const pyListo = (async () => {
   const py = await loadPyodide();
   await py.loadPackage(["lxml", "pillow", "micropip"]);
   const ruedas = ["typing_extensions-4.16.0-py3-none-any.whl", "xlsxwriter-3.3.1-py3-none-any.whl",
-                  "python_pptx-1.0.2-py3-none-any.whl"];
+                  "python_pptx-1.0.2-py3-none-any.whl", "et_xmlfile-2.0.0-py3-none-any.whl", "openpyxl-3.1.5-py2.py3-none-any.whl"];
   for (const w of ruedas) {
     const buf = new Uint8Array(await (await fetch("py/" + w)).arrayBuffer());
     py.FS.writeFile("/tmp/" + w, buf);
@@ -105,6 +106,7 @@ await micropip.install([${ruedas.map(w => `"emfs:/tmp/${w}"`).join(",")}], deps=
 `);
   const src = await (await fetch("foro_engine.py?v=" + Date.now())).text();
   py.FS.writeFile("foro_engine.py", src);
+  py.FS.writeFile("reportes_eventos.py", await (await fetch("reportes_eventos.py?v=" + Date.now())).text());
   await py.runPythonAsync("import foro_engine");
   PY = py; return py;
 })();
@@ -145,6 +147,9 @@ async function recibir(files) {
     if (n.endsWith(".pptx")) {
       PPTX = f;
       $("aPptx").innerHTML = `<span>Foro</span>✔ ${f.name}`; $("aPptx").classList.add("ok");
+    } else if (n.endsWith(".xlsx")) {
+      XLSX = f;
+      $("aXlsx").innerHTML = `<span>Excel de eventos</span>✔ ${f.name}`; $("aXlsx").classList.add("ok");
     } else if (n.endsWith(".json")) {
       try {
         const j = JSON.parse(await f.text());
@@ -176,9 +181,20 @@ $("bAct").onclick = async () => {
     $("e2").textContent = "Actualizando gráficos y tablas…";
     py.globals.set("ENTRADA", new Uint8Array(await PPTX.arrayBuffer()));
     py.globals.set("DATOS_JSON", JSON.stringify(DATOS));
+    py.globals.set("XLSX_BYTES", XLSX ? new Uint8Array(await XLSX.arrayBuffer()) : null);
+    py.globals.set("XLSX_NOMBRE", XLSX ? XLSX.name : "");
     const res = await py.runPythonAsync(`
 import json, foro_engine
-_b, _log = foro_engine.actualizar(bytes(ENTRADA.to_py()), json.loads(DATOS_JSON))
+_datos = json.loads(DATOS_JSON)
+_aviso = []
+if XLSX_BYTES is not None:
+    try:
+        import reportes_eventos
+        _datos["reportes"] = reportes_eventos.calcular(bytes(XLSX_BYTES.to_py()), str(XLSX_NOMBRE))
+    except Exception as _e:
+        _aviso.append("⚠ Excel de eventos no se pudo leer: " + type(_e).__name__ + ": " + str(_e))
+_b, _log = foro_engine.actualizar(bytes(ENTRADA.to_py()), _datos)
+_log = list(_log) + _aviso
 (_b, _log)
 `);
     const [out, log] = res.toJs();
