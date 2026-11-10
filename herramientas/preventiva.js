@@ -1,0 +1,322 @@
+/* =====================================================================
+   GESTIÓN PREVENTIVA EJECUTADA EN TERRENO
+   Lee el informe completo (PDF) en el navegador, propone un resumen ejecutivo por bloques
+   y las fotos de cada bloque; todo es editable antes de generar las láminas.
+   Nada se sube a ningún servidor (pdf.js corre aquí mismo).
+   ===================================================================== */
+const PDFJS_VER = "4.10.38";
+const PDFJS_URL = `https://cdn.jsdelivr.net/npm/pdfjs-dist@${PDFJS_VER}/build/pdf.min.mjs`;
+const PDFJS_WORKER = `https://cdn.jsdelivr.net/npm/pdfjs-dist@${PDFJS_VER}/build/pdf.worker.min.mjs`;
+
+const PREV = {
+  incluir: false,
+  lema: "GESTIÓN EN SEGURIDAD",
+  titulo: "Gestión preventiva ejecutada en terreno",
+  subtitulo: "Acciones desarrolladas durante el período",
+  bloques: [],      // {titulo, intro, items(texto, uno por línea), claves:[...], fotos:[id,...]}
+  fotos: [],        // {id, src(dataURL), w, h, pag}
+  lineas: 0
+};
+
+/* Reglas de clasificación (palabras clave por bloque). */
+const PREV_REGLAS = [
+  { titulo: "Coordinación", max: 5, tope: 140,
+    re: /coordin|reuni[oó]n|tfds|charla|campa[nñ]a|an[aá]lisis|reflexi[oó]n|comit[eé]|capacitaci[oó]n|planific|acordamos|se defini|foco de cada|entrega de foco|difusi[oó]n/i },
+  { titulo: "Procesos y rol", max: 4, tope: 140,
+    re: /proceso|tarea cr[ií]tica|repetitiva|\brol\b|jefe de terreno|auditor[ií]a|verificaci[oó]n|confirmaci[oó]n|\bedc\b|\bartp\b|\bpts\b|\bcdp\b|cumplimiento/i },
+  { titulo: "Ejecución", max: 6, tope: 150,
+    re: /terreno|chequeo|inspecci[oó]n|izaje|energ[ií]a|aislamiento|emergencia|suspel|control(es)?\b|observaci[oó]n|ejecut|se verific|se revis|se realiz|estabilidad|disciplina|bloqueo|andamio|excavaci[oó]n/i },
+  { titulo: "Visita gerencial", max: 2, tope: 220,
+    re: /gerente|gerencia|gemba|visita|superintendente|subgerente|direcci[oó]n/i }
+];
+
+/** Importa pdf.js solo cuando se necesita (el worker se sirve como blob para evitar el bloqueo entre orígenes). */
+let _pdfjs = null;
+async function cargarPdfjs() {
+  if (_pdfjs) return _pdfjs;
+  const lib = await import(PDFJS_URL);
+  const r = await fetch(PDFJS_WORKER);
+  if (!r.ok) throw new Error("No se pudo descargar el lector de PDF (pdf.js).");
+  const blob = new Blob([await r.text()], { type: "text/javascript" });
+  lib.GlobalWorkerOptions.workerSrc = URL.createObjectURL(blob);
+  _pdfjs = lib;
+  return lib;
+}
+
+/** Texto de una página agrupado en líneas (por posición vertical). */
+async function textoDePagina(pagina) {
+  const tc = await pagina.getTextContent();
+  const filas = [];
+  tc.items.forEach(it => {
+    if (!it.str || !it.str.trim()) return;
+    const y = Math.round(it.transform[5] / 3), x = it.transform[4];
+    let f = filas.find(q => Math.abs(q.y - y) <= 1);
+    if (!f) { f = { y, partes: [] }; filas.push(f); }
+    f.partes.push({ x, s: it.str });
+  });
+  filas.sort((a, b) => b.y - a.y);
+  return filas.map(f => f.partes.sort((a, b) => a.x - b.x).map(p => p.s).join(" ").replace(/\s+/g, " ").trim()).filter(Boolean);
+}
+
+/** Convierte un objeto de imagen de pdf.js en un JPEG (dataURL) de ancho máx. 1000 px. */
+function imagenAJpeg(img) {
+  const w = img.width, h = img.height;
+  const cv = document.createElement("canvas");
+  cv.width = w; cv.height = h;
+  const ctx = cv.getContext("2d");
+  if (img.bitmap) {
+    ctx.drawImage(img.bitmap, 0, 0);
+  } else if (img.data) {
+    const rgba = ctx.createImageData(w, h);
+    const d = img.data, o = rgba.data;
+    if (d.length === w * h * 4) o.set(d);
+    else if (d.length === w * h * 3) { for (let i = 0, j = 0; i < d.length; i += 3, j += 4) { o[j] = d[i]; o[j + 1] = d[i + 1]; o[j + 2] = d[i + 2]; o[j + 3] = 255; } }
+    else if (d.length === w * h) { for (let i = 0, j = 0; i < d.length; i++, j += 4) { o[j] = o[j + 1] = o[j + 2] = d[i]; o[j + 3] = 255; } }
+    else return null;
+    ctx.putImageData(rgba, 0, 0);
+  } else return null;
+  let dest = cv;
+  if (w > 1000) {
+    dest = document.createElement("canvas");
+    dest.width = 1000; dest.height = Math.round(h * 1000 / w);
+    const c2 = dest.getContext("2d");
+    c2.fillStyle = "#fff"; c2.fillRect(0, 0, dest.width, dest.height);
+    c2.drawImage(cv, 0, 0, dest.width, dest.height);
+  }
+  return { src: dest.toDataURL("image/jpeg", 0.82), w: dest.width, h: dest.height };
+}
+
+function objetoImagen(pagina, nombre) {
+  return new Promise(res => {
+    let listo = false;
+    const t = setTimeout(() => { if (!listo) res(null); }, 4000);
+    try { pagina.objs.get(nombre, o => { listo = true; clearTimeout(t); res(o); }); }
+    catch (e) { clearTimeout(t); res(null); }
+  });
+}
+
+async function imagenesDePagina(lib, pagina, numPag) {
+  const ops = await pagina.getOperatorList();
+  const OPS = lib.OPS, salida = [];
+  for (let i = 0; i < ops.fnArray.length; i++) {
+    const f = ops.fnArray[i];
+    if (f !== OPS.paintImageXObject && f !== OPS.paintInlineImageXObject) continue;
+    let obj = null;
+    if (f === OPS.paintImageXObject) obj = await objetoImagen(pagina, ops.argsArray[i][0]);
+    else obj = ops.argsArray[i][0];
+    if (!obj || !obj.width || obj.width < 250 || obj.height < 170) continue;
+    const ratio = obj.width / obj.height;
+    if (ratio < 0.4 || ratio > 3.5) continue;
+    try { const j = imagenAJpeg(obj); if (j) salida.push({ ...j, pag: numPag }); } catch (e) { /* imagen ilegible */ }
+  }
+  return salida;
+}
+
+/** Resumen ejecutivo por reglas: cada frase va al bloque donde más calza (los títulos del informe ayudan) y se dejan las más informativas. */
+function resumirPorReglas(paginas) {
+  // Líneas que se repiten en muchas páginas (encabezados/pies) se descartan.
+  const cuenta = {};
+  paginas.forEach(p => new Set(p.lineas.map(l => l.toLowerCase())).forEach(l => { cuenta[l] = (cuenta[l] || 0) + 1; }));
+  const repetida = l => paginas.length >= 4 && cuenta[l.toLowerCase()] >= Math.max(3, paginas.length * 0.4);
+  const esTitulo = l => l.length <= 60 && !/[.;!?]$/.test(l) && l.split(" ").length <= 7;
+
+  const frases = [];
+  let pista = -1;                         // bloque sugerido por el último título encontrado
+  const vaciar = (buf, pag) => {
+    const texto = buf.join(" ").replace(/\s+/g, " ");
+    texto.split(/(?<=[.;!?])\s+|\s[•●▪■]\s/).forEach(s => {
+      s = s.replace(/^[\s•●▪■\-–*\d.)]+/, "").trim();
+      if (s.length < 25 || s.length > 400) return;
+      if (/^(p[aá]gina|informe|fecha|n[°º]|tabla|figura|gr[aá]fico)\b/i.test(s)) return;
+      if ((s.match(/[A-Za-zÁÉÍÓÚáéíóúñÑ]/g) || []).length < s.length * 0.55) return;   // mucha cifra/símbolo
+      frases.push({ s, pag, pista });
+    });
+    buf.length = 0;
+  };
+  paginas.forEach(p => {
+    const buf = [];
+    p.lineas.filter(l => !repetida(l)).forEach(l => {
+      if (esTitulo(l)) {
+        vaciar(buf, p.num);
+        const i = PREV_REGLAS.findIndex(r => r.re.test(l));
+        if (i >= 0) pista = i;
+      } else buf.push(l);
+    });
+    vaciar(buf, p.num);
+  });
+
+  const asignadas = PREV_REGLAS.map(() => []);
+  frases.forEach(f => {
+    let mejor = -1, mp = 0;
+    PREV_REGLAS.forEach((r, i) => {
+      const coinc = (f.s.match(new RegExp(r.re.source, "gi")) || []).length;
+      let pt = coinc * 2 + (f.pista === i ? 3 : 0) + (i === 3 && /gerente|gemba/i.test(f.s) ? 4 : 0);
+      if (coinc === 0 && i !== f.pista) pt = 0;
+      if (pt > mp) { mp = pt; mejor = i; }
+    });
+    if (mejor >= 0 && mp >= 2) {
+      let puntos = mp + (/\d/.test(f.s) ? 1 : 0) + (/^[A-ZÁÉÍÓÚÑ]/.test(f.s) ? 0.5 : 0);
+      if (f.s.length > PREV_REGLAS[mejor].tope * 1.8) puntos -= 2;
+      asignadas[mejor].push({ ...f, puntos });
+    }
+  });
+
+  return PREV_REGLAS.map((r, i) => {
+    const cand = asignadas[i].sort((a, b) => b.puntos - a.puntos).slice(0, r.max).sort((a, b) => a.pag - b.pag);
+    return { titulo: r.titulo, intro: "", items: cand.map(c => acortar(c.s, r.tope)).join("\n"),
+             pags: cand.map(c => c.pag), fotos: [], re: r.re };
+  });
+}
+
+function acortar(s, tope) {
+  s = s.replace(/\s+/g, " ").trim();
+  if (s.length <= tope) return s.replace(/[.;,]$/, "") + ".";
+  const corte = s.slice(0, tope);
+  const k = Math.max(corte.lastIndexOf(", "), corte.lastIndexOf(" y "), corte.lastIndexOf(" "));
+  return corte.slice(0, k > tope * 0.5 ? k : tope).replace(/[,;:\s]+$/, "") + "…";
+}
+
+/** Reparte las fotos entre bloques según la página y las palabras del texto de esa página. */
+function proponerFotos(bloques, paginas, fotos) {
+  const textoPag = {}; paginas.forEach(p => { textoPag[p.num] = p.lineas.join(" "); });
+  const orden = [...fotos].sort((a, b) => (b.w * b.h) - (a.w * a.h)).slice(0, 24);
+  bloques.forEach(b => { b.fotos = []; });
+  orden.forEach(f => {
+    let mejor = -1, puntos = 0;
+    bloques.forEach((b, i) => {
+      const pt = (bloques[i].pags || []).includes(f.pag) ? 3 : 0;
+      const m = ((textoPag[f.pag] || "").match(new RegExp(b.re.source, "gi")) || []).length;
+      const tot = pt + Math.min(m, 6);
+      if (tot > puntos) { puntos = tot; mejor = i; }
+    });
+    if (mejor >= 0 && bloques[mejor].fotos.length < (mejor === 3 ? 1 : 2)) bloques[mejor].fotos.push(f.id);
+  });
+}
+
+async function extraerInforme(archivo, onProgreso) {
+  const lib = await cargarPdfjs();
+  const pdf = await lib.getDocument({ data: new Uint8Array(await archivo.arrayBuffer()) }).promise;
+  const paginas = [], fotos = [], vistas = {};
+  for (let n = 1; n <= pdf.numPages; n++) {
+    onProgreso && onProgreso(n, pdf.numPages);
+    const pag = await pdf.getPage(n);
+    paginas.push({ num: n, lineas: await textoDePagina(pag) });
+    (await imagenesDePagina(lib, pag, n)).forEach(im => {
+      const k = im.w + "x" + im.h;
+      (vistas[k] = vistas[k] || []).push(im);
+      fotos.push(im);
+    });
+    pag.cleanup();
+  }
+  // Logos o fondos repetidos: misma medida en 3 o más páginas
+  const repetidas = new Set(Object.keys(vistas).filter(k => vistas[k].length >= 3));
+  const utiles = fotos.filter(f => !repetidas.has(f.w + "x" + f.h)).slice(0, 80);
+  utiles.forEach((f, i) => { f.id = i; });
+  return { paginas, fotos: utiles, descartadas: fotos.length - utiles.length, numPaginas: pdf.numPages };
+}
+
+/* ------------------------------ INTERFAZ ------------------------------ */
+function campoPrev(etiqueta, valor, alCambiar, opc) {
+  opc = opc || {};
+  const e = el(opc.linea ? "input" : "textarea", opc.linea ? { type: "text", value: valor } : { rows: String(opc.filas || 2), value: valor });
+  e.addEventListener("input", () => { alCambiar(e.value); invalidarSalida(); if (!opc.linea) autoAlto(e); });
+  if (!opc.linea) setTimeout(() => autoAlto(e), 0);
+  return el("div", { class: "campo" }, el("div", { class: "et" }, el("span", { text: etiqueta })), e);
+}
+
+function pintarPreventiva() {
+  const cont = $("prevCuerpo");
+  cont.innerHTML = "";
+  if (!PREV.bloques.length) return;
+  cont.appendChild(el("label", { style: "display:flex;gap:8px;align-items:center;margin:8px 0;font-weight:600" },
+    el("input", { type: "checkbox", checked: PREV.incluir, onchange: ev => { PREV.incluir = ev.target.checked; invalidarSalida(); } }),
+    "Incluir estas láminas en el PPT del Assurance"));
+  cont.appendChild(el("div", { class: "grid3" },
+    el("div", {}, campoPrev("Lema (arriba)", PREV.lema, v => { PREV.lema = v; }, { linea: true })),
+    el("div", {}, campoPrev("Título", PREV.titulo, v => { PREV.titulo = v; }, { linea: true })),
+    el("div", {}, campoPrev("Subtítulo", PREV.subtitulo, v => { PREV.subtitulo = v; }, { linea: true }))));
+
+  const nombres = PREV.bloques.map((b, i) => `${i + 1}. ${b.titulo || "(sin título)"}`);
+  PREV.bloques.forEach((b, i) => {
+    const fotosB = PREV.fotos.filter(f => b.fotos.includes(f.id));
+    const caja = el("div", { class: "foco", style: "border-left-color:var(--teal);margin-bottom:18px;padding-top:6px" });
+    caja.appendChild(el("div", { class: "grid2" },
+      campoPrev(`Bloque ${i + 1} · título`, b.titulo, v => { b.titulo = v; }, { linea: true }),
+      el("div", { style: "display:flex;align-items:flex-end;gap:6px;padding-bottom:6px;flex-wrap:wrap" },
+        el("button", { class: "sec", type: "button", text: "↑", disabled: i === 0, onclick: () => { [PREV.bloques[i - 1], PREV.bloques[i]] = [PREV.bloques[i], PREV.bloques[i - 1]]; invalidarSalida(); pintarPreventiva(); } }),
+        el("button", { class: "sec", type: "button", text: "↓", disabled: i === PREV.bloques.length - 1, onclick: () => { [PREV.bloques[i + 1], PREV.bloques[i]] = [PREV.bloques[i], PREV.bloques[i + 1]]; invalidarSalida(); pintarPreventiva(); } }),
+        el("button", { class: "sec", type: "button", text: "Quitar bloque", onclick: () => { PREV.bloques.splice(i, 1); invalidarSalida(); pintarPreventiva(); } }))));
+    caja.appendChild(campoPrev("Texto introductorio (opcional)", b.intro, v => { b.intro = v; }));
+    caja.appendChild(campoPrev("Puntos (uno por línea; «Palabra clave: detalle» deja la palabra en negrita)", b.items, v => { b.items = v; }, { filas: 4 }));
+    caja.appendChild(el("div", { class: "ayuda", text: fotosB.length ? `Fotos de este bloque (${fotosB.length}, máx. 4):` : "Sin fotos asignadas: elige abajo en la galería." }));
+    if (fotosB.length) caja.appendChild(el("div", { style: "display:flex;gap:8px;flex-wrap:wrap" }, fotosB.map(f => el("img", { src: f.src, style: "height:70px;border:1px solid var(--line);border-radius:4px" }))));
+    cont.appendChild(caja);
+  });
+  cont.appendChild(el("button", { class: "sec", type: "button", text: "+ Agregar bloque", onclick: () => { PREV.bloques.push({ titulo: "Nuevo bloque", intro: "", items: "", pags: [], fotos: [], re: /$^/ }); invalidarSalida(); pintarPreventiva(); } }));
+
+  cont.appendChild(el("h3", { text: `Galería de fotos del informe (${PREV.fotos.length}) · asigna cada una a un bloque` }));
+  const gal = el("div", { style: "display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px" });
+  PREV.fotos.forEach(f => {
+    const actual = PREV.bloques.findIndex(b => b.fotos.includes(f.id));
+    const sel = el("select", { style: "width:100%;padding:4px;border:1px solid var(--line);border-radius:6px;margin-top:4px" },
+      el("option", { value: "-1", text: "— no usar —" }),
+      nombres.map((n, i) => el("option", { value: String(i), text: n })));
+    sel.value = String(actual);
+    sel.addEventListener("change", () => {
+      const nuevo = Number(sel.value);
+      PREV.bloques.forEach(b => { b.fotos = b.fotos.filter(x => x !== f.id); });
+      if (nuevo >= 0) {
+        if (PREV.bloques[nuevo].fotos.length >= 4) { sel.value = "-1"; reg("Un bloque admite máximo 4 fotos.", "warn"); return; }
+        PREV.bloques[nuevo].fotos.push(f.id);
+      }
+      invalidarSalida(); pintarPreventiva();
+    });
+    gal.appendChild(el("div", {}, el("img", { src: f.src, style: "width:100%;aspect-ratio:4/3;object-fit:cover;border:1px solid var(--line);border-radius:4px" }),
+      el("div", { class: "ayuda", text: `pág. ${f.pag}` }), sel));
+  });
+  cont.appendChild(gal);
+}
+
+/** Objeto que recibe el motor (lamina_preventiva.agregar_preventiva); null si no se incluye. */
+function construirPreventiva() {
+  if (!PREV.incluir || !PREV.bloques.length) return null;
+  const porId = {}; PREV.fotos.forEach(f => { porId[f.id] = f.src; });
+  return {
+    lema: PREV.lema, titulo: PREV.titulo, subtitulo: PREV.subtitulo,
+    bloques: PREV.bloques.map(b => ({
+      titulo: b.titulo, intro: b.intro,
+      items: String(b.items || "").split(/\r?\n/).map(x => x.trim()).filter(Boolean),
+      fotos: b.fotos.map(id => porId[id]).filter(Boolean)
+    })).filter(b => b.titulo || b.intro || b.items.length || b.fotos.length)
+  };
+}
+
+$("bPrevExtraer").onclick = async () => {
+  const f = $("filePrev").files[0];
+  const est = $("estPrev");
+  if (!f) { est.innerHTML = ""; est.appendChild(el("span", { class: "bad", text: "✖ Primero elige el PDF del informe." })); return; }
+  est.textContent = "Leyendo el informe…";
+  $("bPrevExtraer").disabled = true;
+  try {
+    const r = await extraerInforme(f, (n, t) => { est.textContent = `Leyendo el informe… página ${n} de ${t}`; });
+    const bloques = resumirPorReglas(r.paginas);
+    proponerFotos(bloques, r.paginas, r.fotos);
+    PREV.bloques = bloques; PREV.fotos = r.fotos; PREV.incluir = true;
+    const conTexto = bloques.filter(b => b.items).length;
+    est.innerHTML = "";
+    est.appendChild(el("span", { class: "ok", text: `✔ ${r.numPaginas} páginas leídas · ${conTexto} bloques con texto · ${r.fotos.length} fotos (${r.descartadas} descartadas por repetidas o chicas). Revisa y corrige abajo.` }));
+    if (!r.paginas.some(p => p.lineas.length)) est.appendChild(el("div", { class: "bad", text: "⚠ El PDF no trae texto seleccionable (parece escaneado): escribe los puntos a mano." }));
+    reg(`Informe leído: ${r.numPaginas} páginas, ${r.fotos.length} fotos.`, "ok");
+    invalidarSalida();
+    pintarPreventiva();
+  } catch (e) {
+    console.error(e);
+    est.innerHTML = ""; est.appendChild(el("span", { class: "bad", text: "✖ No se pudo leer el PDF: " + (e && e.message ? e.message : e) }));
+    reg("✖ Informe PDF: " + (e && e.message ? e.message : e), "bad");
+  } finally { $("bPrevExtraer").disabled = false; }
+};
+
+$("bPrevVacio").onclick = () => {
+  PREV.bloques = PREV_REGLAS.map(r => ({ titulo: r.titulo, intro: "", items: "", pags: [], fotos: [], re: r.re }));
+  PREV.fotos = []; PREV.incluir = true; invalidarSalida(); pintarPreventiva();
+};

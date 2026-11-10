@@ -174,6 +174,18 @@
         <div id="qaCuerpo"></div>
       </div>
 
+      <div class="card" id="cPrev">
+        <h2>Láminas · «Gestión preventiva ejecutada en terreno» (desde el informe completo de JEJ)</h2>
+        <div class="ayuda">Sube el informe completo en PDF y la página lee el texto y las fotos aquí mismo (no se sube a ningún servidor). Propone un resumen ejecutivo en 4 bloques (Coordinación, Procesos y rol, Ejecución, Visita gerencial) y las fotos de cada uno. Tú corriges lo que quieras antes de generar. Funciona solo con PDF que tengan texto seleccionable.</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:8px 0">
+          <input type="file" id="filePrev" accept="application/pdf,.pdf">
+          <button id="bPrevExtraer" type="button">Extraer resumen y fotos</button>
+          <button id="bPrevVacio" class="sec" type="button">Prefiero armarlo a mano</button>
+        </div>
+        <div class="estado" id="estPrev"></div>
+        <div id="prevCuerpo"></div>
+      </div>
+
       <div class="card" id="cPulso">
         <h2>Lámina final · «Seguridad | ¿Qué hicimos para sostener el resultado?» (se llena a mano)</h2>
         <div class="ayuda">Esta lámina va al final del PPT y no se calcula: todo lo que escribas aquí aparece tal cual. Lo que dejes vacío queda como cuadro vacío para completarlo en PowerPoint. En las listas, un punto por línea.</div>
@@ -321,7 +333,7 @@ const RUEDAS = [   // orden importante; todas con deps=False
   "python_pptx-1.0.2-py3-none-any.whl"
 ];
 const MODULOS = ["resumen_engine.py", "assurance_engine.py", "resumen_texto.py", "catalogo_data.py",
-                 "catalogo_extra.py", "catalogo_ajustes.py", "catalogo_temas.py", "laminas_gestion.py", "lamina_pulso.py", "puente_web.py"];
+                 "catalogo_extra.py", "catalogo_ajustes.py", "catalogo_temas.py", "laminas_gestion.py", "lamina_pulso.py", "lamina_preventiva.py", "puente_web.py"];
 const PLANTILLA = "FORMATO_ASSURANCE_base.pptx";
 
 let PY = null, pyOk = false, faseCarga = "";
@@ -970,6 +982,7 @@ function aplicarEdiciones(plan) {
     if (k.startsWith("@|")) asignarRuta(p, k.slice(2).split("."), EDIC[k]);
   });
   p.pulso = construirPulso();
+  p.preventiva = construirPreventiva();
   return p;
 }
 
@@ -1397,5 +1410,6 @@ reg("Página lista. Cargando el motor…");
 refrescar();
 cargarMotor();
 </script>
+<script src="preventiva.js"></script>
 </body>
 </html>
