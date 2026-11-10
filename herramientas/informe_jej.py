@@ -199,6 +199,7 @@ def resumen_ejecutivo(slides, portada, turno, focos):
     if m and m.group(1).lower() in NUM_PALABRA:
         total = max(total, NUM_PALABRA[m.group(1).lower()])
     pct = round(100 * n_cubiertos / total) if total else 0
+    n_conf = len([f for f in filas if f.get("estado") == "Conforme"])
     haps = [i for i in ids_h if i.startswith(("HAP", "ACC", "CAAP"))]
     hbps = [i for i in ids_h if i.startswith(("HBP", "CBP"))]
     partes = []
@@ -212,7 +213,7 @@ def resumen_ejecutivo(slides, portada, turno, focos):
         "titulo": "RESUMEN EJECUTIVO ASSURANCE",
         "subtitulo": "Minera Antucoya · GPRO" + (f" · Turno {turno}" if turno else "") + (f" | Verificación: {rango}" if rango else ""),
         "kpis": [
-            {"titulo": "COBERTURA DE FOCOS", "valor": f"{n_cubiertos} de {total} cubiertos · {pct}%", "color": "verde" if pct == 100 else "ambar"},
+            {"titulo": "FOCOS VERIFICADOS", "valor": f"{n_cubiertos} de {total} verificados · {n_conf} conformes sin observación", "color": "azul"},
             {"titulo": "VERIFICACIONES EN TERRENO", "valor": f"{n_verif} verificaciones realizadas", "color": "azul"},
             {"titulo": "HALLAZGOS REPORTADOS", "valor": hall_txt, "color": "ambar" if ids_h else "negro"},
             {"titulo": "DESPLIEGUE ITO", "valor": f"{len(personas)} responsables en terreno", "color": "negro"},
