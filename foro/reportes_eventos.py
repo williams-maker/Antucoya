@@ -87,23 +87,23 @@ def leer_eventos(excel_bytes):
     filas = wb[hoja].iter_rows(values_only=True)
     enc = [_norm(c) for c in next(filas, [])]
     pedidas = {"fecha": ("FECHA EVENTO", "FECHA"), "emp": ("EMPRESA",), "cl": ("CLASIFICACION", "CLASIFICACION SECUNDARIA"),
-               "pot": ("POTENCIALIDAD",), "tit": ("TITULO", "TITULO EVENTO")}
+               "pot": ("POTENCIALIDAD",), "tit": ("TITULO", "TITULO EVENTO"), "riesgo": ("RIESGO INVOLUCRADO", "RIESGO")}
     idx = {}
     for k, nombres in pedidas.items():
         for n in nombres:
             if n in enc:
                 idx[k] = enc.index(n)
                 break
-    falt = [k for k in pedidas if k not in idx]
+    falt = [k for k in pedidas if k not in idx and k != "riesgo"]
     if falt:
         raise ValueError(f"faltan columnas en la hoja Export: {falt}")
     out = []
     for f in filas:
         if not f or all(v is None or str(v).strip() == "" for v in f):
             continue
-        g = lambda k: f[idx[k]] if idx[k] < len(f) else None
+        g = lambda k: f[idx[k]] if (k in idx and idx[k] < len(f)) else None
         out.append({"fecha": _fecha(g("fecha")), "emp": str(g("emp") or "").strip(), "cl": g("cl"), "pot": g("pot"),
-                    "tit": str(g("tit") or "").strip()})
+                    "tit": str(g("tit") or "").strip(), "riesgo": str(g("riesgo") or "").strip() if "riesgo" in idx else None})
     return out
 
 
@@ -123,8 +123,14 @@ def calcular(excel_bytes, nombre=None, anio=None):
     grav = {t: {"PUMA": 0, "COX": 0, "JEJ": 0, "OTRAS": 0} for t in TIPOS}
     otras = Counter()
     acc = []
+    riesgos = {"PUMA": {}, "COX": {}, "RESTO": {}}
+    hay_riesgo = any(e["riesgo"] is not None for e in ev)
     for e in ev:
         g = _grupo(e["emp"])
+        if hay_riesgo:
+            rg = riesgos[g if g in ("PUMA", "COX") else "RESTO"]
+            rr = rg.setdefault(e["riesgo"] or "(sin riesgo)", Counter())
+            rr[_tipo_excel(e["cl"], e["pot"])] += 1
         t = _tipo_excel(e["cl"], e["pot"])
         grav[t][g or "OTRAS"] += 1
         if g:
@@ -148,6 +154,7 @@ def calcular(excel_bytes, nombre=None, anio=None):
         "anio": int(anio), "mes_max": mes_max, "dia_corte": corte.day, "meses": meses,
         "g3": G3, "mensual": mensual, "total_mes": total_mes, "pct": pct, "tot_g": tot_g, "tot3": sum(tot_g.values()),
         "ev": ev15, "grav": grav,
+        "riesgos": ({k: {r: dict(c) for r, c in v.items()} for k, v in riesgos.items()} if hay_riesgo else None),
         "otras": sorted(otras.items(), key=lambda kv: (-kv[1], kv[0])),
         "acc": sorted(acc, key=lambda a: (a["mes"], _orden_emp(a["empresa"]))),
         "fuente": fuente or f"{corte.day} {MESES[corte.month - 1][:3]} {anio}",
@@ -594,7 +601,7 @@ def _avisos(prs, s, gf, d, ymax):
 def _lamina16(prs, d, T, log):
     s = _lamina(prs, "REPORTES Y GRAVEDAD POR EMPRESA")
     if s is None:
-        return log.append("⚠ Reportes y gravedad: no encontré la lámina «REPORTES Y GRAVEDAD POR EMPRESA»")
+        return
     tabla = next(sh for sh in s.shapes if getattr(sh, "has_table", False) and sh.has_table).table
     cols = [c.text.strip() for c in tabla.rows[0].cells][1:]          # PUMA, COX, JEJ, Otras, Total
     clave = {"PUMA": "PUMA", "COX": "COX", "JEJ": "JEJ", "OTRAS": "OTRAS"}
@@ -625,9 +632,156 @@ def _lamina16(prs, d, T, log):
     log.append(f"Reportes y gravedad (lámina 16) ✔ ({len(d['acc'])} accidentes)")
 
 
+# ------------------------------------------------------------------ lámina «TEMAS MÁS REPORTADOS POR EMPRESA»
+OTRO_SEG = "OTRO RIESGO DE SEGURIDAD"
+CORTO_RIESGO = {"INTERACCION CON ENERGIA ELECTRICA": "Energía eléctrica", "OPERACION DE VEHICULOS LIVIANOS": "Vehículos livianos",
+                "CONSTRUCCION DE ZANJAS Y EXCAVACIONES": "Zanjas y excavaciones", "OTRO RIESGO MEDIOAMBIENTAL": "Medio ambiente"}
+MINUS_RIESGO = {"Trabajos en altura": "altura", "Operaciones de izaje": "izaje", "Zanjas y excavaciones": "zanjas",
+                "Energía eléctrica": "energía eléctrica", "Vehículos livianos": "vehículos livianos", "Medio ambiente": "medio ambiente"}
+SERIES16 = ["HAP", "CAP", "HBP", "CBP", "ACC"]
+
+
+def _etq_riesgo(r):
+    return CORTO_RIESGO.get(_norm(r), r.strip())
+
+
+def _top_riesgos(rg, maxfilas=6):
+    """Top 5 sin «Otro riesgo de seguridad»; si hay empate en el 5.º puesto entran todos (marcados ¹)."""
+    lista = [(r, c) for r, c in rg.items() if _norm(r) != OTRO_SEG and _norm(r) != "(SIN RIESGO)"]
+    lista.sort(key=lambda rc: (-sum(rc[1].values()), _norm(rc[0])))
+    if len(lista) <= 5:
+        return [(_etq_riesgo(r), c, False) for r, c in lista]
+    corte = sum(lista[4][1].values())
+    empate = sum(lista[5][1].values()) == corte
+    out = []
+    for i, (r, c) in enumerate(lista):
+        n = sum(c.values())
+        if i < 5 or (empate and n == corte):
+            out.append((_etq_riesgo(r), c, empate and n == corte))
+    return out[:maxfilas]
+
+
+def _tot_riesgo(c):
+    return sum(c.values())
+
+
+def _textos_temas(d):
+    R = d["riesgos"]
+    top = {g: _top_riesgos(R[g]) for g in ("PUMA", "COX")}
+    n = {g: d["tot_g"][g] for g in ("PUMA", "COX")}
+    ap = lambda c: c.get("HAP", 0) + c.get("CAP", 0)
+    mes = CORTO[d["mes_max"] - 1].lower()
+    sub = f"Top 5 por riesgo involucrado, ene–{mes} {d['anio']} · Nº de eventos, sin “Otro riesgo de seguridad”"
+    l = []
+    p1, c1 = top["PUMA"][0], top["COX"][0]
+    if p1[0] == c1[0]:
+        l.append((f"{p1[0]} es el tema nº 1 en las dos empresas: ", f"{_tot_riesgo(p1[1])} eventos en PUMA y {_tot_riesgo(c1[1])} en COX."))
+    else:
+        l.append(("El tema nº 1 difiere entre empresas: ", f"PUMA {p1[0].lower()} ({_tot_riesgo(p1[1])}) y COX {c1[0].lower()} ({_tot_riesgo(c1[1])})."))
+    partes, nombres = [], []
+    for g in ("PUMA", "COX"):
+        sel = [(e, c) for e, c, _ in top[g] if _tot_riesgo(c) >= 10 and ap(c) * 100 >= 60 * _tot_riesgo(c)][:2]
+        for e, c in sel:
+            nom = MINUS_RIESGO.get(e, e.lower())
+            if nom not in nombres:
+                nombres.append(nom)
+        if sel:
+            partes.append(f"{g} " + " y ".join(f"{ap(c)}/{_tot_riesgo(c)} {MINUS_RIESGO.get(e, e.lower())}" for e, c in sel))
+    if partes:
+        l.append((f"Alto potencial pesa en {_lista(nombres)}: ", "; ".join(partes) + "."))
+    else:
+        l.append(("Alto potencial no domina ningún tema: ", "ningún tema del top supera el 60% de alto potencial."))
+    ma = {g: next((c for r, c in R[g].items() if _norm(r) == "OTRO RIESGO MEDIOAMBIENTAL"), None) for g in ("PUMA", "COX")}
+    if any(ma.values()):
+        todo_hbp = all(set(c) <= {"HBP"} for c in ma.values() if c)
+        nums = " y ".join(f"{_tot_riesgo(c)} en {g}" for g, c in ma.items() if c)
+        l.append(("Medio ambiente es todo HBP: " if todo_hbp else "Medio ambiente: ", f"{nums.replace(' en ', ' eventos en ', 1) if ' y ' not in nums else nums.replace(' en PUMA', ' eventos en PUMA', 1)}."))
+    otro = {g: _tot_riesgo(next((c for r, c in R[g].items() if _norm(r) == OTRO_SEG), {})) for g in ("PUMA", "COX")}
+    pp, pc = _pc(otro["PUMA"], n["PUMA"]), _pc(otro["COX"], n["COX"])
+    l.append((f"{pp}% de PUMA y {pc}% de COX no tiene riesgo específico: ", "quedó como “Otro riesgo de seguridad”."))
+    resto = R["RESTO"]
+    nres = sum(_tot_riesgo(c) for c in resto.values())
+    tops = sorted([(r, _tot_riesgo(c)) for r, c in resto.items() if _norm(r) not in (OTRO_SEG, "(SIN RIESGO)")], key=lambda rn: (-rn[1], _norm(rn[0])))[:3]
+    nombres_r = [f"{MINUS_RIESGO.get(_etq_riesgo(r), _etq_riesgo(r).lower())} {v}" for r, v in tops]
+    l.append((f"Resto de empresas ({nres} eventos): ", (", ".join(nombres_r[:-1]) + " e " + nombres_r[-1] if len(nombres_r) > 1 else "".join(nombres_r)) + "."))
+    return {"sub": sub, "lectura": l, "cap": {g: f"{g}, {n[g]} eventos" for g in n}, "top": top}
+
+
+def _borrar_lbl(ser, modelo=None):
+    dl = ser.find(C + "dLbls")
+    if dl is None and modelo is not None:     # serie sin etiquetas (p. ej. Accidente en 0): copiar el formato de otra
+        dl = copy.deepcopy(modelo)
+        for x in dl.findall(C + "dLbl"):
+            dl.remove(x)
+        ser.find(C + "cat").addprevious(dl)
+    for x in dl.findall(C + "dLbl"):
+        dl.remove(x)
+    return dl
+
+
+def _grafico_temas(shape, filas, maximo):
+    cs = shape.chart._chartSpace
+    cats = [e + ("\u00b9" if emp else "") for e, _, emp in filas]
+    plantilla_tot = None
+    modelo = next((x.find(C + "dLbls") for x in cs.findall(f".//{C}ser") if x.find(f"{C}tx/{C}v").text == "HBP"), None)
+    for ser in cs.findall(f".//{C}ser"):
+        nombre = ser.find(f"{C}tx/{C}v").text
+        if nombre == "Total":
+            dl0 = ser.find(C + "dLbls").find(C + "dLbl")
+            plantilla_tot = copy.deepcopy(dl0)
+        if nombre == "Accidente":
+            clave = "ACC"
+        else:
+            clave = nombre
+        if nombre == "Total":
+            vals = [4] * len(filas)
+        else:
+            vals = [c.get(clave, 0) for _, c, _ in filas]
+        _pts(ser.find(f"{C}cat/{C}strLit"), cats, True)
+        _pts(ser.find(f"{C}val/{C}numLit"), vals, False)
+        dl = _borrar_lbl(ser, modelo)
+        if nombre == "Total":
+            for i, (_, c, _) in enumerate(filas):
+                x = _sin_ext(copy.deepcopy(plantilla_tot))
+                x.find(C + "idx").set("val", str(i))
+                x.find(f".//{A}t").text = str(sum(c.values()))
+                dl.insert(i, x)
+        else:
+            k = 0
+            for i, v in enumerate(vals):
+                if v < 2:
+                    x = etree.Element(C + "dLbl")
+                    etree.SubElement(x, C + "idx").set("val", str(i))
+                    etree.SubElement(x, C + "delete").set("val", "1")
+                    dl.insert(k, x)
+                    k += 1
+    for ax in cs.findall(f".//{C}valAx"):
+        mx = ax.find(f"{C}scaling/{C}max")
+        if mx is not None:
+            mx.set("val", str(maximo))
+    shape.height = 2376140 + (len(filas) - 5) * 268508
+
+
+def _lamina16_temas(prs, d, T, log):
+    s = _lamina(prs, "TEMAS MÁS REPORTADOS POR EMPRESA")
+    if s is None:
+        return
+    if not d.get("riesgos"):
+        return log.append("⚠ Temas más reportados: el Excel no trae la columna «RIESGO INVOLUCRADO»; lámina sin actualizar")
+    X = _textos_temas(d)
+    _poner_runs(_forma(s, "Subtitulo").text_frame.paragraphs[0], [X["sub"]])
+    _poner_runs(_forma(s, "Caption linea").text_frame.paragraphs[0], [X["cap"]["PUMA"]])
+    _poner_runs(_forma(s, "Caption tabla").text_frame.paragraphs[0], [X["cap"]["COX"]])
+    _viñetas(_forma(s, "Lectura"), X["lectura"])
+    maximo = max(sum(c.values()) for g in X["top"] for _, c, _ in X["top"][g]) + 6
+    _grafico_temas(_forma(s, "Grafico PUMA"), X["top"]["PUMA"], maximo)
+    _grafico_temas(_forma(s, "Grafico COX"), X["top"]["COX"], maximo)
+    log.append("Temas más reportados por empresa (lámina 16) ✔")
+
+
 def aplicar(prs, d, log):
     T = textos(d)
-    for f in (_lamina15, _lamina16):
+    for f in (_lamina15, _lamina16, _lamina16_temas):
         try:
             f(prs, d, T, log)
         except Exception as e:

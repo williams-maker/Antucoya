@@ -17,7 +17,7 @@ from pptx.chart.data import CategoryChartData
 from pptx.dml.color import RGBColor
 from lxml import etree
 
-VERSION = "10 (12-11 láminas Reportes por empresa y gravedad)"
+VERSION = "11 (12-11 láminas Reportes por empresa y Temas más reportados)"
 A = "{http://schemas.openxmlformats.org/drawingml/2006/main}"
 C = "{http://schemas.openxmlformats.org/drawingml/2006/chart}"
 
@@ -814,7 +814,7 @@ def actualizar(pptx_bytes, datos):
         if _FALTAN:  # el ✔ no basta: avisar qué elementos no se encontraron y quedaron sin actualizar
             log.append(f"⚠ {clave}: no encontré {', '.join(dict.fromkeys(_FALTAN))}; esos elementos quedaron como estaban")
     if "reportes" not in datos:
-        for t in ("REPORTES POR EMPRESA", "REPORTES Y GRAVEDAD POR EMPRESA"):
+        for t in ("REPORTES POR EMPRESA", "REPORTES Y GRAVEDAD POR EMPRESA", "TEMAS MÁS REPORTADOS POR EMPRESA"):
             for sl in prs.slides:
                 if any(sh.name == "Titulo" and sh.has_text_frame and sh.text_frame.text.strip().upper() == t for sh in sl.shapes):
                     log.append(f"⚠ Lámina «{t}» sin actualizar: falta el Excel de eventos (hoja Export)")
